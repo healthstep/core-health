@@ -1,0 +1,11 @@
+grpc_port: "5002"
+server_port: "9002"
+close_timeout: "5s"
+
+db_dsn: "host=localhost user=zdravoshag password=zdravoshag_secret dbname=zdravoshag search_path=core_health sslmode=disable"
+
+nats_url: "nats://localhost:4222"
+
+tracer_host: "localhost"
+tracer_port: "4317"
+service_name: "core-health"

@@ -1,0 +1,142 @@
+syntax = "proto3";
+
+package health;
+
+option go_package = "github.com/helthtech/core-health/pkg/proto/health";
+
+import "google/protobuf/timestamp.proto";
+
+service HealthService {
+  rpc ListCriteria(ListCriteriaRequest) returns (ListCriteriaResponse);
+  rpc ListLabTests(ListLabTestsRequest) returns (ListLabTestsResponse);
+  rpc CreateNumericEvent(CreateNumericEventRequest) returns (EventResponse);
+  rpc CreateBooleanEvent(CreateBooleanEventRequest) returns (EventResponse);
+  rpc CreateMarkDoneEvent(CreateMarkDoneEventRequest) returns (EventResponse);
+  rpc CreateDocument(CreateDocumentRequest) returns (DocumentResponse);
+  rpc GetDashboard(GetDashboardRequest) returns (DashboardResponse);
+  rpc GetUserCriterionStates(GetUserCriterionStatesRequest) returns (GetUserCriterionStatesResponse);
+  rpc SendNotification(SendNotificationRequest) returns (SendNotificationResponse);
+}
+
+message ListCriteriaRequest {}
+
+message Criterion {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  string description = 4;
+  string value_type = 5;
+  string unit = 6;
+  repeated string input_modes = 7;
+  int32 recurrence_interval_days = 8;
+  bool is_active = 9;
+}
+
+message ListCriteriaResponse {
+  repeated Criterion criteria = 1;
+}
+
+message ListLabTestsRequest {}
+
+message LabTest {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  string description = 4;
+  repeated string criterion_ids = 5;
+}
+
+message ListLabTestsResponse {
+  repeated LabTest lab_tests = 1;
+}
+
+message CreateNumericEventRequest {
+  string user_id = 1;
+  string health_criterion_id = 2;
+  string lab_test_id = 3;
+  double numeric_value = 4;
+  google.protobuf.Timestamp occurred_at = 5;
+  string source = 6;
+  string note = 7;
+}
+
+message CreateBooleanEventRequest {
+  string user_id = 1;
+  string health_criterion_id = 2;
+  string boolean_value = 3;
+  google.protobuf.Timestamp occurred_at = 4;
+  string source = 5;
+  string note = 6;
+}
+
+message CreateMarkDoneEventRequest {
+  string user_id = 1;
+  string health_criterion_id = 2;
+  google.protobuf.Timestamp occurred_at = 3;
+  string source = 4;
+  string note = 5;
+}
+
+message EventResponse {
+  string id = 1;
+  string user_id = 2;
+  string health_criterion_id = 3;
+  string event_type = 4;
+  google.protobuf.Timestamp occurred_at = 5;
+  google.protobuf.Timestamp recorded_at = 6;
+}
+
+message CreateDocumentRequest {
+  string user_id = 1;
+  string storage_key = 2;
+  string mime_type = 3;
+  int64 byte_size = 4;
+  string sha256 = 5;
+}
+
+message DocumentResponse {
+  string id = 1;
+  string user_id = 2;
+  string storage_key = 3;
+  google.protobuf.Timestamp created_at = 4;
+}
+
+message GetDashboardRequest {
+  string user_id = 1;
+}
+
+message DashboardResponse {
+  string level = 1;
+  double progress_percent = 2;
+  int32 total_criteria = 3;
+  int32 filled_criteria = 4;
+  int32 overdue_criteria = 5;
+  repeated CriterionState states = 6;
+}
+
+message CriterionState {
+  string criterion_id = 1;
+  string criterion_name = 2;
+  string status = 3;
+  google.protobuf.Timestamp last_event_at = 4;
+  string last_value_summary = 5;
+  string recommendation = 6;
+}
+
+message GetUserCriterionStatesRequest {
+  string user_id = 1;
+}
+
+message GetUserCriterionStatesResponse {
+  repeated CriterionState states = 1;
+}
+
+message SendNotificationRequest {
+  string user_id = 1;
+  string channel = 2;
+  string notification_type = 3;
+  string template_code = 4;
+  string payload_json = 5;
+}
+
+message SendNotificationResponse {}
