@@ -4,131 +4,120 @@ package health;
 
 option go_package = "github.com/helthtech/core-health/pkg/proto/health";
 
-import "google/protobuf/timestamp.proto";
-
 service HealthService {
+  rpc ListAnalysis(ListAnalysisRequest) returns (ListAnalysisResponse);
   rpc ListCriteria(ListCriteriaRequest) returns (ListCriteriaResponse);
-  rpc ListLabTests(ListLabTestsRequest) returns (ListLabTestsResponse);
-  rpc CreateNumericEvent(CreateNumericEventRequest) returns (EventResponse);
-  rpc CreateBooleanEvent(CreateBooleanEventRequest) returns (EventResponse);
-  rpc CreateMarkDoneEvent(CreateMarkDoneEventRequest) returns (EventResponse);
-  rpc CreateDocument(CreateDocumentRequest) returns (DocumentResponse);
-  rpc GetDashboard(GetDashboardRequest) returns (DashboardResponse);
-  rpc GetUserCriterionStates(GetUserCriterionStatesRequest) returns (GetUserCriterionStatesResponse);
+  rpc SetUserCriterion(SetUserCriterionRequest) returns (SetUserCriterionResponse);
+  rpc ResetAnalysisCriteria(ResetAnalysisCriteriaRequest) returns (ResetAnalysisCriteriaResponse);
+  rpc GetUserCriteria(GetUserCriteriaRequest) returns (GetUserCriteriaResponse);
+  rpc GetProgress(GetProgressRequest) returns (GetProgressResponse);
+  rpc GetRecommendations(GetRecommendationsRequest) returns (GetRecommendationsResponse);
   rpc SendNotification(SendNotificationRequest) returns (SendNotificationResponse);
 }
 
-message ListCriteriaRequest {}
+message Analysis {
+  string id = 1;
+  string name = 2;
+  // lifetime in days; 0 means no expiry
+  int32 lifetime = 3;
+  // sex restriction: "male", "female", or "" for all
+  string sex = 4;
+  // blocked_by: "", "level_1", "level_2", or "criteria_<uuid>"
+  string blocked_by = 5;
+}
+
+// ListAnalysisRequest optionally filters by user context (sex + blocking rules).
+message ListAnalysisRequest {
+  string user_id = 1;
+  string user_sex = 2;
+}
+
+message ListAnalysisResponse {
+  repeated Analysis analyses = 1;
+}
 
 message Criterion {
   string id = 1;
-  string code = 2;
-  string name = 3;
-  string description = 4;
-  string value_type = 5;
-  string unit = 6;
-  repeated string input_modes = 7;
-  int32 recurrence_interval_days = 8;
-  bool is_active = 9;
+  string name = 2;
+  string analysis_id = 3;
+  int32 level = 4;
+}
+
+message ListCriteriaRequest {
+  string analysis_id = 1;
 }
 
 message ListCriteriaResponse {
   repeated Criterion criteria = 1;
 }
 
-message ListLabTestsRequest {}
-
-message LabTest {
-  string id = 1;
-  string code = 2;
-  string name = 3;
-  string description = 4;
-  repeated string criterion_ids = 5;
-}
-
-message ListLabTestsResponse {
-  repeated LabTest lab_tests = 1;
-}
-
-message CreateNumericEventRequest {
+message SetUserCriterionRequest {
   string user_id = 1;
-  string health_criterion_id = 2;
-  string lab_test_id = 3;
-  double numeric_value = 4;
-  google.protobuf.Timestamp occurred_at = 5;
-  string source = 6;
-  string note = 7;
-}
-
-message CreateBooleanEventRequest {
-  string user_id = 1;
-  string health_criterion_id = 2;
-  string boolean_value = 3;
-  google.protobuf.Timestamp occurred_at = 4;
-  string source = 5;
-  string note = 6;
-}
-
-message CreateMarkDoneEventRequest {
-  string user_id = 1;
-  string health_criterion_id = 2;
-  google.protobuf.Timestamp occurred_at = 3;
+  string criterion_id = 2;
+  string value = 3;
   string source = 4;
-  string note = 5;
 }
 
-message EventResponse {
-  string id = 1;
-  string user_id = 2;
-  string health_criterion_id = 3;
-  string event_type = 4;
-  google.protobuf.Timestamp occurred_at = 5;
-  google.protobuf.Timestamp recorded_at = 6;
+message SetUserCriterionResponse {
+  bool success = 1;
 }
 
-message CreateDocumentRequest {
-  string user_id = 1;
-  string storage_key = 2;
-  string mime_type = 3;
-  int64 byte_size = 4;
-  string sha256 = 5;
-}
-
-message DocumentResponse {
-  string id = 1;
-  string user_id = 2;
-  string storage_key = 3;
-  google.protobuf.Timestamp created_at = 4;
-}
-
-message GetDashboardRequest {
-  string user_id = 1;
-}
-
-message DashboardResponse {
-  string level = 1;
-  double progress_percent = 2;
-  int32 total_criteria = 3;
-  int32 filled_criteria = 4;
-  int32 overdue_criteria = 5;
-  repeated CriterionState states = 6;
-}
-
-message CriterionState {
+message UserCriterionEntry {
   string criterion_id = 1;
   string criterion_name = 2;
-  string status = 3;
-  google.protobuf.Timestamp last_event_at = 4;
-  string last_value_summary = 5;
-  string recommendation = 6;
+  string analysis_id = 3;
+  string analysis_name = 4;
+  string value = 5;
+  string status = 6;
+  string recommendation = 7;
+  int32 level = 8;
+  string severity = 9;
 }
 
-message GetUserCriterionStatesRequest {
+message GetUserCriteriaRequest {
+  string user_id = 1;
+  string user_sex = 2;
+}
+
+message GetUserCriteriaResponse {
+  repeated UserCriterionEntry entries = 1;
+}
+
+message GetProgressRequest {
   string user_id = 1;
 }
 
-message GetUserCriterionStatesResponse {
-  repeated CriterionState states = 1;
+message GetProgressResponse {
+  int32 total = 1;
+  int32 filled = 2;
+  double percent = 3;
+  string level_label = 4;
+}
+
+message Recommendation {
+  string criterion_id = 1;
+  string criterion_name = 2;
+  string analysis_name = 3;
+  string text = 4;
+  string severity = 5;
+}
+
+message GetRecommendationsRequest {
+  string user_id = 1;
+  string user_sex = 2;
+}
+
+message GetRecommendationsResponse {
+  repeated Recommendation recommendations = 1;
+}
+
+message ResetAnalysisCriteriaRequest {
+  string user_id = 1;
+  string analysis_id = 2;
+}
+
+message ResetAnalysisCriteriaResponse {
+  bool success = 1;
 }
 
 message SendNotificationRequest {

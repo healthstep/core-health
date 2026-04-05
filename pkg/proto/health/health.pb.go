@@ -9,7 +9,6 @@ package health
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -22,26 +21,34 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type ListCriteriaRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
+type Analysis struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Id    string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name  string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	// lifetime in days; 0 means no expiry
+	Lifetime int32 `protobuf:"varint,3,opt,name=lifetime,proto3" json:"lifetime,omitempty"`
+	// sex restriction: "male", "female", or "" for all
+	Sex string `protobuf:"bytes,4,opt,name=sex,proto3" json:"sex,omitempty"`
+	// blocked_by: "", "level_1", "level_2", or "criteria_<uuid>"
+	BlockedBy     string `protobuf:"bytes,5,opt,name=blocked_by,json=blockedBy,proto3" json:"blocked_by,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListCriteriaRequest) Reset() {
-	*x = ListCriteriaRequest{}
+func (x *Analysis) Reset() {
+	*x = Analysis{}
 	mi := &file_health_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListCriteriaRequest) String() string {
+func (x *Analysis) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListCriteriaRequest) ProtoMessage() {}
+func (*Analysis) ProtoMessage() {}
 
-func (x *ListCriteriaRequest) ProtoReflect() protoreflect.Message {
+func (x *Analysis) ProtoReflect() protoreflect.Message {
 	mi := &file_health_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -53,29 +60,156 @@ func (x *ListCriteriaRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListCriteriaRequest.ProtoReflect.Descriptor instead.
-func (*ListCriteriaRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use Analysis.ProtoReflect.Descriptor instead.
+func (*Analysis) Descriptor() ([]byte, []int) {
 	return file_health_proto_rawDescGZIP(), []int{0}
 }
 
+func (x *Analysis) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Analysis) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Analysis) GetLifetime() int32 {
+	if x != nil {
+		return x.Lifetime
+	}
+	return 0
+}
+
+func (x *Analysis) GetSex() string {
+	if x != nil {
+		return x.Sex
+	}
+	return ""
+}
+
+func (x *Analysis) GetBlockedBy() string {
+	if x != nil {
+		return x.BlockedBy
+	}
+	return ""
+}
+
+// ListAnalysisRequest optionally filters by user context (sex + blocking rules).
+type ListAnalysisRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserSex       string                 `protobuf:"bytes,2,opt,name=user_sex,json=userSex,proto3" json:"user_sex,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListAnalysisRequest) Reset() {
+	*x = ListAnalysisRequest{}
+	mi := &file_health_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAnalysisRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAnalysisRequest) ProtoMessage() {}
+
+func (x *ListAnalysisRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_health_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAnalysisRequest.ProtoReflect.Descriptor instead.
+func (*ListAnalysisRequest) Descriptor() ([]byte, []int) {
+	return file_health_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *ListAnalysisRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *ListAnalysisRequest) GetUserSex() string {
+	if x != nil {
+		return x.UserSex
+	}
+	return ""
+}
+
+type ListAnalysisResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Analyses      []*Analysis            `protobuf:"bytes,1,rep,name=analyses,proto3" json:"analyses,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListAnalysisResponse) Reset() {
+	*x = ListAnalysisResponse{}
+	mi := &file_health_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAnalysisResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAnalysisResponse) ProtoMessage() {}
+
+func (x *ListAnalysisResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_health_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAnalysisResponse.ProtoReflect.Descriptor instead.
+func (*ListAnalysisResponse) Descriptor() ([]byte, []int) {
+	return file_health_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ListAnalysisResponse) GetAnalyses() []*Analysis {
+	if x != nil {
+		return x.Analyses
+	}
+	return nil
+}
+
 type Criterion struct {
-	state                  protoimpl.MessageState `protogen:"open.v1"`
-	Id                     string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Code                   string                 `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`
-	Name                   string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Description            string                 `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
-	ValueType              string                 `protobuf:"bytes,5,opt,name=value_type,json=valueType,proto3" json:"value_type,omitempty"`
-	Unit                   string                 `protobuf:"bytes,6,opt,name=unit,proto3" json:"unit,omitempty"`
-	InputModes             []string               `protobuf:"bytes,7,rep,name=input_modes,json=inputModes,proto3" json:"input_modes,omitempty"`
-	RecurrenceIntervalDays int32                  `protobuf:"varint,8,opt,name=recurrence_interval_days,json=recurrenceIntervalDays,proto3" json:"recurrence_interval_days,omitempty"`
-	IsActive               bool                   `protobuf:"varint,9,opt,name=is_active,json=isActive,proto3" json:"is_active,omitempty"`
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	AnalysisId    string                 `protobuf:"bytes,3,opt,name=analysis_id,json=analysisId,proto3" json:"analysis_id,omitempty"`
+	Level         int32                  `protobuf:"varint,4,opt,name=level,proto3" json:"level,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Criterion) Reset() {
 	*x = Criterion{}
-	mi := &file_health_proto_msgTypes[1]
+	mi := &file_health_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -87,7 +221,7 @@ func (x *Criterion) String() string {
 func (*Criterion) ProtoMessage() {}
 
 func (x *Criterion) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[1]
+	mi := &file_health_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -100,19 +234,12 @@ func (x *Criterion) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Criterion.ProtoReflect.Descriptor instead.
 func (*Criterion) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{1}
+	return file_health_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *Criterion) GetId() string {
 	if x != nil {
 		return x.Id
-	}
-	return ""
-}
-
-func (x *Criterion) GetCode() string {
-	if x != nil {
-		return x.Code
 	}
 	return ""
 }
@@ -124,46 +251,62 @@ func (x *Criterion) GetName() string {
 	return ""
 }
 
-func (x *Criterion) GetDescription() string {
+func (x *Criterion) GetAnalysisId() string {
 	if x != nil {
-		return x.Description
+		return x.AnalysisId
 	}
 	return ""
 }
 
-func (x *Criterion) GetValueType() string {
+func (x *Criterion) GetLevel() int32 {
 	if x != nil {
-		return x.ValueType
-	}
-	return ""
-}
-
-func (x *Criterion) GetUnit() string {
-	if x != nil {
-		return x.Unit
-	}
-	return ""
-}
-
-func (x *Criterion) GetInputModes() []string {
-	if x != nil {
-		return x.InputModes
-	}
-	return nil
-}
-
-func (x *Criterion) GetRecurrenceIntervalDays() int32 {
-	if x != nil {
-		return x.RecurrenceIntervalDays
+		return x.Level
 	}
 	return 0
 }
 
-func (x *Criterion) GetIsActive() bool {
+type ListCriteriaRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AnalysisId    string                 `protobuf:"bytes,1,opt,name=analysis_id,json=analysisId,proto3" json:"analysis_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListCriteriaRequest) Reset() {
+	*x = ListCriteriaRequest{}
+	mi := &file_health_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListCriteriaRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListCriteriaRequest) ProtoMessage() {}
+
+func (x *ListCriteriaRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_health_proto_msgTypes[4]
 	if x != nil {
-		return x.IsActive
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
 	}
-	return false
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListCriteriaRequest.ProtoReflect.Descriptor instead.
+func (*ListCriteriaRequest) Descriptor() ([]byte, []int) {
+	return file_health_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *ListCriteriaRequest) GetAnalysisId() string {
+	if x != nil {
+		return x.AnalysisId
+	}
+	return ""
 }
 
 type ListCriteriaResponse struct {
@@ -175,7 +318,7 @@ type ListCriteriaResponse struct {
 
 func (x *ListCriteriaResponse) Reset() {
 	*x = ListCriteriaResponse{}
-	mi := &file_health_proto_msgTypes[2]
+	mi := &file_health_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -187,7 +330,7 @@ func (x *ListCriteriaResponse) String() string {
 func (*ListCriteriaResponse) ProtoMessage() {}
 
 func (x *ListCriteriaResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[2]
+	mi := &file_health_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -200,7 +343,7 @@ func (x *ListCriteriaResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCriteriaResponse.ProtoReflect.Descriptor instead.
 func (*ListCriteriaResponse) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{2}
+	return file_health_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ListCriteriaResponse) GetCriteria() []*Criterion {
@@ -210,189 +353,30 @@ func (x *ListCriteriaResponse) GetCriteria() []*Criterion {
 	return nil
 }
 
-type ListLabTestsRequest struct {
+type SetUserCriterionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	CriterionId   string                 `protobuf:"bytes,2,opt,name=criterion_id,json=criterionId,proto3" json:"criterion_id,omitempty"`
+	Value         string                 `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
+	Source        string                 `protobuf:"bytes,4,opt,name=source,proto3" json:"source,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListLabTestsRequest) Reset() {
-	*x = ListLabTestsRequest{}
-	mi := &file_health_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListLabTestsRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListLabTestsRequest) ProtoMessage() {}
-
-func (x *ListLabTestsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListLabTestsRequest.ProtoReflect.Descriptor instead.
-func (*ListLabTestsRequest) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{3}
-}
-
-type LabTest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Code          string                 `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`
-	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Description   string                 `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
-	CriterionIds  []string               `protobuf:"bytes,5,rep,name=criterion_ids,json=criterionIds,proto3" json:"criterion_ids,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LabTest) Reset() {
-	*x = LabTest{}
-	mi := &file_health_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LabTest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LabTest) ProtoMessage() {}
-
-func (x *LabTest) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LabTest.ProtoReflect.Descriptor instead.
-func (*LabTest) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *LabTest) GetId() string {
-	if x != nil {
-		return x.Id
-	}
-	return ""
-}
-
-func (x *LabTest) GetCode() string {
-	if x != nil {
-		return x.Code
-	}
-	return ""
-}
-
-func (x *LabTest) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *LabTest) GetDescription() string {
-	if x != nil {
-		return x.Description
-	}
-	return ""
-}
-
-func (x *LabTest) GetCriterionIds() []string {
-	if x != nil {
-		return x.CriterionIds
-	}
-	return nil
-}
-
-type ListLabTestsResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	LabTests      []*LabTest             `protobuf:"bytes,1,rep,name=lab_tests,json=labTests,proto3" json:"lab_tests,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListLabTestsResponse) Reset() {
-	*x = ListLabTestsResponse{}
-	mi := &file_health_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListLabTestsResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListLabTestsResponse) ProtoMessage() {}
-
-func (x *ListLabTestsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListLabTestsResponse.ProtoReflect.Descriptor instead.
-func (*ListLabTestsResponse) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *ListLabTestsResponse) GetLabTests() []*LabTest {
-	if x != nil {
-		return x.LabTests
-	}
-	return nil
-}
-
-type CreateNumericEventRequest struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	UserId            string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	HealthCriterionId string                 `protobuf:"bytes,2,opt,name=health_criterion_id,json=healthCriterionId,proto3" json:"health_criterion_id,omitempty"`
-	LabTestId         string                 `protobuf:"bytes,3,opt,name=lab_test_id,json=labTestId,proto3" json:"lab_test_id,omitempty"`
-	NumericValue      float64                `protobuf:"fixed64,4,opt,name=numeric_value,json=numericValue,proto3" json:"numeric_value,omitempty"`
-	OccurredAt        *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
-	Source            string                 `protobuf:"bytes,6,opt,name=source,proto3" json:"source,omitempty"`
-	Note              string                 `protobuf:"bytes,7,opt,name=note,proto3" json:"note,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
-}
-
-func (x *CreateNumericEventRequest) Reset() {
-	*x = CreateNumericEventRequest{}
+func (x *SetUserCriterionRequest) Reset() {
+	*x = SetUserCriterionRequest{}
 	mi := &file_health_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CreateNumericEventRequest) String() string {
+func (x *SetUserCriterionRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateNumericEventRequest) ProtoMessage() {}
+func (*SetUserCriterionRequest) ProtoMessage() {}
 
-func (x *CreateNumericEventRequest) ProtoReflect() protoreflect.Message {
+func (x *SetUserCriterionRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_health_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -404,682 +388,214 @@ func (x *CreateNumericEventRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateNumericEventRequest.ProtoReflect.Descriptor instead.
-func (*CreateNumericEventRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use SetUserCriterionRequest.ProtoReflect.Descriptor instead.
+func (*SetUserCriterionRequest) Descriptor() ([]byte, []int) {
 	return file_health_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *CreateNumericEventRequest) GetUserId() string {
+func (x *SetUserCriterionRequest) GetUserId() string {
 	if x != nil {
 		return x.UserId
 	}
 	return ""
 }
 
-func (x *CreateNumericEventRequest) GetHealthCriterionId() string {
-	if x != nil {
-		return x.HealthCriterionId
-	}
-	return ""
-}
-
-func (x *CreateNumericEventRequest) GetLabTestId() string {
-	if x != nil {
-		return x.LabTestId
-	}
-	return ""
-}
-
-func (x *CreateNumericEventRequest) GetNumericValue() float64 {
-	if x != nil {
-		return x.NumericValue
-	}
-	return 0
-}
-
-func (x *CreateNumericEventRequest) GetOccurredAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.OccurredAt
-	}
-	return nil
-}
-
-func (x *CreateNumericEventRequest) GetSource() string {
-	if x != nil {
-		return x.Source
-	}
-	return ""
-}
-
-func (x *CreateNumericEventRequest) GetNote() string {
-	if x != nil {
-		return x.Note
-	}
-	return ""
-}
-
-type CreateBooleanEventRequest struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	UserId            string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	HealthCriterionId string                 `protobuf:"bytes,2,opt,name=health_criterion_id,json=healthCriterionId,proto3" json:"health_criterion_id,omitempty"`
-	BooleanValue      string                 `protobuf:"bytes,3,opt,name=boolean_value,json=booleanValue,proto3" json:"boolean_value,omitempty"`
-	OccurredAt        *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
-	Source            string                 `protobuf:"bytes,5,opt,name=source,proto3" json:"source,omitempty"`
-	Note              string                 `protobuf:"bytes,6,opt,name=note,proto3" json:"note,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
-}
-
-func (x *CreateBooleanEventRequest) Reset() {
-	*x = CreateBooleanEventRequest{}
-	mi := &file_health_proto_msgTypes[7]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CreateBooleanEventRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateBooleanEventRequest) ProtoMessage() {}
-
-func (x *CreateBooleanEventRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[7]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreateBooleanEventRequest.ProtoReflect.Descriptor instead.
-func (*CreateBooleanEventRequest) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *CreateBooleanEventRequest) GetUserId() string {
-	if x != nil {
-		return x.UserId
-	}
-	return ""
-}
-
-func (x *CreateBooleanEventRequest) GetHealthCriterionId() string {
-	if x != nil {
-		return x.HealthCriterionId
-	}
-	return ""
-}
-
-func (x *CreateBooleanEventRequest) GetBooleanValue() string {
-	if x != nil {
-		return x.BooleanValue
-	}
-	return ""
-}
-
-func (x *CreateBooleanEventRequest) GetOccurredAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.OccurredAt
-	}
-	return nil
-}
-
-func (x *CreateBooleanEventRequest) GetSource() string {
-	if x != nil {
-		return x.Source
-	}
-	return ""
-}
-
-func (x *CreateBooleanEventRequest) GetNote() string {
-	if x != nil {
-		return x.Note
-	}
-	return ""
-}
-
-type CreateMarkDoneEventRequest struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	UserId            string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	HealthCriterionId string                 `protobuf:"bytes,2,opt,name=health_criterion_id,json=healthCriterionId,proto3" json:"health_criterion_id,omitempty"`
-	OccurredAt        *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
-	Source            string                 `protobuf:"bytes,4,opt,name=source,proto3" json:"source,omitempty"`
-	Note              string                 `protobuf:"bytes,5,opt,name=note,proto3" json:"note,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
-}
-
-func (x *CreateMarkDoneEventRequest) Reset() {
-	*x = CreateMarkDoneEventRequest{}
-	mi := &file_health_proto_msgTypes[8]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CreateMarkDoneEventRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateMarkDoneEventRequest) ProtoMessage() {}
-
-func (x *CreateMarkDoneEventRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[8]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreateMarkDoneEventRequest.ProtoReflect.Descriptor instead.
-func (*CreateMarkDoneEventRequest) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *CreateMarkDoneEventRequest) GetUserId() string {
-	if x != nil {
-		return x.UserId
-	}
-	return ""
-}
-
-func (x *CreateMarkDoneEventRequest) GetHealthCriterionId() string {
-	if x != nil {
-		return x.HealthCriterionId
-	}
-	return ""
-}
-
-func (x *CreateMarkDoneEventRequest) GetOccurredAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.OccurredAt
-	}
-	return nil
-}
-
-func (x *CreateMarkDoneEventRequest) GetSource() string {
-	if x != nil {
-		return x.Source
-	}
-	return ""
-}
-
-func (x *CreateMarkDoneEventRequest) GetNote() string {
-	if x != nil {
-		return x.Note
-	}
-	return ""
-}
-
-type EventResponse struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	Id                string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	UserId            string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	HealthCriterionId string                 `protobuf:"bytes,3,opt,name=health_criterion_id,json=healthCriterionId,proto3" json:"health_criterion_id,omitempty"`
-	EventType         string                 `protobuf:"bytes,4,opt,name=event_type,json=eventType,proto3" json:"event_type,omitempty"`
-	OccurredAt        *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
-	RecordedAt        *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=recorded_at,json=recordedAt,proto3" json:"recorded_at,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
-}
-
-func (x *EventResponse) Reset() {
-	*x = EventResponse{}
-	mi := &file_health_proto_msgTypes[9]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *EventResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*EventResponse) ProtoMessage() {}
-
-func (x *EventResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[9]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use EventResponse.ProtoReflect.Descriptor instead.
-func (*EventResponse) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *EventResponse) GetId() string {
-	if x != nil {
-		return x.Id
-	}
-	return ""
-}
-
-func (x *EventResponse) GetUserId() string {
-	if x != nil {
-		return x.UserId
-	}
-	return ""
-}
-
-func (x *EventResponse) GetHealthCriterionId() string {
-	if x != nil {
-		return x.HealthCriterionId
-	}
-	return ""
-}
-
-func (x *EventResponse) GetEventType() string {
-	if x != nil {
-		return x.EventType
-	}
-	return ""
-}
-
-func (x *EventResponse) GetOccurredAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.OccurredAt
-	}
-	return nil
-}
-
-func (x *EventResponse) GetRecordedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.RecordedAt
-	}
-	return nil
-}
-
-type CreateDocumentRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	StorageKey    string                 `protobuf:"bytes,2,opt,name=storage_key,json=storageKey,proto3" json:"storage_key,omitempty"`
-	MimeType      string                 `protobuf:"bytes,3,opt,name=mime_type,json=mimeType,proto3" json:"mime_type,omitempty"`
-	ByteSize      int64                  `protobuf:"varint,4,opt,name=byte_size,json=byteSize,proto3" json:"byte_size,omitempty"`
-	Sha256        string                 `protobuf:"bytes,5,opt,name=sha256,proto3" json:"sha256,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CreateDocumentRequest) Reset() {
-	*x = CreateDocumentRequest{}
-	mi := &file_health_proto_msgTypes[10]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CreateDocumentRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateDocumentRequest) ProtoMessage() {}
-
-func (x *CreateDocumentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[10]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreateDocumentRequest.ProtoReflect.Descriptor instead.
-func (*CreateDocumentRequest) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{10}
-}
-
-func (x *CreateDocumentRequest) GetUserId() string {
-	if x != nil {
-		return x.UserId
-	}
-	return ""
-}
-
-func (x *CreateDocumentRequest) GetStorageKey() string {
-	if x != nil {
-		return x.StorageKey
-	}
-	return ""
-}
-
-func (x *CreateDocumentRequest) GetMimeType() string {
-	if x != nil {
-		return x.MimeType
-	}
-	return ""
-}
-
-func (x *CreateDocumentRequest) GetByteSize() int64 {
-	if x != nil {
-		return x.ByteSize
-	}
-	return 0
-}
-
-func (x *CreateDocumentRequest) GetSha256() string {
-	if x != nil {
-		return x.Sha256
-	}
-	return ""
-}
-
-type DocumentResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	StorageKey    string                 `protobuf:"bytes,3,opt,name=storage_key,json=storageKey,proto3" json:"storage_key,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *DocumentResponse) Reset() {
-	*x = DocumentResponse{}
-	mi := &file_health_proto_msgTypes[11]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DocumentResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DocumentResponse) ProtoMessage() {}
-
-func (x *DocumentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[11]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DocumentResponse.ProtoReflect.Descriptor instead.
-func (*DocumentResponse) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{11}
-}
-
-func (x *DocumentResponse) GetId() string {
-	if x != nil {
-		return x.Id
-	}
-	return ""
-}
-
-func (x *DocumentResponse) GetUserId() string {
-	if x != nil {
-		return x.UserId
-	}
-	return ""
-}
-
-func (x *DocumentResponse) GetStorageKey() string {
-	if x != nil {
-		return x.StorageKey
-	}
-	return ""
-}
-
-func (x *DocumentResponse) GetCreatedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.CreatedAt
-	}
-	return nil
-}
-
-type GetDashboardRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetDashboardRequest) Reset() {
-	*x = GetDashboardRequest{}
-	mi := &file_health_proto_msgTypes[12]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetDashboardRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetDashboardRequest) ProtoMessage() {}
-
-func (x *GetDashboardRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[12]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetDashboardRequest.ProtoReflect.Descriptor instead.
-func (*GetDashboardRequest) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{12}
-}
-
-func (x *GetDashboardRequest) GetUserId() string {
-	if x != nil {
-		return x.UserId
-	}
-	return ""
-}
-
-type DashboardResponse struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	Level           string                 `protobuf:"bytes,1,opt,name=level,proto3" json:"level,omitempty"`
-	ProgressPercent float64                `protobuf:"fixed64,2,opt,name=progress_percent,json=progressPercent,proto3" json:"progress_percent,omitempty"`
-	TotalCriteria   int32                  `protobuf:"varint,3,opt,name=total_criteria,json=totalCriteria,proto3" json:"total_criteria,omitempty"`
-	FilledCriteria  int32                  `protobuf:"varint,4,opt,name=filled_criteria,json=filledCriteria,proto3" json:"filled_criteria,omitempty"`
-	OverdueCriteria int32                  `protobuf:"varint,5,opt,name=overdue_criteria,json=overdueCriteria,proto3" json:"overdue_criteria,omitempty"`
-	States          []*CriterionState      `protobuf:"bytes,6,rep,name=states,proto3" json:"states,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
-}
-
-func (x *DashboardResponse) Reset() {
-	*x = DashboardResponse{}
-	mi := &file_health_proto_msgTypes[13]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DashboardResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DashboardResponse) ProtoMessage() {}
-
-func (x *DashboardResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[13]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DashboardResponse.ProtoReflect.Descriptor instead.
-func (*DashboardResponse) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{13}
-}
-
-func (x *DashboardResponse) GetLevel() string {
-	if x != nil {
-		return x.Level
-	}
-	return ""
-}
-
-func (x *DashboardResponse) GetProgressPercent() float64 {
-	if x != nil {
-		return x.ProgressPercent
-	}
-	return 0
-}
-
-func (x *DashboardResponse) GetTotalCriteria() int32 {
-	if x != nil {
-		return x.TotalCriteria
-	}
-	return 0
-}
-
-func (x *DashboardResponse) GetFilledCriteria() int32 {
-	if x != nil {
-		return x.FilledCriteria
-	}
-	return 0
-}
-
-func (x *DashboardResponse) GetOverdueCriteria() int32 {
-	if x != nil {
-		return x.OverdueCriteria
-	}
-	return 0
-}
-
-func (x *DashboardResponse) GetStates() []*CriterionState {
-	if x != nil {
-		return x.States
-	}
-	return nil
-}
-
-type CriterionState struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	CriterionId      string                 `protobuf:"bytes,1,opt,name=criterion_id,json=criterionId,proto3" json:"criterion_id,omitempty"`
-	CriterionName    string                 `protobuf:"bytes,2,opt,name=criterion_name,json=criterionName,proto3" json:"criterion_name,omitempty"`
-	Status           string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
-	LastEventAt      *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=last_event_at,json=lastEventAt,proto3" json:"last_event_at,omitempty"`
-	LastValueSummary string                 `protobuf:"bytes,5,opt,name=last_value_summary,json=lastValueSummary,proto3" json:"last_value_summary,omitempty"`
-	Recommendation   string                 `protobuf:"bytes,6,opt,name=recommendation,proto3" json:"recommendation,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
-}
-
-func (x *CriterionState) Reset() {
-	*x = CriterionState{}
-	mi := &file_health_proto_msgTypes[14]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CriterionState) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CriterionState) ProtoMessage() {}
-
-func (x *CriterionState) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[14]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CriterionState.ProtoReflect.Descriptor instead.
-func (*CriterionState) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{14}
-}
-
-func (x *CriterionState) GetCriterionId() string {
+func (x *SetUserCriterionRequest) GetCriterionId() string {
 	if x != nil {
 		return x.CriterionId
 	}
 	return ""
 }
 
-func (x *CriterionState) GetCriterionName() string {
+func (x *SetUserCriterionRequest) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
+func (x *SetUserCriterionRequest) GetSource() string {
+	if x != nil {
+		return x.Source
+	}
+	return ""
+}
+
+type SetUserCriterionResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetUserCriterionResponse) Reset() {
+	*x = SetUserCriterionResponse{}
+	mi := &file_health_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetUserCriterionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetUserCriterionResponse) ProtoMessage() {}
+
+func (x *SetUserCriterionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_health_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetUserCriterionResponse.ProtoReflect.Descriptor instead.
+func (*SetUserCriterionResponse) Descriptor() ([]byte, []int) {
+	return file_health_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *SetUserCriterionResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+type UserCriterionEntry struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	CriterionId    string                 `protobuf:"bytes,1,opt,name=criterion_id,json=criterionId,proto3" json:"criterion_id,omitempty"`
+	CriterionName  string                 `protobuf:"bytes,2,opt,name=criterion_name,json=criterionName,proto3" json:"criterion_name,omitempty"`
+	AnalysisId     string                 `protobuf:"bytes,3,opt,name=analysis_id,json=analysisId,proto3" json:"analysis_id,omitempty"`
+	AnalysisName   string                 `protobuf:"bytes,4,opt,name=analysis_name,json=analysisName,proto3" json:"analysis_name,omitempty"`
+	Value          string                 `protobuf:"bytes,5,opt,name=value,proto3" json:"value,omitempty"`
+	Status         string                 `protobuf:"bytes,6,opt,name=status,proto3" json:"status,omitempty"`
+	Recommendation string                 `protobuf:"bytes,7,opt,name=recommendation,proto3" json:"recommendation,omitempty"`
+	Level          int32                  `protobuf:"varint,8,opt,name=level,proto3" json:"level,omitempty"`
+	Severity       string                 `protobuf:"bytes,9,opt,name=severity,proto3" json:"severity,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *UserCriterionEntry) Reset() {
+	*x = UserCriterionEntry{}
+	mi := &file_health_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UserCriterionEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserCriterionEntry) ProtoMessage() {}
+
+func (x *UserCriterionEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_health_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserCriterionEntry.ProtoReflect.Descriptor instead.
+func (*UserCriterionEntry) Descriptor() ([]byte, []int) {
+	return file_health_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *UserCriterionEntry) GetCriterionId() string {
+	if x != nil {
+		return x.CriterionId
+	}
+	return ""
+}
+
+func (x *UserCriterionEntry) GetCriterionName() string {
 	if x != nil {
 		return x.CriterionName
 	}
 	return ""
 }
 
-func (x *CriterionState) GetStatus() string {
+func (x *UserCriterionEntry) GetAnalysisId() string {
+	if x != nil {
+		return x.AnalysisId
+	}
+	return ""
+}
+
+func (x *UserCriterionEntry) GetAnalysisName() string {
+	if x != nil {
+		return x.AnalysisName
+	}
+	return ""
+}
+
+func (x *UserCriterionEntry) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
+func (x *UserCriterionEntry) GetStatus() string {
 	if x != nil {
 		return x.Status
 	}
 	return ""
 }
 
-func (x *CriterionState) GetLastEventAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.LastEventAt
-	}
-	return nil
-}
-
-func (x *CriterionState) GetLastValueSummary() string {
-	if x != nil {
-		return x.LastValueSummary
-	}
-	return ""
-}
-
-func (x *CriterionState) GetRecommendation() string {
+func (x *UserCriterionEntry) GetRecommendation() string {
 	if x != nil {
 		return x.Recommendation
 	}
 	return ""
 }
 
-type GetUserCriterionStatesRequest struct {
+func (x *UserCriterionEntry) GetLevel() int32 {
+	if x != nil {
+		return x.Level
+	}
+	return 0
+}
+
+func (x *UserCriterionEntry) GetSeverity() string {
+	if x != nil {
+		return x.Severity
+	}
+	return ""
+}
+
+type GetUserCriteriaRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserSex       string                 `protobuf:"bytes,2,opt,name=user_sex,json=userSex,proto3" json:"user_sex,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetUserCriterionStatesRequest) Reset() {
-	*x = GetUserCriterionStatesRequest{}
-	mi := &file_health_proto_msgTypes[15]
+func (x *GetUserCriteriaRequest) Reset() {
+	*x = GetUserCriteriaRequest{}
+	mi := &file_health_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetUserCriterionStatesRequest) String() string {
+func (x *GetUserCriteriaRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetUserCriterionStatesRequest) ProtoMessage() {}
+func (*GetUserCriteriaRequest) ProtoMessage() {}
 
-func (x *GetUserCriterionStatesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[15]
+func (x *GetUserCriteriaRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_health_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1090,39 +606,375 @@ func (x *GetUserCriterionStatesRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetUserCriterionStatesRequest.ProtoReflect.Descriptor instead.
-func (*GetUserCriterionStatesRequest) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{15}
+// Deprecated: Use GetUserCriteriaRequest.ProtoReflect.Descriptor instead.
+func (*GetUserCriteriaRequest) Descriptor() ([]byte, []int) {
+	return file_health_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *GetUserCriterionStatesRequest) GetUserId() string {
+func (x *GetUserCriteriaRequest) GetUserId() string {
 	if x != nil {
 		return x.UserId
 	}
 	return ""
 }
 
-type GetUserCriterionStatesResponse struct {
+func (x *GetUserCriteriaRequest) GetUserSex() string {
+	if x != nil {
+		return x.UserSex
+	}
+	return ""
+}
+
+type GetUserCriteriaResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	States        []*CriterionState      `protobuf:"bytes,1,rep,name=states,proto3" json:"states,omitempty"`
+	Entries       []*UserCriterionEntry  `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetUserCriterionStatesResponse) Reset() {
-	*x = GetUserCriterionStatesResponse{}
+func (x *GetUserCriteriaResponse) Reset() {
+	*x = GetUserCriteriaResponse{}
+	mi := &file_health_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetUserCriteriaResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetUserCriteriaResponse) ProtoMessage() {}
+
+func (x *GetUserCriteriaResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_health_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetUserCriteriaResponse.ProtoReflect.Descriptor instead.
+func (*GetUserCriteriaResponse) Descriptor() ([]byte, []int) {
+	return file_health_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *GetUserCriteriaResponse) GetEntries() []*UserCriterionEntry {
+	if x != nil {
+		return x.Entries
+	}
+	return nil
+}
+
+type GetProgressRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetProgressRequest) Reset() {
+	*x = GetProgressRequest{}
+	mi := &file_health_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetProgressRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProgressRequest) ProtoMessage() {}
+
+func (x *GetProgressRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_health_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProgressRequest.ProtoReflect.Descriptor instead.
+func (*GetProgressRequest) Descriptor() ([]byte, []int) {
+	return file_health_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *GetProgressRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type GetProgressResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Total         int32                  `protobuf:"varint,1,opt,name=total,proto3" json:"total,omitempty"`
+	Filled        int32                  `protobuf:"varint,2,opt,name=filled,proto3" json:"filled,omitempty"`
+	Percent       float64                `protobuf:"fixed64,3,opt,name=percent,proto3" json:"percent,omitempty"`
+	LevelLabel    string                 `protobuf:"bytes,4,opt,name=level_label,json=levelLabel,proto3" json:"level_label,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetProgressResponse) Reset() {
+	*x = GetProgressResponse{}
+	mi := &file_health_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetProgressResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProgressResponse) ProtoMessage() {}
+
+func (x *GetProgressResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_health_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProgressResponse.ProtoReflect.Descriptor instead.
+func (*GetProgressResponse) Descriptor() ([]byte, []int) {
+	return file_health_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *GetProgressResponse) GetTotal() int32 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *GetProgressResponse) GetFilled() int32 {
+	if x != nil {
+		return x.Filled
+	}
+	return 0
+}
+
+func (x *GetProgressResponse) GetPercent() float64 {
+	if x != nil {
+		return x.Percent
+	}
+	return 0
+}
+
+func (x *GetProgressResponse) GetLevelLabel() string {
+	if x != nil {
+		return x.LevelLabel
+	}
+	return ""
+}
+
+type Recommendation struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CriterionId   string                 `protobuf:"bytes,1,opt,name=criterion_id,json=criterionId,proto3" json:"criterion_id,omitempty"`
+	CriterionName string                 `protobuf:"bytes,2,opt,name=criterion_name,json=criterionName,proto3" json:"criterion_name,omitempty"`
+	AnalysisName  string                 `protobuf:"bytes,3,opt,name=analysis_name,json=analysisName,proto3" json:"analysis_name,omitempty"`
+	Text          string                 `protobuf:"bytes,4,opt,name=text,proto3" json:"text,omitempty"`
+	Severity      string                 `protobuf:"bytes,5,opt,name=severity,proto3" json:"severity,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Recommendation) Reset() {
+	*x = Recommendation{}
+	mi := &file_health_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Recommendation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Recommendation) ProtoMessage() {}
+
+func (x *Recommendation) ProtoReflect() protoreflect.Message {
+	mi := &file_health_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Recommendation.ProtoReflect.Descriptor instead.
+func (*Recommendation) Descriptor() ([]byte, []int) {
+	return file_health_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *Recommendation) GetCriterionId() string {
+	if x != nil {
+		return x.CriterionId
+	}
+	return ""
+}
+
+func (x *Recommendation) GetCriterionName() string {
+	if x != nil {
+		return x.CriterionName
+	}
+	return ""
+}
+
+func (x *Recommendation) GetAnalysisName() string {
+	if x != nil {
+		return x.AnalysisName
+	}
+	return ""
+}
+
+func (x *Recommendation) GetText() string {
+	if x != nil {
+		return x.Text
+	}
+	return ""
+}
+
+func (x *Recommendation) GetSeverity() string {
+	if x != nil {
+		return x.Severity
+	}
+	return ""
+}
+
+type GetRecommendationsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserSex       string                 `protobuf:"bytes,2,opt,name=user_sex,json=userSex,proto3" json:"user_sex,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetRecommendationsRequest) Reset() {
+	*x = GetRecommendationsRequest{}
+	mi := &file_health_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetRecommendationsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetRecommendationsRequest) ProtoMessage() {}
+
+func (x *GetRecommendationsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_health_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetRecommendationsRequest.ProtoReflect.Descriptor instead.
+func (*GetRecommendationsRequest) Descriptor() ([]byte, []int) {
+	return file_health_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *GetRecommendationsRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *GetRecommendationsRequest) GetUserSex() string {
+	if x != nil {
+		return x.UserSex
+	}
+	return ""
+}
+
+type GetRecommendationsResponse struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Recommendations []*Recommendation      `protobuf:"bytes,1,rep,name=recommendations,proto3" json:"recommendations,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *GetRecommendationsResponse) Reset() {
+	*x = GetRecommendationsResponse{}
+	mi := &file_health_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetRecommendationsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetRecommendationsResponse) ProtoMessage() {}
+
+func (x *GetRecommendationsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_health_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetRecommendationsResponse.ProtoReflect.Descriptor instead.
+func (*GetRecommendationsResponse) Descriptor() ([]byte, []int) {
+	return file_health_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *GetRecommendationsResponse) GetRecommendations() []*Recommendation {
+	if x != nil {
+		return x.Recommendations
+	}
+	return nil
+}
+
+type ResetAnalysisCriteriaRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	AnalysisId    string                 `protobuf:"bytes,2,opt,name=analysis_id,json=analysisId,proto3" json:"analysis_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResetAnalysisCriteriaRequest) Reset() {
+	*x = ResetAnalysisCriteriaRequest{}
 	mi := &file_health_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetUserCriterionStatesResponse) String() string {
+func (x *ResetAnalysisCriteriaRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetUserCriterionStatesResponse) ProtoMessage() {}
+func (*ResetAnalysisCriteriaRequest) ProtoMessage() {}
 
-func (x *GetUserCriterionStatesResponse) ProtoReflect() protoreflect.Message {
+func (x *ResetAnalysisCriteriaRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_health_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1134,16 +986,67 @@ func (x *GetUserCriterionStatesResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetUserCriterionStatesResponse.ProtoReflect.Descriptor instead.
-func (*GetUserCriterionStatesResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ResetAnalysisCriteriaRequest.ProtoReflect.Descriptor instead.
+func (*ResetAnalysisCriteriaRequest) Descriptor() ([]byte, []int) {
 	return file_health_proto_rawDescGZIP(), []int{16}
 }
 
-func (x *GetUserCriterionStatesResponse) GetStates() []*CriterionState {
+func (x *ResetAnalysisCriteriaRequest) GetUserId() string {
 	if x != nil {
-		return x.States
+		return x.UserId
 	}
-	return nil
+	return ""
+}
+
+func (x *ResetAnalysisCriteriaRequest) GetAnalysisId() string {
+	if x != nil {
+		return x.AnalysisId
+	}
+	return ""
+}
+
+type ResetAnalysisCriteriaResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResetAnalysisCriteriaResponse) Reset() {
+	*x = ResetAnalysisCriteriaResponse{}
+	mi := &file_health_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResetAnalysisCriteriaResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResetAnalysisCriteriaResponse) ProtoMessage() {}
+
+func (x *ResetAnalysisCriteriaResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_health_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResetAnalysisCriteriaResponse.ProtoReflect.Descriptor instead.
+func (*ResetAnalysisCriteriaResponse) Descriptor() ([]byte, []int) {
+	return file_health_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *ResetAnalysisCriteriaResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
 }
 
 type SendNotificationRequest struct {
@@ -1159,7 +1062,7 @@ type SendNotificationRequest struct {
 
 func (x *SendNotificationRequest) Reset() {
 	*x = SendNotificationRequest{}
-	mi := &file_health_proto_msgTypes[17]
+	mi := &file_health_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1171,7 +1074,7 @@ func (x *SendNotificationRequest) String() string {
 func (*SendNotificationRequest) ProtoMessage() {}
 
 func (x *SendNotificationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[17]
+	mi := &file_health_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1184,7 +1087,7 @@ func (x *SendNotificationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendNotificationRequest.ProtoReflect.Descriptor instead.
 func (*SendNotificationRequest) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{17}
+	return file_health_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *SendNotificationRequest) GetUserId() string {
@@ -1230,7 +1133,7 @@ type SendNotificationResponse struct {
 
 func (x *SendNotificationResponse) Reset() {
 	*x = SendNotificationResponse{}
-	mi := &file_health_proto_msgTypes[18]
+	mi := &file_health_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1242,7 +1145,7 @@ func (x *SendNotificationResponse) String() string {
 func (*SendNotificationResponse) ProtoMessage() {}
 
 func (x *SendNotificationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[18]
+	mi := &file_health_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1255,122 +1158,100 @@ func (x *SendNotificationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendNotificationResponse.ProtoReflect.Descriptor instead.
 func (*SendNotificationResponse) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{18}
+	return file_health_proto_rawDescGZIP(), []int{19}
 }
 
 var File_health_proto protoreflect.FileDescriptor
 
 const file_health_proto_rawDesc = "" +
 	"\n" +
-	"\fhealth.proto\x12\x06health\x1a\x1fgoogle/protobuf/timestamp.proto\"\x15\n" +
-	"\x13ListCriteriaRequest\"\x90\x02\n" +
+	"\fhealth.proto\x12\x06health\"{\n" +
+	"\bAnalysis\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1a\n" +
+	"\blifetime\x18\x03 \x01(\x05R\blifetime\x12\x10\n" +
+	"\x03sex\x18\x04 \x01(\tR\x03sex\x12\x1d\n" +
+	"\n" +
+	"blocked_by\x18\x05 \x01(\tR\tblockedBy\"I\n" +
+	"\x13ListAnalysisRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x19\n" +
+	"\buser_sex\x18\x02 \x01(\tR\auserSex\"D\n" +
+	"\x14ListAnalysisResponse\x12,\n" +
+	"\banalyses\x18\x01 \x03(\v2\x10.health.AnalysisR\banalyses\"f\n" +
 	"\tCriterion\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04code\x18\x02 \x01(\tR\x04code\x12\x12\n" +
-	"\x04name\x18\x03 \x01(\tR\x04name\x12 \n" +
-	"\vdescription\x18\x04 \x01(\tR\vdescription\x12\x1d\n" +
-	"\n" +
-	"value_type\x18\x05 \x01(\tR\tvalueType\x12\x12\n" +
-	"\x04unit\x18\x06 \x01(\tR\x04unit\x12\x1f\n" +
-	"\vinput_modes\x18\a \x03(\tR\n" +
-	"inputModes\x128\n" +
-	"\x18recurrence_interval_days\x18\b \x01(\x05R\x16recurrenceIntervalDays\x12\x1b\n" +
-	"\tis_active\x18\t \x01(\bR\bisActive\"E\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1f\n" +
+	"\vanalysis_id\x18\x03 \x01(\tR\n" +
+	"analysisId\x12\x14\n" +
+	"\x05level\x18\x04 \x01(\x05R\x05level\"6\n" +
+	"\x13ListCriteriaRequest\x12\x1f\n" +
+	"\vanalysis_id\x18\x01 \x01(\tR\n" +
+	"analysisId\"E\n" +
 	"\x14ListCriteriaResponse\x12-\n" +
-	"\bcriteria\x18\x01 \x03(\v2\x11.health.CriterionR\bcriteria\"\x15\n" +
-	"\x13ListLabTestsRequest\"\x88\x01\n" +
-	"\aLabTest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04code\x18\x02 \x01(\tR\x04code\x12\x12\n" +
-	"\x04name\x18\x03 \x01(\tR\x04name\x12 \n" +
-	"\vdescription\x18\x04 \x01(\tR\vdescription\x12#\n" +
-	"\rcriterion_ids\x18\x05 \x03(\tR\fcriterionIds\"D\n" +
-	"\x14ListLabTestsResponse\x12,\n" +
-	"\tlab_tests\x18\x01 \x03(\v2\x0f.health.LabTestR\blabTests\"\x92\x02\n" +
-	"\x19CreateNumericEventRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12.\n" +
-	"\x13health_criterion_id\x18\x02 \x01(\tR\x11healthCriterionId\x12\x1e\n" +
-	"\vlab_test_id\x18\x03 \x01(\tR\tlabTestId\x12#\n" +
-	"\rnumeric_value\x18\x04 \x01(\x01R\fnumericValue\x12;\n" +
-	"\voccurred_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"occurredAt\x12\x16\n" +
-	"\x06source\x18\x06 \x01(\tR\x06source\x12\x12\n" +
-	"\x04note\x18\a \x01(\tR\x04note\"\xf2\x01\n" +
-	"\x19CreateBooleanEventRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12.\n" +
-	"\x13health_criterion_id\x18\x02 \x01(\tR\x11healthCriterionId\x12#\n" +
-	"\rboolean_value\x18\x03 \x01(\tR\fbooleanValue\x12;\n" +
-	"\voccurred_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"occurredAt\x12\x16\n" +
-	"\x06source\x18\x05 \x01(\tR\x06source\x12\x12\n" +
-	"\x04note\x18\x06 \x01(\tR\x04note\"\xce\x01\n" +
-	"\x1aCreateMarkDoneEventRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12.\n" +
-	"\x13health_criterion_id\x18\x02 \x01(\tR\x11healthCriterionId\x12;\n" +
-	"\voccurred_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"occurredAt\x12\x16\n" +
-	"\x06source\x18\x04 \x01(\tR\x06source\x12\x12\n" +
-	"\x04note\x18\x05 \x01(\tR\x04note\"\x81\x02\n" +
-	"\rEventResponse\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
-	"\auser_id\x18\x02 \x01(\tR\x06userId\x12.\n" +
-	"\x13health_criterion_id\x18\x03 \x01(\tR\x11healthCriterionId\x12\x1d\n" +
-	"\n" +
-	"event_type\x18\x04 \x01(\tR\teventType\x12;\n" +
-	"\voccurred_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"occurredAt\x12;\n" +
-	"\vrecorded_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"recordedAt\"\xa3\x01\n" +
-	"\x15CreateDocumentRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1f\n" +
-	"\vstorage_key\x18\x02 \x01(\tR\n" +
-	"storageKey\x12\x1b\n" +
-	"\tmime_type\x18\x03 \x01(\tR\bmimeType\x12\x1b\n" +
-	"\tbyte_size\x18\x04 \x01(\x03R\bbyteSize\x12\x16\n" +
-	"\x06sha256\x18\x05 \x01(\tR\x06sha256\"\x97\x01\n" +
-	"\x10DocumentResponse\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
-	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x1f\n" +
-	"\vstorage_key\x18\x03 \x01(\tR\n" +
-	"storageKey\x129\n" +
-	"\n" +
-	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\".\n" +
-	"\x13GetDashboardRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\"\xff\x01\n" +
-	"\x11DashboardResponse\x12\x14\n" +
-	"\x05level\x18\x01 \x01(\tR\x05level\x12)\n" +
-	"\x10progress_percent\x18\x02 \x01(\x01R\x0fprogressPercent\x12%\n" +
-	"\x0etotal_criteria\x18\x03 \x01(\x05R\rtotalCriteria\x12'\n" +
-	"\x0ffilled_criteria\x18\x04 \x01(\x05R\x0efilledCriteria\x12)\n" +
-	"\x10overdue_criteria\x18\x05 \x01(\x05R\x0foverdueCriteria\x12.\n" +
-	"\x06states\x18\x06 \x03(\v2\x16.health.CriterionStateR\x06states\"\x88\x02\n" +
-	"\x0eCriterionState\x12!\n" +
+	"\bcriteria\x18\x01 \x03(\v2\x11.health.CriterionR\bcriteria\"\x83\x01\n" +
+	"\x17SetUserCriterionRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12!\n" +
+	"\fcriterion_id\x18\x02 \x01(\tR\vcriterionId\x12\x14\n" +
+	"\x05value\x18\x03 \x01(\tR\x05value\x12\x16\n" +
+	"\x06source\x18\x04 \x01(\tR\x06source\"4\n" +
+	"\x18SetUserCriterionResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xac\x02\n" +
+	"\x12UserCriterionEntry\x12!\n" +
 	"\fcriterion_id\x18\x01 \x01(\tR\vcriterionId\x12%\n" +
-	"\x0ecriterion_name\x18\x02 \x01(\tR\rcriterionName\x12\x16\n" +
-	"\x06status\x18\x03 \x01(\tR\x06status\x12>\n" +
-	"\rlast_event_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\vlastEventAt\x12,\n" +
-	"\x12last_value_summary\x18\x05 \x01(\tR\x10lastValueSummary\x12&\n" +
-	"\x0erecommendation\x18\x06 \x01(\tR\x0erecommendation\"8\n" +
-	"\x1dGetUserCriterionStatesRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\"P\n" +
-	"\x1eGetUserCriterionStatesResponse\x12.\n" +
-	"\x06states\x18\x01 \x03(\v2\x16.health.CriterionStateR\x06states\"\xc1\x01\n" +
+	"\x0ecriterion_name\x18\x02 \x01(\tR\rcriterionName\x12\x1f\n" +
+	"\vanalysis_id\x18\x03 \x01(\tR\n" +
+	"analysisId\x12#\n" +
+	"\ranalysis_name\x18\x04 \x01(\tR\fanalysisName\x12\x14\n" +
+	"\x05value\x18\x05 \x01(\tR\x05value\x12\x16\n" +
+	"\x06status\x18\x06 \x01(\tR\x06status\x12&\n" +
+	"\x0erecommendation\x18\a \x01(\tR\x0erecommendation\x12\x14\n" +
+	"\x05level\x18\b \x01(\x05R\x05level\x12\x1a\n" +
+	"\bseverity\x18\t \x01(\tR\bseverity\"L\n" +
+	"\x16GetUserCriteriaRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x19\n" +
+	"\buser_sex\x18\x02 \x01(\tR\auserSex\"O\n" +
+	"\x17GetUserCriteriaResponse\x124\n" +
+	"\aentries\x18\x01 \x03(\v2\x1a.health.UserCriterionEntryR\aentries\"-\n" +
+	"\x12GetProgressRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"~\n" +
+	"\x13GetProgressResponse\x12\x14\n" +
+	"\x05total\x18\x01 \x01(\x05R\x05total\x12\x16\n" +
+	"\x06filled\x18\x02 \x01(\x05R\x06filled\x12\x18\n" +
+	"\apercent\x18\x03 \x01(\x01R\apercent\x12\x1f\n" +
+	"\vlevel_label\x18\x04 \x01(\tR\n" +
+	"levelLabel\"\xaf\x01\n" +
+	"\x0eRecommendation\x12!\n" +
+	"\fcriterion_id\x18\x01 \x01(\tR\vcriterionId\x12%\n" +
+	"\x0ecriterion_name\x18\x02 \x01(\tR\rcriterionName\x12#\n" +
+	"\ranalysis_name\x18\x03 \x01(\tR\fanalysisName\x12\x12\n" +
+	"\x04text\x18\x04 \x01(\tR\x04text\x12\x1a\n" +
+	"\bseverity\x18\x05 \x01(\tR\bseverity\"O\n" +
+	"\x19GetRecommendationsRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x19\n" +
+	"\buser_sex\x18\x02 \x01(\tR\auserSex\"^\n" +
+	"\x1aGetRecommendationsResponse\x12@\n" +
+	"\x0frecommendations\x18\x01 \x03(\v2\x16.health.RecommendationR\x0frecommendations\"X\n" +
+	"\x1cResetAnalysisCriteriaRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1f\n" +
+	"\vanalysis_id\x18\x02 \x01(\tR\n" +
+	"analysisId\"9\n" +
+	"\x1dResetAnalysisCriteriaResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xc1\x01\n" +
 	"\x17SendNotificationRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x18\n" +
 	"\achannel\x18\x02 \x01(\tR\achannel\x12+\n" +
 	"\x11notification_type\x18\x03 \x01(\tR\x10notificationType\x12#\n" +
 	"\rtemplate_code\x18\x04 \x01(\tR\ftemplateCode\x12!\n" +
 	"\fpayload_json\x18\x05 \x01(\tR\vpayloadJson\"\x1a\n" +
-	"\x18SendNotificationResponse2\xea\x05\n" +
+	"\x18SendNotificationResponse2\xb2\x05\n" +
 	"\rHealthService\x12I\n" +
-	"\fListCriteria\x12\x1b.health.ListCriteriaRequest\x1a\x1c.health.ListCriteriaResponse\x12I\n" +
-	"\fListLabTests\x12\x1b.health.ListLabTestsRequest\x1a\x1c.health.ListLabTestsResponse\x12N\n" +
-	"\x12CreateNumericEvent\x12!.health.CreateNumericEventRequest\x1a\x15.health.EventResponse\x12N\n" +
-	"\x12CreateBooleanEvent\x12!.health.CreateBooleanEventRequest\x1a\x15.health.EventResponse\x12P\n" +
-	"\x13CreateMarkDoneEvent\x12\".health.CreateMarkDoneEventRequest\x1a\x15.health.EventResponse\x12I\n" +
-	"\x0eCreateDocument\x12\x1d.health.CreateDocumentRequest\x1a\x18.health.DocumentResponse\x12F\n" +
-	"\fGetDashboard\x12\x1b.health.GetDashboardRequest\x1a\x19.health.DashboardResponse\x12g\n" +
-	"\x16GetUserCriterionStates\x12%.health.GetUserCriterionStatesRequest\x1a&.health.GetUserCriterionStatesResponse\x12U\n" +
+	"\fListAnalysis\x12\x1b.health.ListAnalysisRequest\x1a\x1c.health.ListAnalysisResponse\x12I\n" +
+	"\fListCriteria\x12\x1b.health.ListCriteriaRequest\x1a\x1c.health.ListCriteriaResponse\x12U\n" +
+	"\x10SetUserCriterion\x12\x1f.health.SetUserCriterionRequest\x1a .health.SetUserCriterionResponse\x12d\n" +
+	"\x15ResetAnalysisCriteria\x12$.health.ResetAnalysisCriteriaRequest\x1a%.health.ResetAnalysisCriteriaResponse\x12R\n" +
+	"\x0fGetUserCriteria\x12\x1e.health.GetUserCriteriaRequest\x1a\x1f.health.GetUserCriteriaResponse\x12F\n" +
+	"\vGetProgress\x12\x1a.health.GetProgressRequest\x1a\x1b.health.GetProgressResponse\x12[\n" +
+	"\x12GetRecommendations\x12!.health.GetRecommendationsRequest\x1a\".health.GetRecommendationsResponse\x12U\n" +
 	"\x10SendNotification\x12\x1f.health.SendNotificationRequest\x1a .health.SendNotificationResponseB3Z1github.com/helthtech/core-health/pkg/proto/healthb\x06proto3"
 
 var (
@@ -1385,64 +1266,55 @@ func file_health_proto_rawDescGZIP() []byte {
 	return file_health_proto_rawDescData
 }
 
-var file_health_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
+var file_health_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_health_proto_goTypes = []any{
-	(*ListCriteriaRequest)(nil),            // 0: health.ListCriteriaRequest
-	(*Criterion)(nil),                      // 1: health.Criterion
-	(*ListCriteriaResponse)(nil),           // 2: health.ListCriteriaResponse
-	(*ListLabTestsRequest)(nil),            // 3: health.ListLabTestsRequest
-	(*LabTest)(nil),                        // 4: health.LabTest
-	(*ListLabTestsResponse)(nil),           // 5: health.ListLabTestsResponse
-	(*CreateNumericEventRequest)(nil),      // 6: health.CreateNumericEventRequest
-	(*CreateBooleanEventRequest)(nil),      // 7: health.CreateBooleanEventRequest
-	(*CreateMarkDoneEventRequest)(nil),     // 8: health.CreateMarkDoneEventRequest
-	(*EventResponse)(nil),                  // 9: health.EventResponse
-	(*CreateDocumentRequest)(nil),          // 10: health.CreateDocumentRequest
-	(*DocumentResponse)(nil),               // 11: health.DocumentResponse
-	(*GetDashboardRequest)(nil),            // 12: health.GetDashboardRequest
-	(*DashboardResponse)(nil),              // 13: health.DashboardResponse
-	(*CriterionState)(nil),                 // 14: health.CriterionState
-	(*GetUserCriterionStatesRequest)(nil),  // 15: health.GetUserCriterionStatesRequest
-	(*GetUserCriterionStatesResponse)(nil), // 16: health.GetUserCriterionStatesResponse
-	(*SendNotificationRequest)(nil),        // 17: health.SendNotificationRequest
-	(*SendNotificationResponse)(nil),       // 18: health.SendNotificationResponse
-	(*timestamppb.Timestamp)(nil),          // 19: google.protobuf.Timestamp
+	(*Analysis)(nil),                      // 0: health.Analysis
+	(*ListAnalysisRequest)(nil),           // 1: health.ListAnalysisRequest
+	(*ListAnalysisResponse)(nil),          // 2: health.ListAnalysisResponse
+	(*Criterion)(nil),                     // 3: health.Criterion
+	(*ListCriteriaRequest)(nil),           // 4: health.ListCriteriaRequest
+	(*ListCriteriaResponse)(nil),          // 5: health.ListCriteriaResponse
+	(*SetUserCriterionRequest)(nil),       // 6: health.SetUserCriterionRequest
+	(*SetUserCriterionResponse)(nil),      // 7: health.SetUserCriterionResponse
+	(*UserCriterionEntry)(nil),            // 8: health.UserCriterionEntry
+	(*GetUserCriteriaRequest)(nil),        // 9: health.GetUserCriteriaRequest
+	(*GetUserCriteriaResponse)(nil),       // 10: health.GetUserCriteriaResponse
+	(*GetProgressRequest)(nil),            // 11: health.GetProgressRequest
+	(*GetProgressResponse)(nil),           // 12: health.GetProgressResponse
+	(*Recommendation)(nil),                // 13: health.Recommendation
+	(*GetRecommendationsRequest)(nil),     // 14: health.GetRecommendationsRequest
+	(*GetRecommendationsResponse)(nil),    // 15: health.GetRecommendationsResponse
+	(*ResetAnalysisCriteriaRequest)(nil),  // 16: health.ResetAnalysisCriteriaRequest
+	(*ResetAnalysisCriteriaResponse)(nil), // 17: health.ResetAnalysisCriteriaResponse
+	(*SendNotificationRequest)(nil),       // 18: health.SendNotificationRequest
+	(*SendNotificationResponse)(nil),      // 19: health.SendNotificationResponse
 }
 var file_health_proto_depIdxs = []int32{
-	1,  // 0: health.ListCriteriaResponse.criteria:type_name -> health.Criterion
-	4,  // 1: health.ListLabTestsResponse.lab_tests:type_name -> health.LabTest
-	19, // 2: health.CreateNumericEventRequest.occurred_at:type_name -> google.protobuf.Timestamp
-	19, // 3: health.CreateBooleanEventRequest.occurred_at:type_name -> google.protobuf.Timestamp
-	19, // 4: health.CreateMarkDoneEventRequest.occurred_at:type_name -> google.protobuf.Timestamp
-	19, // 5: health.EventResponse.occurred_at:type_name -> google.protobuf.Timestamp
-	19, // 6: health.EventResponse.recorded_at:type_name -> google.protobuf.Timestamp
-	19, // 7: health.DocumentResponse.created_at:type_name -> google.protobuf.Timestamp
-	14, // 8: health.DashboardResponse.states:type_name -> health.CriterionState
-	19, // 9: health.CriterionState.last_event_at:type_name -> google.protobuf.Timestamp
-	14, // 10: health.GetUserCriterionStatesResponse.states:type_name -> health.CriterionState
-	0,  // 11: health.HealthService.ListCriteria:input_type -> health.ListCriteriaRequest
-	3,  // 12: health.HealthService.ListLabTests:input_type -> health.ListLabTestsRequest
-	6,  // 13: health.HealthService.CreateNumericEvent:input_type -> health.CreateNumericEventRequest
-	7,  // 14: health.HealthService.CreateBooleanEvent:input_type -> health.CreateBooleanEventRequest
-	8,  // 15: health.HealthService.CreateMarkDoneEvent:input_type -> health.CreateMarkDoneEventRequest
-	10, // 16: health.HealthService.CreateDocument:input_type -> health.CreateDocumentRequest
-	12, // 17: health.HealthService.GetDashboard:input_type -> health.GetDashboardRequest
-	15, // 18: health.HealthService.GetUserCriterionStates:input_type -> health.GetUserCriterionStatesRequest
-	17, // 19: health.HealthService.SendNotification:input_type -> health.SendNotificationRequest
-	2,  // 20: health.HealthService.ListCriteria:output_type -> health.ListCriteriaResponse
-	5,  // 21: health.HealthService.ListLabTests:output_type -> health.ListLabTestsResponse
-	9,  // 22: health.HealthService.CreateNumericEvent:output_type -> health.EventResponse
-	9,  // 23: health.HealthService.CreateBooleanEvent:output_type -> health.EventResponse
-	9,  // 24: health.HealthService.CreateMarkDoneEvent:output_type -> health.EventResponse
-	11, // 25: health.HealthService.CreateDocument:output_type -> health.DocumentResponse
-	13, // 26: health.HealthService.GetDashboard:output_type -> health.DashboardResponse
-	16, // 27: health.HealthService.GetUserCriterionStates:output_type -> health.GetUserCriterionStatesResponse
-	18, // 28: health.HealthService.SendNotification:output_type -> health.SendNotificationResponse
-	20, // [20:29] is the sub-list for method output_type
-	11, // [11:20] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	0,  // 0: health.ListAnalysisResponse.analyses:type_name -> health.Analysis
+	3,  // 1: health.ListCriteriaResponse.criteria:type_name -> health.Criterion
+	8,  // 2: health.GetUserCriteriaResponse.entries:type_name -> health.UserCriterionEntry
+	13, // 3: health.GetRecommendationsResponse.recommendations:type_name -> health.Recommendation
+	1,  // 4: health.HealthService.ListAnalysis:input_type -> health.ListAnalysisRequest
+	4,  // 5: health.HealthService.ListCriteria:input_type -> health.ListCriteriaRequest
+	6,  // 6: health.HealthService.SetUserCriterion:input_type -> health.SetUserCriterionRequest
+	16, // 7: health.HealthService.ResetAnalysisCriteria:input_type -> health.ResetAnalysisCriteriaRequest
+	9,  // 8: health.HealthService.GetUserCriteria:input_type -> health.GetUserCriteriaRequest
+	11, // 9: health.HealthService.GetProgress:input_type -> health.GetProgressRequest
+	14, // 10: health.HealthService.GetRecommendations:input_type -> health.GetRecommendationsRequest
+	18, // 11: health.HealthService.SendNotification:input_type -> health.SendNotificationRequest
+	2,  // 12: health.HealthService.ListAnalysis:output_type -> health.ListAnalysisResponse
+	5,  // 13: health.HealthService.ListCriteria:output_type -> health.ListCriteriaResponse
+	7,  // 14: health.HealthService.SetUserCriterion:output_type -> health.SetUserCriterionResponse
+	17, // 15: health.HealthService.ResetAnalysisCriteria:output_type -> health.ResetAnalysisCriteriaResponse
+	10, // 16: health.HealthService.GetUserCriteria:output_type -> health.GetUserCriteriaResponse
+	12, // 17: health.HealthService.GetProgress:output_type -> health.GetProgressResponse
+	15, // 18: health.HealthService.GetRecommendations:output_type -> health.GetRecommendationsResponse
+	19, // 19: health.HealthService.SendNotification:output_type -> health.SendNotificationResponse
+	12, // [12:20] is the sub-list for method output_type
+	4,  // [4:12] is the sub-list for method input_type
+	4,  // [4:4] is the sub-list for extension type_name
+	4,  // [4:4] is the sub-list for extension extendee
+	0,  // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_health_proto_init() }
@@ -1456,7 +1328,7 @@ func file_health_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_health_proto_rawDesc), len(file_health_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   19,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

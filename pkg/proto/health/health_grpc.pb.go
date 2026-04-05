@@ -19,29 +19,27 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	HealthService_ListCriteria_FullMethodName           = "/health.HealthService/ListCriteria"
-	HealthService_ListLabTests_FullMethodName           = "/health.HealthService/ListLabTests"
-	HealthService_CreateNumericEvent_FullMethodName     = "/health.HealthService/CreateNumericEvent"
-	HealthService_CreateBooleanEvent_FullMethodName     = "/health.HealthService/CreateBooleanEvent"
-	HealthService_CreateMarkDoneEvent_FullMethodName    = "/health.HealthService/CreateMarkDoneEvent"
-	HealthService_CreateDocument_FullMethodName         = "/health.HealthService/CreateDocument"
-	HealthService_GetDashboard_FullMethodName           = "/health.HealthService/GetDashboard"
-	HealthService_GetUserCriterionStates_FullMethodName = "/health.HealthService/GetUserCriterionStates"
-	HealthService_SendNotification_FullMethodName       = "/health.HealthService/SendNotification"
+	HealthService_ListAnalysis_FullMethodName          = "/health.HealthService/ListAnalysis"
+	HealthService_ListCriteria_FullMethodName          = "/health.HealthService/ListCriteria"
+	HealthService_SetUserCriterion_FullMethodName      = "/health.HealthService/SetUserCriterion"
+	HealthService_ResetAnalysisCriteria_FullMethodName = "/health.HealthService/ResetAnalysisCriteria"
+	HealthService_GetUserCriteria_FullMethodName       = "/health.HealthService/GetUserCriteria"
+	HealthService_GetProgress_FullMethodName           = "/health.HealthService/GetProgress"
+	HealthService_GetRecommendations_FullMethodName    = "/health.HealthService/GetRecommendations"
+	HealthService_SendNotification_FullMethodName      = "/health.HealthService/SendNotification"
 )
 
 // HealthServiceClient is the client API for HealthService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type HealthServiceClient interface {
+	ListAnalysis(ctx context.Context, in *ListAnalysisRequest, opts ...grpc.CallOption) (*ListAnalysisResponse, error)
 	ListCriteria(ctx context.Context, in *ListCriteriaRequest, opts ...grpc.CallOption) (*ListCriteriaResponse, error)
-	ListLabTests(ctx context.Context, in *ListLabTestsRequest, opts ...grpc.CallOption) (*ListLabTestsResponse, error)
-	CreateNumericEvent(ctx context.Context, in *CreateNumericEventRequest, opts ...grpc.CallOption) (*EventResponse, error)
-	CreateBooleanEvent(ctx context.Context, in *CreateBooleanEventRequest, opts ...grpc.CallOption) (*EventResponse, error)
-	CreateMarkDoneEvent(ctx context.Context, in *CreateMarkDoneEventRequest, opts ...grpc.CallOption) (*EventResponse, error)
-	CreateDocument(ctx context.Context, in *CreateDocumentRequest, opts ...grpc.CallOption) (*DocumentResponse, error)
-	GetDashboard(ctx context.Context, in *GetDashboardRequest, opts ...grpc.CallOption) (*DashboardResponse, error)
-	GetUserCriterionStates(ctx context.Context, in *GetUserCriterionStatesRequest, opts ...grpc.CallOption) (*GetUserCriterionStatesResponse, error)
+	SetUserCriterion(ctx context.Context, in *SetUserCriterionRequest, opts ...grpc.CallOption) (*SetUserCriterionResponse, error)
+	ResetAnalysisCriteria(ctx context.Context, in *ResetAnalysisCriteriaRequest, opts ...grpc.CallOption) (*ResetAnalysisCriteriaResponse, error)
+	GetUserCriteria(ctx context.Context, in *GetUserCriteriaRequest, opts ...grpc.CallOption) (*GetUserCriteriaResponse, error)
+	GetProgress(ctx context.Context, in *GetProgressRequest, opts ...grpc.CallOption) (*GetProgressResponse, error)
+	GetRecommendations(ctx context.Context, in *GetRecommendationsRequest, opts ...grpc.CallOption) (*GetRecommendationsResponse, error)
 	SendNotification(ctx context.Context, in *SendNotificationRequest, opts ...grpc.CallOption) (*SendNotificationResponse, error)
 }
 
@@ -51,6 +49,16 @@ type healthServiceClient struct {
 
 func NewHealthServiceClient(cc grpc.ClientConnInterface) HealthServiceClient {
 	return &healthServiceClient{cc}
+}
+
+func (c *healthServiceClient) ListAnalysis(ctx context.Context, in *ListAnalysisRequest, opts ...grpc.CallOption) (*ListAnalysisResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListAnalysisResponse)
+	err := c.cc.Invoke(ctx, HealthService_ListAnalysis_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *healthServiceClient) ListCriteria(ctx context.Context, in *ListCriteriaRequest, opts ...grpc.CallOption) (*ListCriteriaResponse, error) {
@@ -63,70 +71,50 @@ func (c *healthServiceClient) ListCriteria(ctx context.Context, in *ListCriteria
 	return out, nil
 }
 
-func (c *healthServiceClient) ListLabTests(ctx context.Context, in *ListLabTestsRequest, opts ...grpc.CallOption) (*ListLabTestsResponse, error) {
+func (c *healthServiceClient) SetUserCriterion(ctx context.Context, in *SetUserCriterionRequest, opts ...grpc.CallOption) (*SetUserCriterionResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListLabTestsResponse)
-	err := c.cc.Invoke(ctx, HealthService_ListLabTests_FullMethodName, in, out, cOpts...)
+	out := new(SetUserCriterionResponse)
+	err := c.cc.Invoke(ctx, HealthService_SetUserCriterion_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *healthServiceClient) CreateNumericEvent(ctx context.Context, in *CreateNumericEventRequest, opts ...grpc.CallOption) (*EventResponse, error) {
+func (c *healthServiceClient) ResetAnalysisCriteria(ctx context.Context, in *ResetAnalysisCriteriaRequest, opts ...grpc.CallOption) (*ResetAnalysisCriteriaResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(EventResponse)
-	err := c.cc.Invoke(ctx, HealthService_CreateNumericEvent_FullMethodName, in, out, cOpts...)
+	out := new(ResetAnalysisCriteriaResponse)
+	err := c.cc.Invoke(ctx, HealthService_ResetAnalysisCriteria_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *healthServiceClient) CreateBooleanEvent(ctx context.Context, in *CreateBooleanEventRequest, opts ...grpc.CallOption) (*EventResponse, error) {
+func (c *healthServiceClient) GetUserCriteria(ctx context.Context, in *GetUserCriteriaRequest, opts ...grpc.CallOption) (*GetUserCriteriaResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(EventResponse)
-	err := c.cc.Invoke(ctx, HealthService_CreateBooleanEvent_FullMethodName, in, out, cOpts...)
+	out := new(GetUserCriteriaResponse)
+	err := c.cc.Invoke(ctx, HealthService_GetUserCriteria_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *healthServiceClient) CreateMarkDoneEvent(ctx context.Context, in *CreateMarkDoneEventRequest, opts ...grpc.CallOption) (*EventResponse, error) {
+func (c *healthServiceClient) GetProgress(ctx context.Context, in *GetProgressRequest, opts ...grpc.CallOption) (*GetProgressResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(EventResponse)
-	err := c.cc.Invoke(ctx, HealthService_CreateMarkDoneEvent_FullMethodName, in, out, cOpts...)
+	out := new(GetProgressResponse)
+	err := c.cc.Invoke(ctx, HealthService_GetProgress_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *healthServiceClient) CreateDocument(ctx context.Context, in *CreateDocumentRequest, opts ...grpc.CallOption) (*DocumentResponse, error) {
+func (c *healthServiceClient) GetRecommendations(ctx context.Context, in *GetRecommendationsRequest, opts ...grpc.CallOption) (*GetRecommendationsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DocumentResponse)
-	err := c.cc.Invoke(ctx, HealthService_CreateDocument_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *healthServiceClient) GetDashboard(ctx context.Context, in *GetDashboardRequest, opts ...grpc.CallOption) (*DashboardResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DashboardResponse)
-	err := c.cc.Invoke(ctx, HealthService_GetDashboard_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *healthServiceClient) GetUserCriterionStates(ctx context.Context, in *GetUserCriterionStatesRequest, opts ...grpc.CallOption) (*GetUserCriterionStatesResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetUserCriterionStatesResponse)
-	err := c.cc.Invoke(ctx, HealthService_GetUserCriterionStates_FullMethodName, in, out, cOpts...)
+	out := new(GetRecommendationsResponse)
+	err := c.cc.Invoke(ctx, HealthService_GetRecommendations_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -147,14 +135,13 @@ func (c *healthServiceClient) SendNotification(ctx context.Context, in *SendNoti
 // All implementations must embed UnimplementedHealthServiceServer
 // for forward compatibility.
 type HealthServiceServer interface {
+	ListAnalysis(context.Context, *ListAnalysisRequest) (*ListAnalysisResponse, error)
 	ListCriteria(context.Context, *ListCriteriaRequest) (*ListCriteriaResponse, error)
-	ListLabTests(context.Context, *ListLabTestsRequest) (*ListLabTestsResponse, error)
-	CreateNumericEvent(context.Context, *CreateNumericEventRequest) (*EventResponse, error)
-	CreateBooleanEvent(context.Context, *CreateBooleanEventRequest) (*EventResponse, error)
-	CreateMarkDoneEvent(context.Context, *CreateMarkDoneEventRequest) (*EventResponse, error)
-	CreateDocument(context.Context, *CreateDocumentRequest) (*DocumentResponse, error)
-	GetDashboard(context.Context, *GetDashboardRequest) (*DashboardResponse, error)
-	GetUserCriterionStates(context.Context, *GetUserCriterionStatesRequest) (*GetUserCriterionStatesResponse, error)
+	SetUserCriterion(context.Context, *SetUserCriterionRequest) (*SetUserCriterionResponse, error)
+	ResetAnalysisCriteria(context.Context, *ResetAnalysisCriteriaRequest) (*ResetAnalysisCriteriaResponse, error)
+	GetUserCriteria(context.Context, *GetUserCriteriaRequest) (*GetUserCriteriaResponse, error)
+	GetProgress(context.Context, *GetProgressRequest) (*GetProgressResponse, error)
+	GetRecommendations(context.Context, *GetRecommendationsRequest) (*GetRecommendationsResponse, error)
 	SendNotification(context.Context, *SendNotificationRequest) (*SendNotificationResponse, error)
 	mustEmbedUnimplementedHealthServiceServer()
 }
@@ -166,29 +153,26 @@ type HealthServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedHealthServiceServer struct{}
 
+func (UnimplementedHealthServiceServer) ListAnalysis(context.Context, *ListAnalysisRequest) (*ListAnalysisResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListAnalysis not implemented")
+}
 func (UnimplementedHealthServiceServer) ListCriteria(context.Context, *ListCriteriaRequest) (*ListCriteriaResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListCriteria not implemented")
 }
-func (UnimplementedHealthServiceServer) ListLabTests(context.Context, *ListLabTestsRequest) (*ListLabTestsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListLabTests not implemented")
+func (UnimplementedHealthServiceServer) SetUserCriterion(context.Context, *SetUserCriterionRequest) (*SetUserCriterionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SetUserCriterion not implemented")
 }
-func (UnimplementedHealthServiceServer) CreateNumericEvent(context.Context, *CreateNumericEventRequest) (*EventResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CreateNumericEvent not implemented")
+func (UnimplementedHealthServiceServer) ResetAnalysisCriteria(context.Context, *ResetAnalysisCriteriaRequest) (*ResetAnalysisCriteriaResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ResetAnalysisCriteria not implemented")
 }
-func (UnimplementedHealthServiceServer) CreateBooleanEvent(context.Context, *CreateBooleanEventRequest) (*EventResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CreateBooleanEvent not implemented")
+func (UnimplementedHealthServiceServer) GetUserCriteria(context.Context, *GetUserCriteriaRequest) (*GetUserCriteriaResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetUserCriteria not implemented")
 }
-func (UnimplementedHealthServiceServer) CreateMarkDoneEvent(context.Context, *CreateMarkDoneEventRequest) (*EventResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CreateMarkDoneEvent not implemented")
+func (UnimplementedHealthServiceServer) GetProgress(context.Context, *GetProgressRequest) (*GetProgressResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetProgress not implemented")
 }
-func (UnimplementedHealthServiceServer) CreateDocument(context.Context, *CreateDocumentRequest) (*DocumentResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CreateDocument not implemented")
-}
-func (UnimplementedHealthServiceServer) GetDashboard(context.Context, *GetDashboardRequest) (*DashboardResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetDashboard not implemented")
-}
-func (UnimplementedHealthServiceServer) GetUserCriterionStates(context.Context, *GetUserCriterionStatesRequest) (*GetUserCriterionStatesResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetUserCriterionStates not implemented")
+func (UnimplementedHealthServiceServer) GetRecommendations(context.Context, *GetRecommendationsRequest) (*GetRecommendationsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetRecommendations not implemented")
 }
 func (UnimplementedHealthServiceServer) SendNotification(context.Context, *SendNotificationRequest) (*SendNotificationResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SendNotification not implemented")
@@ -214,6 +198,24 @@ func RegisterHealthServiceServer(s grpc.ServiceRegistrar, srv HealthServiceServe
 	s.RegisterService(&HealthService_ServiceDesc, srv)
 }
 
+func _HealthService_ListAnalysis_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAnalysisRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HealthServiceServer).ListAnalysis(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: HealthService_ListAnalysis_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HealthServiceServer).ListAnalysis(ctx, req.(*ListAnalysisRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _HealthService_ListCriteria_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListCriteriaRequest)
 	if err := dec(in); err != nil {
@@ -232,128 +234,92 @@ func _HealthService_ListCriteria_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _HealthService_ListLabTests_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListLabTestsRequest)
+func _HealthService_SetUserCriterion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetUserCriterionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(HealthServiceServer).ListLabTests(ctx, in)
+		return srv.(HealthServiceServer).SetUserCriterion(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: HealthService_ListLabTests_FullMethodName,
+		FullMethod: HealthService_SetUserCriterion_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HealthServiceServer).ListLabTests(ctx, req.(*ListLabTestsRequest))
+		return srv.(HealthServiceServer).SetUserCriterion(ctx, req.(*SetUserCriterionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _HealthService_CreateNumericEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateNumericEventRequest)
+func _HealthService_ResetAnalysisCriteria_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResetAnalysisCriteriaRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(HealthServiceServer).CreateNumericEvent(ctx, in)
+		return srv.(HealthServiceServer).ResetAnalysisCriteria(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: HealthService_CreateNumericEvent_FullMethodName,
+		FullMethod: HealthService_ResetAnalysisCriteria_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HealthServiceServer).CreateNumericEvent(ctx, req.(*CreateNumericEventRequest))
+		return srv.(HealthServiceServer).ResetAnalysisCriteria(ctx, req.(*ResetAnalysisCriteriaRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _HealthService_CreateBooleanEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateBooleanEventRequest)
+func _HealthService_GetUserCriteria_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserCriteriaRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(HealthServiceServer).CreateBooleanEvent(ctx, in)
+		return srv.(HealthServiceServer).GetUserCriteria(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: HealthService_CreateBooleanEvent_FullMethodName,
+		FullMethod: HealthService_GetUserCriteria_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HealthServiceServer).CreateBooleanEvent(ctx, req.(*CreateBooleanEventRequest))
+		return srv.(HealthServiceServer).GetUserCriteria(ctx, req.(*GetUserCriteriaRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _HealthService_CreateMarkDoneEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateMarkDoneEventRequest)
+func _HealthService_GetProgress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProgressRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(HealthServiceServer).CreateMarkDoneEvent(ctx, in)
+		return srv.(HealthServiceServer).GetProgress(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: HealthService_CreateMarkDoneEvent_FullMethodName,
+		FullMethod: HealthService_GetProgress_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HealthServiceServer).CreateMarkDoneEvent(ctx, req.(*CreateMarkDoneEventRequest))
+		return srv.(HealthServiceServer).GetProgress(ctx, req.(*GetProgressRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _HealthService_CreateDocument_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateDocumentRequest)
+func _HealthService_GetRecommendations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRecommendationsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(HealthServiceServer).CreateDocument(ctx, in)
+		return srv.(HealthServiceServer).GetRecommendations(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: HealthService_CreateDocument_FullMethodName,
+		FullMethod: HealthService_GetRecommendations_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HealthServiceServer).CreateDocument(ctx, req.(*CreateDocumentRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _HealthService_GetDashboard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetDashboardRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(HealthServiceServer).GetDashboard(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: HealthService_GetDashboard_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HealthServiceServer).GetDashboard(ctx, req.(*GetDashboardRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _HealthService_GetUserCriterionStates_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserCriterionStatesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(HealthServiceServer).GetUserCriterionStates(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: HealthService_GetUserCriterionStates_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HealthServiceServer).GetUserCriterionStates(ctx, req.(*GetUserCriterionStatesRequest))
+		return srv.(HealthServiceServer).GetRecommendations(ctx, req.(*GetRecommendationsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -384,36 +350,32 @@ var HealthService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*HealthServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "ListAnalysis",
+			Handler:    _HealthService_ListAnalysis_Handler,
+		},
+		{
 			MethodName: "ListCriteria",
 			Handler:    _HealthService_ListCriteria_Handler,
 		},
 		{
-			MethodName: "ListLabTests",
-			Handler:    _HealthService_ListLabTests_Handler,
+			MethodName: "SetUserCriterion",
+			Handler:    _HealthService_SetUserCriterion_Handler,
 		},
 		{
-			MethodName: "CreateNumericEvent",
-			Handler:    _HealthService_CreateNumericEvent_Handler,
+			MethodName: "ResetAnalysisCriteria",
+			Handler:    _HealthService_ResetAnalysisCriteria_Handler,
 		},
 		{
-			MethodName: "CreateBooleanEvent",
-			Handler:    _HealthService_CreateBooleanEvent_Handler,
+			MethodName: "GetUserCriteria",
+			Handler:    _HealthService_GetUserCriteria_Handler,
 		},
 		{
-			MethodName: "CreateMarkDoneEvent",
-			Handler:    _HealthService_CreateMarkDoneEvent_Handler,
+			MethodName: "GetProgress",
+			Handler:    _HealthService_GetProgress_Handler,
 		},
 		{
-			MethodName: "CreateDocument",
-			Handler:    _HealthService_CreateDocument_Handler,
-		},
-		{
-			MethodName: "GetDashboard",
-			Handler:    _HealthService_GetDashboard_Handler,
-		},
-		{
-			MethodName: "GetUserCriterionStates",
-			Handler:    _HealthService_GetUserCriterionStates_Handler,
+			MethodName: "GetRecommendations",
+			Handler:    _HealthService_GetRecommendations_Handler,
 		},
 		{
 			MethodName: "SendNotification",

@@ -19,6 +19,14 @@ config:
     type: string
     default: "nats://localhost:4222"
     source: yaml
+  redis_addr:
+    type: string
+    default: "localhost:6379"
+    source: yaml
+  redis_password:
+    type: string
+    default: ""
+    source: yaml
   tracer_host:
     type: string
     default: "localhost"

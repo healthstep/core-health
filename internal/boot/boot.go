@@ -15,6 +15,7 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/porebric/configs"
 	"github.com/porebric/resty"
+	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -44,6 +45,11 @@ func Run(ctx context.Context) error {
 		return fmt.Errorf("init nats: %w", err)
 	}
 
+	rdb, err := initRedis(ctx)
+	if err != nil {
+		return fmt.Errorf("init redis: %w", err)
+	}
+
 	tp, err := initTracer(ctx)
 	if err != nil {
 		log.Printf("tracer init failed (non-fatal): %v", err)
@@ -53,7 +59,14 @@ func Run(ctx context.Context) error {
 	}
 
 	repo := repository.NewHealthRepository(db)
-	svc := service.NewHealthService(repo, nc)
+	svc := service.NewHealthService(repo, nc, rdb)
+
+	// Start in-memory cache refresh loop.
+	svc.StartCache(ctx)
+
+	// Start schedulers in background.
+	go svc.RunDailyScheduler(ctx, []string{"telegram", "max"})
+	go svc.RunExpiryScheduler(ctx, []string{"telegram", "max"})
 
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
@@ -92,6 +105,20 @@ func initDB(ctx context.Context) (*gorm.DB, error) {
 
 func initNATS(ctx context.Context) (*nats.Conn, error) {
 	return nats.Connect(configs.Value(ctx, "nats_url").String())
+}
+
+func initRedis(ctx context.Context) (*redis.Client, error) {
+	addr := configs.Value(ctx, "redis_addr").String()
+	password := configs.Value(ctx, "redis_password").String()
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     addr,
+		Password: password,
+		DB:       0,
+	})
+	if err := rdb.Ping(context.Background()).Err(); err != nil {
+		return nil, fmt.Errorf("redis ping: %w", err)
+	}
+	return rdb, nil
 }
 
 func initTracer(ctx context.Context) (*sdktrace.TracerProvider, error) {

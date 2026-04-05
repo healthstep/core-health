@@ -8,63 +8,124 @@ import (
 )
 
 func Run(db *gorm.DB) error {
-	criteria := []model.HealthCriterion{
-		{ID: uuidFromStr("a0000001-0000-0000-0000-000000000001"), Code: "hemoglobin", Name: "Гемоглобин", ValueType: "numeric", Unit: "г/л", InputModes: "document,manual", RecurrenceIntervalDays: 180, IsActive: true},
-		{ID: uuidFromStr("a0000001-0000-0000-0000-000000000002"), Code: "glucose", Name: "Глюкоза", ValueType: "numeric", Unit: "ммоль/л", InputModes: "document,manual", RecurrenceIntervalDays: 365, IsActive: true},
-		{ID: uuidFromStr("a0000001-0000-0000-0000-000000000003"), Code: "leukocytes", Name: "Лейкоциты", ValueType: "numeric", Unit: "× 10⁹/л", InputModes: "document,manual", RecurrenceIntervalDays: 180, IsActive: true},
-		{ID: uuidFromStr("a0000001-0000-0000-0000-000000000004"), Code: "platelets", Name: "Тромбоциты", ValueType: "numeric", Unit: "× 10⁹/л", InputModes: "document,manual", RecurrenceIntervalDays: 180, IsActive: true},
-		{ID: uuidFromStr("a0000001-0000-0000-0000-000000000005"), Code: "cholesterol", Name: "Холестерин", ValueType: "numeric", Unit: "ммоль/л", InputModes: "document,manual", RecurrenceIntervalDays: 365, IsActive: true},
-		{ID: uuidFromStr("a0000001-0000-0000-0000-000000000006"), Code: "blood_pressure_sys", Name: "Давление (систолическое)", ValueType: "numeric", Unit: "мм рт. ст.", InputModes: "manual", RecurrenceIntervalDays: 90, IsActive: true},
-		{ID: uuidFromStr("a0000001-0000-0000-0000-000000000007"), Code: "blood_pressure_dia", Name: "Давление (диастолическое)", ValueType: "numeric", Unit: "мм рт. ст.", InputModes: "manual", RecurrenceIntervalDays: 90, IsActive: true},
-		{ID: uuidFromStr("a0000001-0000-0000-0000-000000000008"), Code: "visual_acuity", Name: "Острота зрения", ValueType: "numeric", Unit: "", InputModes: "manual", RecurrenceIntervalDays: 365, IsActive: true},
-		{ID: uuidFromStr("a0000001-0000-0000-0000-000000000009"), Code: "weekly_steps", Name: "Шаги / неделю", ValueType: "numeric", Unit: "шагов", InputModes: "manual", RecurrenceIntervalDays: 7, IsActive: true},
-		{ID: uuidFromStr("a0000001-0000-0000-0000-000000000010"), Code: "dentist_visit", Name: "Стоматолог", ValueType: "completion", Unit: "", InputModes: "mark_done", RecurrenceIntervalDays: 180, IsActive: true},
-		{ID: uuidFromStr("a0000001-0000-0000-0000-000000000011"), Code: "therapist_visit", Name: "Терапевт", ValueType: "completion", Unit: "", InputModes: "mark_done", RecurrenceIntervalDays: 365, IsActive: true},
-		{ID: uuidFromStr("a0000001-0000-0000-0000-000000000012"), Code: "ultrasound_abdominal", Name: "УЗИ брюшной полости", ValueType: "completion", Unit: "", InputModes: "mark_done,document", RecurrenceIntervalDays: 365, IsActive: true},
-		{ID: uuidFromStr("a0000001-0000-0000-0000-000000000013"), Code: "ultrasound_thyroid", Name: "УЗИ щитовидной железы", ValueType: "completion", Unit: "", InputModes: "mark_done,document", RecurrenceIntervalDays: 365, IsActive: true},
-		{ID: uuidFromStr("a0000001-0000-0000-0000-000000000014"), Code: "fluorography", Name: "Флюорография", ValueType: "completion", Unit: "", InputModes: "mark_done,document", RecurrenceIntervalDays: 365, IsActive: true},
-		{ID: uuidFromStr("a0000001-0000-0000-0000-000000000015"), Code: "vaccination", Name: "Прививка", ValueType: "completion", Unit: "", InputModes: "mark_done", RecurrenceIntervalDays: 365, IsActive: true},
-		{ID: uuidFromStr("a0000001-0000-0000-0000-000000000016"), Code: "body_temperature", Name: "Температура тела", ValueType: "numeric", Unit: "°C", InputModes: "manual", RecurrenceIntervalDays: 0, IsActive: true},
-		{ID: uuidFromStr("a0000001-0000-0000-0000-000000000017"), Code: "lipid_profile", Name: "Липидный профиль", ValueType: "numeric", Unit: "", InputModes: "document,manual", RecurrenceIntervalDays: 365, IsActive: true},
-		{ID: uuidFromStr("a0000001-0000-0000-0000-000000000018"), Code: "urinalysis", Name: "Анализ мочи", ValueType: "completion", Unit: "", InputModes: "document,mark_done", RecurrenceIntervalDays: 365, IsActive: true},
+	// Lifetime in days (0 = no expiry). BlockedBy: "", "level_1", "level_2", "criteria_<uuid>"
+	analyses := []model.Analysis{
+		{ID: uid("b0000001-0000-0000-0000-000000000001"), Name: "Общий анализ крови", Lifetime: 365},
+		{ID: uid("b0000001-0000-0000-0000-000000000002"), Name: "Биохимия крови", Lifetime: 365},
+		{ID: uid("b0000001-0000-0000-0000-000000000003"), Name: "Давление", Lifetime: 30},
+		{ID: uid("b0000001-0000-0000-0000-000000000004"), Name: "Зрение", Lifetime: 365},
+		{ID: uid("b0000001-0000-0000-0000-000000000005"), Name: "Активность", Lifetime: 7},
+		{ID: uid("b0000001-0000-0000-0000-000000000006"), Name: "Профилактические визиты", Lifetime: 180},
+		{ID: uid("b0000001-0000-0000-0000-000000000007"), Name: "Инструментальные обследования", Lifetime: 365},
+		// Женское здоровье — только для женщин, доступно после заполнения уровня 1
+		{ID: uid("b0000001-0000-0000-0000-000000000008"), Name: "Женское здоровье", Lifetime: 90, Sex: "female", BlockedBy: "level_1"},
+		// Вакцинации — последовательно разблокируемые
+		{ID: uid("b0000001-0000-0000-0000-000000000009"), Name: "Вакцина 1 (Грипп)", Lifetime: 365, BlockedBy: "level_1"},
+		{ID: uid("b0000001-0000-0000-0000-000000000010"), Name: "Вакцина 2 (COVID-19)", Lifetime: 365, BlockedBy: "criteria_a0000001-0000-0000-0000-000000000019"},
+		{ID: uid("b0000001-0000-0000-0000-000000000011"), Name: "Вакцина 3 (Гепатит B)", Lifetime: 365, BlockedBy: "criteria_a0000001-0000-0000-0000-000000000020"},
+	}
+	for _, a := range analyses {
+		if err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&a).Error; err != nil {
+			return err
+		}
 	}
 
+	// Level 1 = required, Level 2 = advanced, Level 3 = longevity
+	criteria := []model.Criterion{
+		// Общий анализ крови — level 1
+		{ID: uid("a0000001-0000-0000-0000-000000000001"), Name: "Гемоглобин", AnalysisID: analyses[0].ID, Level: 1},
+		{ID: uid("a0000001-0000-0000-0000-000000000003"), Name: "Лейкоциты", AnalysisID: analyses[0].ID, Level: 1},
+		{ID: uid("a0000001-0000-0000-0000-000000000004"), Name: "Тромбоциты", AnalysisID: analyses[0].ID, Level: 2},
+
+		// Биохимия крови — level 1
+		{ID: uid("a0000001-0000-0000-0000-000000000002"), Name: "Глюкоза", AnalysisID: analyses[1].ID, Level: 1},
+		{ID: uid("a0000001-0000-0000-0000-000000000005"), Name: "Холестерин", AnalysisID: analyses[1].ID, Level: 1},
+		{ID: uid("a0000001-0000-0000-0000-000000000017"), Name: "Липидный профиль", AnalysisID: analyses[1].ID, Level: 3},
+
+		// Давление — level 1
+		{ID: uid("a0000001-0000-0000-0000-000000000006"), Name: "Давление систолическое", AnalysisID: analyses[2].ID, Level: 1},
+		{ID: uid("a0000001-0000-0000-0000-000000000007"), Name: "Давление диастолическое", AnalysisID: analyses[2].ID, Level: 1},
+
+		// Зрение — level 2
+		{ID: uid("a0000001-0000-0000-0000-000000000008"), Name: "Острота зрения", AnalysisID: analyses[3].ID, Level: 2},
+
+		// Активность — level 1
+		{ID: uid("a0000001-0000-0000-0000-000000000009"), Name: "Шаги в неделю", AnalysisID: analyses[4].ID, Level: 1},
+
+		// Профилактические визиты — level 1
+		{ID: uid("a0000001-0000-0000-0000-000000000010"), Name: "Стоматолог", AnalysisID: analyses[5].ID, Level: 1},
+		{ID: uid("a0000001-0000-0000-0000-000000000011"), Name: "Терапевт", AnalysisID: analyses[5].ID, Level: 1},
+		{ID: uid("a0000001-0000-0000-0000-000000000015"), Name: "Прививка", AnalysisID: analyses[5].ID, Level: 1},
+
+		// Инструментальные обследования — level 2
+		{ID: uid("a0000001-0000-0000-0000-000000000012"), Name: "УЗИ брюшной полости", AnalysisID: analyses[6].ID, Level: 2},
+		{ID: uid("a0000001-0000-0000-0000-000000000013"), Name: "УЗИ щитовидной железы", AnalysisID: analyses[6].ID, Level: 2},
+		{ID: uid("a0000001-0000-0000-0000-000000000014"), Name: "Флюорография", AnalysisID: analyses[6].ID, Level: 1},
+		{ID: uid("a0000001-0000-0000-0000-000000000018"), Name: "Анализ мочи", AnalysisID: analyses[6].ID, Level: 2},
+
+		// Женское здоровье (analyses[7])
+		{ID: uid("a0000001-0000-0000-0000-000000000016"), Name: "Последняя менструация (дни назад)", AnalysisID: analyses[7].ID, Level: 1},
+
+		// Вакцины — used as blocking criteria for subsequent vaccines
+		{ID: uid("a0000001-0000-0000-0000-000000000019"), Name: "Вакцина от гриппа (год)", AnalysisID: analyses[8].ID, Level: 1},
+		{ID: uid("a0000001-0000-0000-0000-000000000020"), Name: "COVID-19 вакцина (серия)", AnalysisID: analyses[9].ID, Level: 1},
+		{ID: uid("a0000001-0000-0000-0000-000000000021"), Name: "Гепатит B вакцина (серия)", AnalysisID: analyses[10].ID, Level: 1},
+	}
 	for _, c := range criteria {
 		if err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&c).Error; err != nil {
 			return err
 		}
 	}
 
-	labTests := []model.LabTest{
-		{ID: uuidFromStr("b0000001-0000-0000-0000-000000000001"), Code: "cbc", Name: "Общий анализ крови", Description: "Общий клинический анализ крови"},
-		{ID: uuidFromStr("b0000001-0000-0000-0000-000000000002"), Code: "biochemistry", Name: "Биохимия крови", Description: "Биохимический анализ крови"},
-	}
-	for _, t := range labTests {
-		if err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&t).Error; err != nil {
-			return err
-		}
-	}
+	// Recommendation rules. nil/nil min/max = "no data" recommendation.
+	// Sex filtering is handled at the Analysis level, not here.
+	rules := []model.RecommendationRule{
+		// Гемоглобин (criteria[0])
+		{ID: uid("d0000001-0000-0000-0000-000000000001"), CriterionID: criteria[0].ID, MinValue: nil, MaxValue: nil, Recommendation: "Рекомендуем сдать общий анализ крови и внести показатель гемоглобина.", Severity: "warning"},
+		{ID: uid("d0000001-0000-0000-0000-000000000002"), CriterionID: criteria[0].ID, MinValue: pf(120), MaxValue: pf(175), Recommendation: "Гемоглобин в норме.", Severity: "ok"},
+		{ID: uid("d0000001-0000-0000-0000-000000000004"), CriterionID: criteria[0].ID, MinValue: nil, MaxValue: pf(119), Recommendation: "Гемоглобин ниже нормы — рекомендуется консультация терапевта.", Severity: "critical"},
+		{ID: uid("d0000001-0000-0000-0000-000000000026"), CriterionID: criteria[0].ID, MinValue: pf(175), MaxValue: nil, Recommendation: "Гемоглобин выше нормы — проконсультируйтесь с врачом.", Severity: "warning"},
 
-	links := []model.LabTestCriterion{
-		{ID: uuidFromStr("c0000001-0000-0000-0000-000000000001"), LabTestID: labTests[0].ID, HealthCriterionID: criteria[0].ID},
-		{ID: uuidFromStr("c0000001-0000-0000-0000-000000000002"), LabTestID: labTests[0].ID, HealthCriterionID: criteria[2].ID},
-		{ID: uuidFromStr("c0000001-0000-0000-0000-000000000003"), LabTestID: labTests[0].ID, HealthCriterionID: criteria[3].ID},
-		{ID: uuidFromStr("c0000001-0000-0000-0000-000000000004"), LabTestID: labTests[1].ID, HealthCriterionID: criteria[1].ID},
-		{ID: uuidFromStr("c0000001-0000-0000-0000-000000000005"), LabTestID: labTests[1].ID, HealthCriterionID: criteria[4].ID},
-	}
-	for _, l := range links {
-		if err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&l).Error; err != nil {
-			return err
-		}
-	}
+		// Лейкоциты (criteria[1])
+		{ID: uid("d0000001-0000-0000-0000-000000000005"), CriterionID: criteria[1].ID, MinValue: nil, MaxValue: nil, Recommendation: "Рекомендуем сдать общий анализ крови и внести показатель лейкоцитов.", Severity: "warning"},
+		{ID: uid("d0000001-0000-0000-0000-000000000006"), CriterionID: criteria[1].ID, MinValue: pf(4), MaxValue: pf(9), Recommendation: "Лейкоциты в норме.", Severity: "ok"},
+		{ID: uid("d0000001-0000-0000-0000-000000000007"), CriterionID: criteria[1].ID, MinValue: nil, MaxValue: pf(3.9), Recommendation: "Лейкоциты понижены. Проконсультируйтесь с врачом.", Severity: "critical"},
+		{ID: uid("d0000001-0000-0000-0000-000000000008"), CriterionID: criteria[1].ID, MinValue: pf(9.1), MaxValue: nil, Recommendation: "Лейкоциты повышены — возможен воспалительный процесс.", Severity: "critical"},
 
-	rules := []model.NumericRecommendationRule{
-		{ID: uuidFromStr("d0000001-0000-0000-0000-000000000001"), HealthCriterionID: criteria[0].ID, MinValue: pf(130), MaxValue: pf(175), Sex: "male", Recommendation: "Норма", Severity: "ok"},
-		{ID: uuidFromStr("d0000001-0000-0000-0000-000000000002"), HealthCriterionID: criteria[0].ID, MinValue: pf(120), MaxValue: pf(160), Sex: "female", Recommendation: "Норма", Severity: "ok"},
-		{ID: uuidFromStr("d0000001-0000-0000-0000-000000000003"), HealthCriterionID: criteria[0].ID, MinValue: nil, MaxValue: pf(120), Sex: "", Recommendation: "Гемоглобин ниже нормы. Обратитесь к терапевту.", Severity: "warning"},
-		{ID: uuidFromStr("d0000001-0000-0000-0000-000000000004"), HealthCriterionID: criteria[1].ID, MinValue: pf(3.3), MaxValue: pf(5.5), Sex: "", Recommendation: "Норма", Severity: "ok"},
-		{ID: uuidFromStr("d0000001-0000-0000-0000-000000000005"), HealthCriterionID: criteria[4].ID, MinValue: pf(0), MaxValue: pf(5.2), Sex: "", Recommendation: "Норма", Severity: "ok"},
-		{ID: uuidFromStr("d0000001-0000-0000-0000-000000000006"), HealthCriterionID: criteria[4].ID, MinValue: pf(5.2), MaxValue: nil, Sex: "", Recommendation: "Холестерин повышен. Обратитесь к врачу.", Severity: "warning"},
+		// Глюкоза (criteria[3])
+		{ID: uid("d0000001-0000-0000-0000-000000000009"), CriterionID: criteria[3].ID, MinValue: nil, MaxValue: nil, Recommendation: "Рекомендуем сдать биохимию крови и внести показатель глюкозы.", Severity: "warning"},
+		{ID: uid("d0000001-0000-0000-0000-000000000010"), CriterionID: criteria[3].ID, MinValue: pf(3.3), MaxValue: pf(5.5), Recommendation: "Глюкоза в норме.", Severity: "ok"},
+		{ID: uid("d0000001-0000-0000-0000-000000000011"), CriterionID: criteria[3].ID, MinValue: pf(5.6), MaxValue: nil, Recommendation: "Глюкоза повышена. Рекомендуется консультация эндокринолога.", Severity: "critical"},
+
+		// Холестерин (criteria[4])
+		{ID: uid("d0000001-0000-0000-0000-000000000012"), CriterionID: criteria[4].ID, MinValue: nil, MaxValue: nil, Recommendation: "Рекомендуем сдать биохимию крови и внести показатель холестерина.", Severity: "warning"},
+		{ID: uid("d0000001-0000-0000-0000-000000000013"), CriterionID: criteria[4].ID, MinValue: pf(0), MaxValue: pf(5.2), Recommendation: "Холестерин в норме.", Severity: "ok"},
+		{ID: uid("d0000001-0000-0000-0000-000000000014"), CriterionID: criteria[4].ID, MinValue: pf(5.2), MaxValue: nil, Recommendation: "Холестерин повышен — рекомендуется диета и консультация кардиолога.", Severity: "warning"},
+
+		// Давление систолическое (criteria[6])
+		{ID: uid("d0000001-0000-0000-0000-000000000015"), CriterionID: criteria[6].ID, MinValue: nil, MaxValue: nil, Recommendation: "Измерьте артериальное давление и внесите систолическое значение.", Severity: "warning"},
+		{ID: uid("d0000001-0000-0000-0000-000000000016"), CriterionID: criteria[6].ID, MinValue: pf(90), MaxValue: pf(130), Recommendation: "Систолическое давление в норме.", Severity: "ok"},
+		{ID: uid("d0000001-0000-0000-0000-000000000017"), CriterionID: criteria[6].ID, MinValue: pf(130), MaxValue: nil, Recommendation: "Систолическое давление повышено — следите за давлением и проконсультируйтесь с врачом.", Severity: "warning"},
+
+		// Шаги в неделю (criteria[9])
+		{ID: uid("d0000001-0000-0000-0000-000000000018"), CriterionID: criteria[9].ID, MinValue: nil, MaxValue: nil, Recommendation: "Добавьте данные о своей физической активности — количество шагов в неделю.", Severity: "warning"},
+		{ID: uid("d0000001-0000-0000-0000-000000000019"), CriterionID: criteria[9].ID, MinValue: pf(70000), MaxValue: nil, Recommendation: "Отличная физическая активность! Продолжайте в том же духе.", Severity: "ok"},
+		{ID: uid("d0000001-0000-0000-0000-000000000020"), CriterionID: criteria[9].ID, MinValue: pf(35000), MaxValue: pf(69999), Recommendation: "Умеренная активность. Старайтесь ходить больше!", Severity: "warning"},
+		{ID: uid("d0000001-0000-0000-0000-000000000021"), CriterionID: criteria[9].ID, MinValue: nil, MaxValue: pf(34999), Recommendation: "Низкая физическая активность. Рекомендуется не менее 10 000 шагов в день.", Severity: "critical"},
+
+		// Стоматолог (criteria[10])
+		{ID: uid("d0000001-0000-0000-0000-000000000022"), CriterionID: criteria[10].ID, MinValue: nil, MaxValue: nil, Recommendation: "Посетите стоматолога — профилактика дважды в год снижает риск серьёзных заболеваний.", Severity: "warning"},
+		{ID: uid("d0000001-0000-0000-0000-000000000023"), CriterionID: criteria[10].ID, MinValue: pf(1), MaxValue: nil, Recommendation: "Стоматолог посещён.", Severity: "ok"},
+
+		// Флюорография (criteria[16])
+		{ID: uid("d0000001-0000-0000-0000-000000000024"), CriterionID: criteria[16].ID, MinValue: nil, MaxValue: nil, Recommendation: "Пройдите флюорографию — ежегодное обследование лёгких.", Severity: "warning"},
+		{ID: uid("d0000001-0000-0000-0000-000000000025"), CriterionID: criteria[16].ID, MinValue: pf(1), MaxValue: nil, Recommendation: "Флюорография пройдена.", Severity: "ok"},
+
+		// Последняя менструация (criteria[17], женское здоровье)
+		{ID: uid("d0000001-0000-0000-0000-000000000027"), CriterionID: criteria[17].ID, MinValue: nil, MaxValue: nil, Recommendation: "Укажите, сколько дней назад началась последняя менструация.", Severity: "warning"},
+		{ID: uid("d0000001-0000-0000-0000-000000000028"), CriterionID: criteria[17].ID, MinValue: pf(21), MaxValue: pf(35), Recommendation: "Цикл в норме.", Severity: "ok"},
+		{ID: uid("d0000001-0000-0000-0000-000000000029"), CriterionID: criteria[17].ID, MinValue: nil, MaxValue: pf(20), Recommendation: "Цикл короткий — рекомендуется консультация гинеколога.", Severity: "warning"},
+		{ID: uid("d0000001-0000-0000-0000-000000000030"), CriterionID: criteria[17].ID, MinValue: pf(36), MaxValue: nil, Recommendation: "Цикл длинный — рекомендуется консультация гинеколога.", Severity: "warning"},
 	}
 	for _, r := range rules {
 		if err := db.Clauses(clause.OnConflict{DoNothing: true}).Create(&r).Error; err != nil {
@@ -75,7 +136,7 @@ func Run(db *gorm.DB) error {
 	return nil
 }
 
-func uuidFromStr(s string) uuid.UUID {
+func uid(s string) uuid.UUID {
 	id, _ := uuid.Parse(s)
 	return id
 }
