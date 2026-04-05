@@ -19,24 +19,22 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	HealthService_ListAnalysis_FullMethodName          = "/health.HealthService/ListAnalysis"
-	HealthService_ListCriteria_FullMethodName          = "/health.HealthService/ListCriteria"
-	HealthService_SetUserCriterion_FullMethodName      = "/health.HealthService/SetUserCriterion"
-	HealthService_ResetAnalysisCriteria_FullMethodName = "/health.HealthService/ResetAnalysisCriteria"
-	HealthService_GetUserCriteria_FullMethodName       = "/health.HealthService/GetUserCriteria"
-	HealthService_GetProgress_FullMethodName           = "/health.HealthService/GetProgress"
-	HealthService_GetRecommendations_FullMethodName    = "/health.HealthService/GetRecommendations"
-	HealthService_SendNotification_FullMethodName      = "/health.HealthService/SendNotification"
+	HealthService_ListCriteria_FullMethodName       = "/health.HealthService/ListCriteria"
+	HealthService_SetUserCriterion_FullMethodName   = "/health.HealthService/SetUserCriterion"
+	HealthService_ResetCriteria_FullMethodName      = "/health.HealthService/ResetCriteria"
+	HealthService_GetUserCriteria_FullMethodName    = "/health.HealthService/GetUserCriteria"
+	HealthService_GetProgress_FullMethodName        = "/health.HealthService/GetProgress"
+	HealthService_GetRecommendations_FullMethodName = "/health.HealthService/GetRecommendations"
+	HealthService_SendNotification_FullMethodName   = "/health.HealthService/SendNotification"
 )
 
 // HealthServiceClient is the client API for HealthService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type HealthServiceClient interface {
-	ListAnalysis(ctx context.Context, in *ListAnalysisRequest, opts ...grpc.CallOption) (*ListAnalysisResponse, error)
 	ListCriteria(ctx context.Context, in *ListCriteriaRequest, opts ...grpc.CallOption) (*ListCriteriaResponse, error)
 	SetUserCriterion(ctx context.Context, in *SetUserCriterionRequest, opts ...grpc.CallOption) (*SetUserCriterionResponse, error)
-	ResetAnalysisCriteria(ctx context.Context, in *ResetAnalysisCriteriaRequest, opts ...grpc.CallOption) (*ResetAnalysisCriteriaResponse, error)
+	ResetCriteria(ctx context.Context, in *ResetCriteriaRequest, opts ...grpc.CallOption) (*ResetCriteriaResponse, error)
 	GetUserCriteria(ctx context.Context, in *GetUserCriteriaRequest, opts ...grpc.CallOption) (*GetUserCriteriaResponse, error)
 	GetProgress(ctx context.Context, in *GetProgressRequest, opts ...grpc.CallOption) (*GetProgressResponse, error)
 	GetRecommendations(ctx context.Context, in *GetRecommendationsRequest, opts ...grpc.CallOption) (*GetRecommendationsResponse, error)
@@ -49,16 +47,6 @@ type healthServiceClient struct {
 
 func NewHealthServiceClient(cc grpc.ClientConnInterface) HealthServiceClient {
 	return &healthServiceClient{cc}
-}
-
-func (c *healthServiceClient) ListAnalysis(ctx context.Context, in *ListAnalysisRequest, opts ...grpc.CallOption) (*ListAnalysisResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListAnalysisResponse)
-	err := c.cc.Invoke(ctx, HealthService_ListAnalysis_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *healthServiceClient) ListCriteria(ctx context.Context, in *ListCriteriaRequest, opts ...grpc.CallOption) (*ListCriteriaResponse, error) {
@@ -81,10 +69,10 @@ func (c *healthServiceClient) SetUserCriterion(ctx context.Context, in *SetUserC
 	return out, nil
 }
 
-func (c *healthServiceClient) ResetAnalysisCriteria(ctx context.Context, in *ResetAnalysisCriteriaRequest, opts ...grpc.CallOption) (*ResetAnalysisCriteriaResponse, error) {
+func (c *healthServiceClient) ResetCriteria(ctx context.Context, in *ResetCriteriaRequest, opts ...grpc.CallOption) (*ResetCriteriaResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ResetAnalysisCriteriaResponse)
-	err := c.cc.Invoke(ctx, HealthService_ResetAnalysisCriteria_FullMethodName, in, out, cOpts...)
+	out := new(ResetCriteriaResponse)
+	err := c.cc.Invoke(ctx, HealthService_ResetCriteria_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -135,10 +123,9 @@ func (c *healthServiceClient) SendNotification(ctx context.Context, in *SendNoti
 // All implementations must embed UnimplementedHealthServiceServer
 // for forward compatibility.
 type HealthServiceServer interface {
-	ListAnalysis(context.Context, *ListAnalysisRequest) (*ListAnalysisResponse, error)
 	ListCriteria(context.Context, *ListCriteriaRequest) (*ListCriteriaResponse, error)
 	SetUserCriterion(context.Context, *SetUserCriterionRequest) (*SetUserCriterionResponse, error)
-	ResetAnalysisCriteria(context.Context, *ResetAnalysisCriteriaRequest) (*ResetAnalysisCriteriaResponse, error)
+	ResetCriteria(context.Context, *ResetCriteriaRequest) (*ResetCriteriaResponse, error)
 	GetUserCriteria(context.Context, *GetUserCriteriaRequest) (*GetUserCriteriaResponse, error)
 	GetProgress(context.Context, *GetProgressRequest) (*GetProgressResponse, error)
 	GetRecommendations(context.Context, *GetRecommendationsRequest) (*GetRecommendationsResponse, error)
@@ -153,17 +140,14 @@ type HealthServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedHealthServiceServer struct{}
 
-func (UnimplementedHealthServiceServer) ListAnalysis(context.Context, *ListAnalysisRequest) (*ListAnalysisResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListAnalysis not implemented")
-}
 func (UnimplementedHealthServiceServer) ListCriteria(context.Context, *ListCriteriaRequest) (*ListCriteriaResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListCriteria not implemented")
 }
 func (UnimplementedHealthServiceServer) SetUserCriterion(context.Context, *SetUserCriterionRequest) (*SetUserCriterionResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SetUserCriterion not implemented")
 }
-func (UnimplementedHealthServiceServer) ResetAnalysisCriteria(context.Context, *ResetAnalysisCriteriaRequest) (*ResetAnalysisCriteriaResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ResetAnalysisCriteria not implemented")
+func (UnimplementedHealthServiceServer) ResetCriteria(context.Context, *ResetCriteriaRequest) (*ResetCriteriaResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ResetCriteria not implemented")
 }
 func (UnimplementedHealthServiceServer) GetUserCriteria(context.Context, *GetUserCriteriaRequest) (*GetUserCriteriaResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetUserCriteria not implemented")
@@ -196,24 +180,6 @@ func RegisterHealthServiceServer(s grpc.ServiceRegistrar, srv HealthServiceServe
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&HealthService_ServiceDesc, srv)
-}
-
-func _HealthService_ListAnalysis_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListAnalysisRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(HealthServiceServer).ListAnalysis(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: HealthService_ListAnalysis_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HealthServiceServer).ListAnalysis(ctx, req.(*ListAnalysisRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _HealthService_ListCriteria_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -252,20 +218,20 @@ func _HealthService_SetUserCriterion_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _HealthService_ResetAnalysisCriteria_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ResetAnalysisCriteriaRequest)
+func _HealthService_ResetCriteria_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResetCriteriaRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(HealthServiceServer).ResetAnalysisCriteria(ctx, in)
+		return srv.(HealthServiceServer).ResetCriteria(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: HealthService_ResetAnalysisCriteria_FullMethodName,
+		FullMethod: HealthService_ResetCriteria_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HealthServiceServer).ResetAnalysisCriteria(ctx, req.(*ResetAnalysisCriteriaRequest))
+		return srv.(HealthServiceServer).ResetCriteria(ctx, req.(*ResetCriteriaRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -350,10 +316,6 @@ var HealthService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*HealthServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ListAnalysis",
-			Handler:    _HealthService_ListAnalysis_Handler,
-		},
-		{
 			MethodName: "ListCriteria",
 			Handler:    _HealthService_ListCriteria_Handler,
 		},
@@ -362,8 +324,8 @@ var HealthService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _HealthService_SetUserCriterion_Handler,
 		},
 		{
-			MethodName: "ResetAnalysisCriteria",
-			Handler:    _HealthService_ResetAnalysisCriteria_Handler,
+			MethodName: "ResetCriteria",
+			Handler:    _HealthService_ResetCriteria_Handler,
 		},
 		{
 			MethodName: "GetUserCriteria",

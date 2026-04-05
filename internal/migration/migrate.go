@@ -7,7 +7,6 @@ import (
 
 func Run(db *gorm.DB) error {
 	return db.AutoMigrate(
-		&model.Analysis{},
 		&model.Criterion{},
 		&model.UserCriterion{},
 		&model.RecommendationRule{},

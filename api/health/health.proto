@@ -5,46 +5,33 @@ package health;
 option go_package = "github.com/helthtech/core-health/pkg/proto/health";
 
 service HealthService {
-  rpc ListAnalysis(ListAnalysisRequest) returns (ListAnalysisResponse);
   rpc ListCriteria(ListCriteriaRequest) returns (ListCriteriaResponse);
   rpc SetUserCriterion(SetUserCriterionRequest) returns (SetUserCriterionResponse);
-  rpc ResetAnalysisCriteria(ResetAnalysisCriteriaRequest) returns (ResetAnalysisCriteriaResponse);
+  rpc ResetCriteria(ResetCriteriaRequest) returns (ResetCriteriaResponse);
   rpc GetUserCriteria(GetUserCriteriaRequest) returns (GetUserCriteriaResponse);
   rpc GetProgress(GetProgressRequest) returns (GetProgressResponse);
   rpc GetRecommendations(GetRecommendationsRequest) returns (GetRecommendationsResponse);
   rpc SendNotification(SendNotificationRequest) returns (SendNotificationResponse);
 }
 
-message Analysis {
-  string id = 1;
-  string name = 2;
-  // lifetime in days; 0 means no expiry
-  int32 lifetime = 3;
-  // sex restriction: "male", "female", or "" for all
-  string sex = 4;
-  // blocked_by: "", "level_1", "level_2", or "criteria_<uuid>"
-  string blocked_by = 5;
-}
-
-// ListAnalysisRequest optionally filters by user context (sex + blocking rules).
-message ListAnalysisRequest {
-  string user_id = 1;
-  string user_sex = 2;
-}
-
-message ListAnalysisResponse {
-  repeated Analysis analyses = 1;
-}
-
+// Criterion is a single health metric.
+// blocked_by: "", "level_1", "level_2", or "criteria_<uuid>"
+// sex: "male", "female", or "" for all
+// input_type: "numeric" or "check"
+// lifetime: days before expiry; 0 = no expiry
 message Criterion {
   string id = 1;
   string name = 2;
-  string analysis_id = 3;
-  int32 level = 4;
+  int32 level = 3;
+  string sex = 4;
+  string blocked_by = 5;
+  string input_type = 6;
+  int32 lifetime = 7;
 }
 
 message ListCriteriaRequest {
-  string analysis_id = 1;
+  string user_id = 1;
+  string user_sex = 2;
 }
 
 message ListCriteriaResponse {
@@ -62,16 +49,23 @@ message SetUserCriterionResponse {
   bool success = 1;
 }
 
+message ResetCriteriaRequest {
+  string user_id = 1;
+}
+
+message ResetCriteriaResponse {
+  bool success = 1;
+}
+
 message UserCriterionEntry {
   string criterion_id = 1;
   string criterion_name = 2;
-  string analysis_id = 3;
-  string analysis_name = 4;
-  string value = 5;
-  string status = 6;
-  string recommendation = 7;
-  int32 level = 8;
-  string severity = 9;
+  string value = 3;
+  string status = 4;
+  string recommendation = 5;
+  int32 level = 6;
+  string severity = 7;
+  string input_type = 8;
 }
 
 message GetUserCriteriaRequest {
@@ -97,9 +91,8 @@ message GetProgressResponse {
 message Recommendation {
   string criterion_id = 1;
   string criterion_name = 2;
-  string analysis_name = 3;
-  string text = 4;
-  string severity = 5;
+  string text = 3;
+  string severity = 4;
 }
 
 message GetRecommendationsRequest {
@@ -109,15 +102,6 @@ message GetRecommendationsRequest {
 
 message GetRecommendationsResponse {
   repeated Recommendation recommendations = 1;
-}
-
-message ResetAnalysisCriteriaRequest {
-  string user_id = 1;
-  string analysis_id = 2;
-}
-
-message ResetAnalysisCriteriaResponse {
-  bool success = 1;
 }
 
 message SendNotificationRequest {

@@ -20,7 +20,7 @@ func NewHealthServer(svc *service.HealthService) *HealthServer {
 	return &HealthServer{svc: svc}
 }
 
-func (s *HealthServer) ListAnalysis(ctx context.Context, req *pb.ListAnalysisRequest) (*pb.ListAnalysisResponse, error) {
+func (s *HealthServer) ListCriteria(ctx context.Context, req *pb.ListCriteriaRequest) (*pb.ListCriteriaResponse, error) {
 	userID := uuid.Nil
 	if req.GetUserId() != "" {
 		var err error
@@ -30,35 +30,20 @@ func (s *HealthServer) ListAnalysis(ctx context.Context, req *pb.ListAnalysisReq
 		}
 	}
 
-	analyses, err := s.svc.ListAnalysis(ctx, userID, req.GetUserSex())
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "list analysis: %v", err)
-	}
-	resp := &pb.ListAnalysisResponse{}
-	for _, a := range analyses {
-		resp.Analyses = append(resp.Analyses, &pb.Analysis{
-			Id:        a.ID.String(),
-			Name:      a.Name,
-			Lifetime:  int32(a.Lifetime),
-			Sex:       a.Sex,
-			BlockedBy: a.BlockedBy,
-		})
-	}
-	return resp, nil
-}
-
-func (s *HealthServer) ListCriteria(ctx context.Context, req *pb.ListCriteriaRequest) (*pb.ListCriteriaResponse, error) {
-	criteria, err := s.svc.ListCriteria(ctx, req.GetAnalysisId())
+	criteria, err := s.svc.ListCriteria(ctx, userID, req.GetUserSex())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "list criteria: %v", err)
 	}
 	resp := &pb.ListCriteriaResponse{}
 	for _, c := range criteria {
 		resp.Criteria = append(resp.Criteria, &pb.Criterion{
-			Id:         c.ID.String(),
-			Name:       c.Name,
-			AnalysisId: c.AnalysisID.String(),
-			Level:      int32(c.Level),
+			Id:        c.ID.String(),
+			Name:      c.Name,
+			Level:     int32(c.Level),
+			Sex:       c.Sex,
+			BlockedBy: c.BlockedBy,
+			InputType: c.InputType,
+			Lifetime:  int32(c.Lifetime),
 		})
 	}
 	return resp, nil
@@ -79,19 +64,15 @@ func (s *HealthServer) SetUserCriterion(ctx context.Context, req *pb.SetUserCrit
 	return &pb.SetUserCriterionResponse{Success: true}, nil
 }
 
-func (s *HealthServer) ResetAnalysisCriteria(ctx context.Context, req *pb.ResetAnalysisCriteriaRequest) (*pb.ResetAnalysisCriteriaResponse, error) {
+func (s *HealthServer) ResetCriteria(ctx context.Context, req *pb.ResetCriteriaRequest) (*pb.ResetCriteriaResponse, error) {
 	userID, err := uuid.Parse(req.GetUserId())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid user_id")
 	}
-	analysisID, err := uuid.Parse(req.GetAnalysisId())
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid analysis_id")
-	}
-	if err := s.svc.ResetAnalysisCriteria(ctx, userID, analysisID); err != nil {
+	if err := s.svc.ResetAllCriteria(ctx, userID); err != nil {
 		return nil, status.Errorf(codes.Internal, fmt.Sprintf("reset criteria: %v", err))
 	}
-	return &pb.ResetAnalysisCriteriaResponse{Success: true}, nil
+	return &pb.ResetCriteriaResponse{Success: true}, nil
 }
 
 func (s *HealthServer) GetUserCriteria(ctx context.Context, req *pb.GetUserCriteriaRequest) (*pb.GetUserCriteriaResponse, error) {
@@ -108,13 +89,12 @@ func (s *HealthServer) GetUserCriteria(ctx context.Context, req *pb.GetUserCrite
 		resp.Entries = append(resp.Entries, &pb.UserCriterionEntry{
 			CriterionId:    e.CriterionID,
 			CriterionName:  e.CriterionName,
-			AnalysisId:     e.AnalysisID,
-			AnalysisName:   e.AnalysisName,
 			Value:          e.Value,
 			Status:         e.Status,
 			Recommendation: e.Recommendation,
 			Level:          int32(e.Level),
 			Severity:       e.Severity,
+			InputType:      e.InputType,
 		})
 	}
 	return resp, nil
@@ -151,7 +131,6 @@ func (s *HealthServer) GetRecommendations(ctx context.Context, req *pb.GetRecomm
 		resp.Recommendations = append(resp.Recommendations, &pb.Recommendation{
 			CriterionId:   r.CriterionID,
 			CriterionName: r.CriterionName,
-			AnalysisName:  r.AnalysisName,
 			Text:          r.Text,
 			Severity:      r.Severity,
 		})

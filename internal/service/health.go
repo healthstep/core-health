@@ -19,7 +19,7 @@ import (
 
 type HealthService struct {
 	repo  *repository.HealthRepository
-	cache *AnalysisCache
+	cache *CriteriaCache
 	nc    *nats.Conn
 	redis *redis.Client
 }
@@ -27,7 +27,7 @@ type HealthService struct {
 func NewHealthService(repo *repository.HealthRepository, nc *nats.Conn, rdb *redis.Client) *HealthService {
 	return &HealthService{
 		repo:  repo,
-		cache: NewAnalysisCache(),
+		cache: NewCriteriaCache(),
 		nc:    nc,
 		redis: rdb,
 	}
@@ -38,20 +38,17 @@ func (s *HealthService) StartCache(ctx context.Context) {
 	go s.cache.RunRefreshLoop(ctx, s.repo)
 }
 
-// ListAnalysis returns analyses filtered by user sex and blocking rules.
+// ListCriteria returns criteria filtered by user sex and blocking rules.
 // userID is optional (pass uuid.Nil to skip blocking check).
-func (s *HealthService) ListAnalysis(ctx context.Context, userID uuid.UUID, userSex string) ([]model.Analysis, error) {
-	analyses := s.cache.GetAnalyses()
-	if len(analyses) == 0 {
-		// Cache not loaded yet — fall back to DB.
+func (s *HealthService) ListCriteria(ctx context.Context, userID uuid.UUID, userSex string) ([]model.Criterion, error) {
+	allCriteria := s.cache.GetCriteria()
+	if len(allCriteria) == 0 {
 		var err error
-		analyses, err = s.repo.ListAnalysis(ctx)
+		allCriteria, err = s.repo.ListCriteria(ctx)
 		if err != nil {
 			return nil, err
 		}
 	}
-
-	allCriteria := s.cache.GetCriteria()
 
 	// Build user values map for blocking check.
 	userValues := map[uuid.UUID]string{}
@@ -64,28 +61,17 @@ func (s *HealthService) ListAnalysis(ctx context.Context, userID uuid.UUID, user
 		}
 	}
 
-	var result []model.Analysis
-	for _, a := range analyses {
-		if !MatchesSex(a, userSex) {
+	var result []model.Criterion
+	for _, c := range allCriteria {
+		if !CriterionMatchesSex(c, userSex) {
 			continue
 		}
-		if userID != uuid.Nil && IsAnalysisBlocked(a, allCriteria, userValues) {
+		if userID != uuid.Nil && IsCriterionBlocked(c, allCriteria, userValues) {
 			continue
 		}
-		result = append(result, a)
+		result = append(result, c)
 	}
 	return result, nil
-}
-
-func (s *HealthService) ListCriteria(ctx context.Context, analysisID string) ([]model.Criterion, error) {
-	if analysisID == "" {
-		return s.repo.ListCriteria(ctx, nil)
-	}
-	id, err := uuid.Parse(analysisID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid analysis_id: %w", err)
-	}
-	return s.repo.ListCriteria(ctx, &id)
 }
 
 // SetUserCriterion stores or updates a user's criterion value.
@@ -99,35 +85,20 @@ func (s *HealthService) SetUserCriterion(ctx context.Context, userID, criterionI
 	return s.repo.SetUserCriterion(ctx, uc)
 }
 
-// ResetAnalysisCriteria soft-deletes all user criteria for an analysis.
-func (s *HealthService) ResetAnalysisCriteria(ctx context.Context, userID, analysisID uuid.UUID) error {
-	return s.repo.SoftDeleteAnalysisCriteria(ctx, userID, analysisID)
+// ResetAllCriteria soft-deletes all user criteria.
+func (s *HealthService) ResetAllCriteria(ctx context.Context, userID uuid.UUID) error {
+	return s.repo.SoftDeleteAllUserCriteria(ctx, userID)
 }
 
-// GetUserCriteria returns enriched entries: all criteria with user values + recommendations.
-// Sex is used to skip analyses that don't match the user's sex.
+// GetUserCriteria returns enriched entries: all visible criteria with user values + recommendations.
 func (s *HealthService) GetUserCriteria(ctx context.Context, userID uuid.UUID, userSex string) ([]UserCriterionEntry, error) {
-	criteria := s.cache.GetCriteria()
-	if len(criteria) == 0 {
+	allCriteria := s.cache.GetCriteria()
+	if len(allCriteria) == 0 {
 		var err error
-		criteria, err = s.repo.ListCriteria(ctx, nil)
+		allCriteria, err = s.repo.ListCriteria(ctx)
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	analyses := s.cache.GetAnalyses()
-	if len(analyses) == 0 {
-		var err error
-		analyses, err = s.repo.ListAnalysis(ctx)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	analysisMap := make(map[uuid.UUID]model.Analysis, len(analyses))
-	for _, a := range analyses {
-		analysisMap[a.ID] = a
 	}
 
 	userCriteria, err := s.repo.GetUserCriteria(ctx, userID)
@@ -139,12 +110,15 @@ func (s *HealthService) GetUserCriteria(ctx context.Context, userID uuid.UUID, u
 		valueMap[uc.CriterionID] = uc.Value
 	}
 
-	entries := make([]UserCriterionEntry, 0, len(criteria))
-	for _, c := range criteria {
-		analysis := analysisMap[c.AnalysisID]
+	// Build user values for blocking check.
+	userValues := make(map[uuid.UUID]string, len(valueMap))
+	for k, v := range valueMap {
+		userValues[k] = v
+	}
 
-		// Skip criteria belonging to sex-restricted analyses.
-		if !MatchesSex(analysis, userSex) {
+	entries := make([]UserCriterionEntry, 0, len(allCriteria))
+	for _, c := range allCriteria {
+		if !CriterionMatchesSex(c, userSex) {
 			continue
 		}
 
@@ -155,10 +129,9 @@ func (s *HealthService) GetUserCriteria(ctx context.Context, userID uuid.UUID, u
 		entry := UserCriterionEntry{
 			CriterionID:   c.ID.String(),
 			CriterionName: c.Name,
-			AnalysisID:    c.AnalysisID.String(),
-			AnalysisName:  analysis.Name,
 			Value:         value,
 			Level:         c.Level,
+			InputType:     c.InputType,
 		}
 		if rule != nil {
 			entry.Recommendation = rule.Recommendation
@@ -177,7 +150,7 @@ func (s *HealthService) GetUserCriteria(ctx context.Context, userID uuid.UUID, u
 
 // GetProgress computes fill statistics for a user.
 func (s *HealthService) GetProgress(ctx context.Context, userID uuid.UUID) (*ProgressResult, error) {
-	criteria, err := s.repo.ListCriteria(ctx, nil)
+	criteria, err := s.repo.ListCriteria(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -208,7 +181,6 @@ func (s *HealthService) GetProgress(ctx context.Context, userID uuid.UUID) (*Pro
 
 // --- Weighted auction ---
 
-// recommendationWeight returns base weight for a severity.
 func recommendationWeight(severity string) int {
 	switch severity {
 	case "critical":
@@ -222,7 +194,6 @@ func recommendationWeight(severity string) int {
 	}
 }
 
-// weeklyKey returns the Redis key for tracking weekly sent recommendations.
 func weeklyKey(userID uuid.UUID, criterionID string) string {
 	return fmt.Sprintf("weekly_sent:%s:%s", userID.String(), criterionID)
 }
@@ -253,7 +224,6 @@ func (s *HealthService) GetRecommendations(ctx context.Context, userID uuid.UUID
 
 		baseWeight := recommendationWeight(sev)
 
-		// Penalise if sent this week.
 		key := weeklyKey(userID, e.CriterionID)
 		sentThisWeek, _ := s.redis.Exists(ctx, key).Result()
 		if sentThisWeek > 0 {
@@ -267,7 +237,6 @@ func (s *HealthService) GetRecommendations(ctx context.Context, userID uuid.UUID
 			item: RecommendationItem{
 				CriterionID:   e.CriterionID,
 				CriterionName: e.CriterionName,
-				AnalysisName:  e.AnalysisName,
 				Text:          e.Recommendation,
 				Severity:      sev,
 			},
@@ -275,7 +244,6 @@ func (s *HealthService) GetRecommendations(ctx context.Context, userID uuid.UUID
 		})
 	}
 
-	// Sort by weight descending for display.
 	sort.Slice(candidates, func(i, j int) bool {
 		return candidates[i].weight > candidates[j].weight
 	})
@@ -301,7 +269,6 @@ func (s *HealthService) SelectDailyRecommendation(ctx context.Context, userID uu
 		}, nil
 	}
 
-	// Build weighted pool.
 	type weightedItem struct {
 		item   RecommendationItem
 		weight int
@@ -321,7 +288,6 @@ func (s *HealthService) SelectDailyRecommendation(ctx context.Context, userID uu
 		totalWeight += w
 	}
 
-	// Weighted random pick.
 	pick := rand.Intn(totalWeight)
 	var chosen *RecommendationItem
 	for _, wi := range pool {
@@ -337,7 +303,6 @@ func (s *HealthService) SelectDailyRecommendation(ctx context.Context, userID uu
 		chosen = &item
 	}
 
-	// Store in Redis + mark as sent this week.
 	recKey := "daily_rec:" + userID.String()
 	data, _ := json.Marshal(chosen)
 	s.redis.Set(ctx, recKey, string(data), 24*time.Hour)
@@ -422,7 +387,6 @@ func (s *HealthService) RunDailyScheduler(ctx context.Context, channels []string
 }
 
 // RunExpiryScheduler fires at 9:00 — sends expiry reminders and cleans up expired data.
-// Reminders are sent at most once every 3 days per (user, analysis) pair.
 func (s *HealthService) RunExpiryScheduler(ctx context.Context, channels []string) {
 	for {
 		next := nextScheduledTime([]int{9})
@@ -432,42 +396,37 @@ func (s *HealthService) RunExpiryScheduler(ctx context.Context, channels []strin
 		case <-time.After(time.Until(next)):
 		}
 
-		// Clean up expired criteria first.
 		if err := s.repo.SoftDeleteExpiredCriteria(ctx); err != nil {
 			continue
 		}
 
-		// Warn about near-expiry (within 30 days).
 		entries, err := s.repo.GetNearExpiryEntries(ctx, 30*24*time.Hour)
 		if err != nil {
 			continue
 		}
 
 		for _, e := range entries {
-			dedupeKey := fmt.Sprintf("expiry_notif:%s:%s", e.UserID.String(), e.Analysis.ID.String())
-			// Send at most once every 3 days.
+			dedupeKey := fmt.Sprintf("expiry_notif:%s:%s", e.UserID.String(), e.Criterion.ID.String())
 			if exists, _ := s.redis.Exists(ctx, dedupeKey).Result(); exists > 0 {
 				continue
 			}
 
 			daysLeft := int(time.Until(e.ExpiresAt).Hours() / 24)
 			payload, _ := json.Marshal(map[string]string{
-				"title":    "Напоминание: повторите анализ",
-				"body":     fmt.Sprintf("Срок действия анализа «%s» истекает через %d дн. Пройдите его снова.", e.Analysis.Name, daysLeft),
-				"analysis": e.Analysis.Name,
+				"title":     "Напоминание: обновите показатель",
+				"body":      fmt.Sprintf("Данные «%s» устареют через %d дн. Обновите их.", e.Criterion.Name, daysLeft),
+				"criterion": e.Criterion.Name,
 			})
 
 			for _, ch := range channels {
 				_ = s.SendNotification(ctx, e.UserID, ch, "expiry_reminder", "expiry_reminder", string(payload))
 			}
 
-			// Set 3-day dedup key.
 			s.redis.Set(ctx, dedupeKey, "1", 3*24*time.Hour)
 		}
 	}
 }
 
-// nextScheduledTime returns the next upcoming occurrence of one of the given hours (local time).
 func nextScheduledTime(hours []int) time.Time {
 	now := time.Now()
 	today := now.Truncate(24 * time.Hour)
@@ -486,7 +445,6 @@ func nextScheduledTime(hours []int) time.Time {
 	return candidates[len(candidates)-1]
 }
 
-// EvaluateCriterionValue returns a numeric value from string, or 0 and false if not numeric.
 func EvaluateCriterionValue(value string) (float64, bool) {
 	if value == "" {
 		return 0, false
@@ -518,13 +476,12 @@ type NotificationMessage struct {
 type UserCriterionEntry struct {
 	CriterionID    string
 	CriterionName  string
-	AnalysisID     string
-	AnalysisName   string
 	Value          string
 	Status         string
 	Recommendation string
 	Severity       string
 	Level          int
+	InputType      string
 }
 
 type ProgressResult struct {
@@ -537,7 +494,6 @@ type ProgressResult struct {
 type RecommendationItem struct {
 	CriterionID   string `json:"criterion_id"`
 	CriterionName string `json:"criterion_name"`
-	AnalysisName  string `json:"analysis_name"`
 	Text          string `json:"text"`
 	Severity      string `json:"severity"`
 }

@@ -7,28 +7,19 @@ import (
 	"gorm.io/gorm"
 )
 
-// Analysis groups related criteria.
+// Criterion is a single health metric.
 // BlockedBy: "", "level_1", "level_2", or "criteria_<uuid>"
 // Sex: "male", "female", or "" for all users
+// InputType: "numeric" or "check"
 // Lifetime: days after entry before expiry; 0 = no expiry
-type Analysis struct {
+type Criterion struct {
 	ID        uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	Name      string    `gorm:"type:text;not null"`
-	Lifetime  int       `gorm:"type:int;not null;default:0"`
+	Level     int       `gorm:"type:int;not null;default:1"`
 	Sex       string    `gorm:"type:text;not null;default:''"`
 	BlockedBy string    `gorm:"type:text;not null;default:''"`
-	CreatedAt time.Time
-}
-
-func (Analysis) TableName() string { return "analysis" }
-
-// Criterion is a single health metric belonging to an analysis.
-type Criterion struct {
-	ID         uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	Name       string    `gorm:"type:text;not null"`
-	AnalysisID uuid.UUID `gorm:"type:uuid;not null;index"`
-	// Level: 1=required, 2=advanced, 3=longevity (live to 100)
-	Level     int       `gorm:"type:int;not null;default:1"`
+	InputType string    `gorm:"type:text;not null;default:'numeric'"`
+	Lifetime  int       `gorm:"type:int;not null;default:0"`
 	CreatedAt time.Time
 }
 
@@ -56,7 +47,6 @@ func (uc *UserCriterion) BeforeCreate(tx *gorm.DB) error {
 
 // RecommendationRule defines a range → recommendation for a criterion.
 // When MinValue == nil && MaxValue == nil → "no data" recommendation.
-// Sex filtering is now done at the Analysis level, not here.
 type RecommendationRule struct {
 	ID             uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	CriterionID    uuid.UUID `gorm:"type:uuid;not null;index"`

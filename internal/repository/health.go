@@ -19,19 +19,9 @@ func NewHealthRepository(db *gorm.DB) *HealthRepository {
 	return &HealthRepository{db: db}
 }
 
-func (r *HealthRepository) ListAnalysis(ctx context.Context) ([]model.Analysis, error) {
-	var analyses []model.Analysis
-	err := r.db.WithContext(ctx).Order("name").Find(&analyses).Error
-	return analyses, err
-}
-
-func (r *HealthRepository) ListCriteria(ctx context.Context, analysisID *uuid.UUID) ([]model.Criterion, error) {
+func (r *HealthRepository) ListCriteria(ctx context.Context) ([]model.Criterion, error) {
 	var criteria []model.Criterion
-	q := r.db.WithContext(ctx).Order("level, name")
-	if analysisID != nil {
-		q = q.Where("analysis_id = ?", *analysisID)
-	}
-	err := q.Find(&criteria).Error
+	err := r.db.WithContext(ctx).Order("level, name").Find(&criteria).Error
 	return criteria, err
 }
 
@@ -47,7 +37,6 @@ func (r *HealthRepository) GetCriterion(ctx context.Context, id uuid.UUID) (*mod
 // SetUserCriterion upserts a user_criterion record (insert or update on conflict).
 // Also restores soft-deleted records.
 func (r *HealthRepository) SetUserCriterion(ctx context.Context, uc *model.UserCriterion) error {
-	// Restore if soft-deleted, or upsert normally.
 	return r.db.WithContext(ctx).
 		Unscoped().
 		Clauses(clause.OnConflict{
@@ -63,87 +52,56 @@ func (r *HealthRepository) SetUserCriterion(ctx context.Context, uc *model.UserC
 
 func (r *HealthRepository) GetUserCriteria(ctx context.Context, userID uuid.UUID) ([]model.UserCriterion, error) {
 	var ucs []model.UserCriterion
-	// GORM automatically excludes soft-deleted records.
 	err := r.db.WithContext(ctx).Where("user_id = ?", userID).Find(&ucs).Error
 	return ucs, err
 }
 
-// SoftDeleteAnalysisCriteria soft-deletes all user criteria for an analysis.
-func (r *HealthRepository) SoftDeleteAnalysisCriteria(ctx context.Context, userID, analysisID uuid.UUID) error {
-	// Get all criterion IDs for this analysis.
-	var criterionIDs []uuid.UUID
-	err := r.db.WithContext(ctx).
-		Model(&model.Criterion{}).
-		Where("analysis_id = ?", analysisID).
-		Pluck("id", &criterionIDs).Error
-	if err != nil || len(criterionIDs) == 0 {
-		return err
-	}
-
+// SoftDeleteAllUserCriteria soft-deletes all user criteria for a user.
+func (r *HealthRepository) SoftDeleteAllUserCriteria(ctx context.Context, userID uuid.UUID) error {
 	return r.db.WithContext(ctx).
-		Where("user_id = ? AND criterion_id IN ?", userID, criterionIDs).
+		Where("user_id = ?", userID).
 		Delete(&model.UserCriterion{}).Error
 }
 
-// SoftDeleteExpiredCriteria finds and soft-deletes criteria that have exceeded their analysis lifetime.
+// SoftDeleteExpiredCriteria finds and soft-deletes user_criteria that have exceeded the
+// criterion's lifetime.
 func (r *HealthRepository) SoftDeleteExpiredCriteria(ctx context.Context) error {
-	var analyses []model.Analysis
-	if err := r.db.WithContext(ctx).Where("lifetime > 0").Find(&analyses).Error; err != nil {
+	var criteria []model.Criterion
+	if err := r.db.WithContext(ctx).Where("lifetime > 0").Find(&criteria).Error; err != nil {
 		return err
 	}
 
 	now := time.Now()
-	for _, a := range analyses {
-		expiryCutoff := now.Add(-time.Duration(a.Lifetime) * 24 * time.Hour)
-
-		var criterionIDs []uuid.UUID
+	for _, c := range criteria {
+		expiryCutoff := now.Add(-time.Duration(c.Lifetime) * 24 * time.Hour)
 		r.db.WithContext(ctx).
-			Model(&model.Criterion{}).
-			Where("analysis_id = ?", a.ID).
-			Pluck("id", &criterionIDs)
-
-		if len(criterionIDs) == 0 {
-			continue
-		}
-
-		// Soft-delete criteria updated before the expiry cutoff.
-		r.db.WithContext(ctx).
-			Where("criterion_id IN ? AND updated_at < ?", criterionIDs, expiryCutoff).
+			Where("criterion_id = ? AND updated_at < ?", c.ID, expiryCutoff).
 			Delete(&model.UserCriterion{})
 	}
 	return nil
 }
 
-// GetUsersWithNearExpiryAnalyses returns (userID, analysis) pairs where the user's
-// data is within warnWithin of expiring.
+// NearExpiryEntry holds a user + criterion that is nearing expiry.
 type NearExpiryEntry struct {
-	UserID     uuid.UUID
-	Analysis   model.Analysis
-	ExpiresAt  time.Time
+	UserID    uuid.UUID
+	Criterion model.Criterion
+	ExpiresAt time.Time
 }
 
+// GetNearExpiryEntries returns (userID, criterion) pairs where the user's data is
+// within warnWithin of expiring.
 func (r *HealthRepository) GetNearExpiryEntries(ctx context.Context, warnWithin time.Duration) ([]NearExpiryEntry, error) {
-	var analyses []model.Analysis
-	if err := r.db.WithContext(ctx).Where("lifetime > 0").Find(&analyses).Error; err != nil {
+	var criteria []model.Criterion
+	if err := r.db.WithContext(ctx).Where("lifetime > 0").Find(&criteria).Error; err != nil {
 		return nil, err
 	}
 
 	now := time.Now()
 	var result []NearExpiryEntry
 
-	for _, a := range analyses {
-		lifetime := time.Duration(a.Lifetime) * 24 * time.Hour
+	for _, c := range criteria {
+		lifetime := time.Duration(c.Lifetime) * 24 * time.Hour
 
-		var criterionIDs []uuid.UUID
-		r.db.WithContext(ctx).
-			Model(&model.Criterion{}).
-			Where("analysis_id = ?", a.ID).
-			Pluck("id", &criterionIDs)
-		if len(criterionIDs) == 0 {
-			continue
-		}
-
-		// Find the latest updated_at per user for this analysis.
 		type row struct {
 			UserID    uuid.UUID
 			UpdatedAt time.Time
@@ -151,9 +109,8 @@ func (r *HealthRepository) GetNearExpiryEntries(ctx context.Context, warnWithin 
 		var rows []row
 		r.db.WithContext(ctx).
 			Model(&model.UserCriterion{}).
-			Select("user_id, MAX(updated_at) as updated_at").
-			Where("criterion_id IN ?", criterionIDs).
-			Group("user_id").
+			Select("user_id, updated_at").
+			Where("criterion_id = ?", c.ID).
 			Scan(&rows)
 
 		for _, rw := range rows {
@@ -162,7 +119,7 @@ func (r *HealthRepository) GetNearExpiryEntries(ctx context.Context, warnWithin 
 			if timeLeft > 0 && timeLeft <= warnWithin {
 				result = append(result, NearExpiryEntry{
 					UserID:    rw.UserID,
-					Analysis:  a,
+					Criterion: c,
 					ExpiresAt: expiresAt,
 				})
 			}
@@ -205,7 +162,6 @@ func (r *HealthRepository) GetAllDistinctUserIDs(ctx context.Context) ([]uuid.UU
 }
 
 // EvaluateCriterionStatus finds the matching recommendation rule for a value.
-// Sex filtering is done at the Analysis level; no sex param here.
 func EvaluateCriterionStatus(value string, rules []model.RecommendationRule) *model.RecommendationRule {
 	if value == "" {
 		for i := range rules {
@@ -218,7 +174,7 @@ func EvaluateCriterionStatus(value string, rules []model.RecommendationRule) *mo
 
 	numVal, err := strconv.ParseFloat(value, 64)
 	if err != nil {
-		// Non-numeric (mark-done style): return the first "ok" rule.
+		// Non-numeric (check-type): return the first "ok" rule.
 		for i := range rules {
 			if rules[i].Severity == "ok" {
 				return &rules[i]

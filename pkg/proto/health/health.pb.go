@@ -21,195 +21,27 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type Analysis struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	Id    string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Name  string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	// lifetime in days; 0 means no expiry
-	Lifetime int32 `protobuf:"varint,3,opt,name=lifetime,proto3" json:"lifetime,omitempty"`
-	// sex restriction: "male", "female", or "" for all
-	Sex string `protobuf:"bytes,4,opt,name=sex,proto3" json:"sex,omitempty"`
-	// blocked_by: "", "level_1", "level_2", or "criteria_<uuid>"
-	BlockedBy     string `protobuf:"bytes,5,opt,name=blocked_by,json=blockedBy,proto3" json:"blocked_by,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *Analysis) Reset() {
-	*x = Analysis{}
-	mi := &file_health_proto_msgTypes[0]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Analysis) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Analysis) ProtoMessage() {}
-
-func (x *Analysis) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[0]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Analysis.ProtoReflect.Descriptor instead.
-func (*Analysis) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *Analysis) GetId() string {
-	if x != nil {
-		return x.Id
-	}
-	return ""
-}
-
-func (x *Analysis) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *Analysis) GetLifetime() int32 {
-	if x != nil {
-		return x.Lifetime
-	}
-	return 0
-}
-
-func (x *Analysis) GetSex() string {
-	if x != nil {
-		return x.Sex
-	}
-	return ""
-}
-
-func (x *Analysis) GetBlockedBy() string {
-	if x != nil {
-		return x.BlockedBy
-	}
-	return ""
-}
-
-// ListAnalysisRequest optionally filters by user context (sex + blocking rules).
-type ListAnalysisRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	UserSex       string                 `protobuf:"bytes,2,opt,name=user_sex,json=userSex,proto3" json:"user_sex,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListAnalysisRequest) Reset() {
-	*x = ListAnalysisRequest{}
-	mi := &file_health_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListAnalysisRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListAnalysisRequest) ProtoMessage() {}
-
-func (x *ListAnalysisRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListAnalysisRequest.ProtoReflect.Descriptor instead.
-func (*ListAnalysisRequest) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *ListAnalysisRequest) GetUserId() string {
-	if x != nil {
-		return x.UserId
-	}
-	return ""
-}
-
-func (x *ListAnalysisRequest) GetUserSex() string {
-	if x != nil {
-		return x.UserSex
-	}
-	return ""
-}
-
-type ListAnalysisResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Analyses      []*Analysis            `protobuf:"bytes,1,rep,name=analyses,proto3" json:"analyses,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListAnalysisResponse) Reset() {
-	*x = ListAnalysisResponse{}
-	mi := &file_health_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListAnalysisResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListAnalysisResponse) ProtoMessage() {}
-
-func (x *ListAnalysisResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[2]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListAnalysisResponse.ProtoReflect.Descriptor instead.
-func (*ListAnalysisResponse) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *ListAnalysisResponse) GetAnalyses() []*Analysis {
-	if x != nil {
-		return x.Analyses
-	}
-	return nil
-}
-
+// Criterion is a single health metric.
+// blocked_by: "", "level_1", "level_2", or "criteria_<uuid>"
+// sex: "male", "female", or "" for all
+// input_type: "numeric" or "check"
+// lifetime: days before expiry; 0 = no expiry
 type Criterion struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	AnalysisId    string                 `protobuf:"bytes,3,opt,name=analysis_id,json=analysisId,proto3" json:"analysis_id,omitempty"`
-	Level         int32                  `protobuf:"varint,4,opt,name=level,proto3" json:"level,omitempty"`
+	Level         int32                  `protobuf:"varint,3,opt,name=level,proto3" json:"level,omitempty"`
+	Sex           string                 `protobuf:"bytes,4,opt,name=sex,proto3" json:"sex,omitempty"`
+	BlockedBy     string                 `protobuf:"bytes,5,opt,name=blocked_by,json=blockedBy,proto3" json:"blocked_by,omitempty"`
+	InputType     string                 `protobuf:"bytes,6,opt,name=input_type,json=inputType,proto3" json:"input_type,omitempty"`
+	Lifetime      int32                  `protobuf:"varint,7,opt,name=lifetime,proto3" json:"lifetime,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Criterion) Reset() {
 	*x = Criterion{}
-	mi := &file_health_proto_msgTypes[3]
+	mi := &file_health_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -221,7 +53,7 @@ func (x *Criterion) String() string {
 func (*Criterion) ProtoMessage() {}
 
 func (x *Criterion) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[3]
+	mi := &file_health_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -234,7 +66,7 @@ func (x *Criterion) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Criterion.ProtoReflect.Descriptor instead.
 func (*Criterion) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{3}
+	return file_health_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Criterion) GetId() string {
@@ -251,13 +83,6 @@ func (x *Criterion) GetName() string {
 	return ""
 }
 
-func (x *Criterion) GetAnalysisId() string {
-	if x != nil {
-		return x.AnalysisId
-	}
-	return ""
-}
-
 func (x *Criterion) GetLevel() int32 {
 	if x != nil {
 		return x.Level
@@ -265,16 +90,45 @@ func (x *Criterion) GetLevel() int32 {
 	return 0
 }
 
+func (x *Criterion) GetSex() string {
+	if x != nil {
+		return x.Sex
+	}
+	return ""
+}
+
+func (x *Criterion) GetBlockedBy() string {
+	if x != nil {
+		return x.BlockedBy
+	}
+	return ""
+}
+
+func (x *Criterion) GetInputType() string {
+	if x != nil {
+		return x.InputType
+	}
+	return ""
+}
+
+func (x *Criterion) GetLifetime() int32 {
+	if x != nil {
+		return x.Lifetime
+	}
+	return 0
+}
+
 type ListCriteriaRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	AnalysisId    string                 `protobuf:"bytes,1,opt,name=analysis_id,json=analysisId,proto3" json:"analysis_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserSex       string                 `protobuf:"bytes,2,opt,name=user_sex,json=userSex,proto3" json:"user_sex,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ListCriteriaRequest) Reset() {
 	*x = ListCriteriaRequest{}
-	mi := &file_health_proto_msgTypes[4]
+	mi := &file_health_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -286,7 +140,7 @@ func (x *ListCriteriaRequest) String() string {
 func (*ListCriteriaRequest) ProtoMessage() {}
 
 func (x *ListCriteriaRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[4]
+	mi := &file_health_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -299,12 +153,19 @@ func (x *ListCriteriaRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCriteriaRequest.ProtoReflect.Descriptor instead.
 func (*ListCriteriaRequest) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{4}
+	return file_health_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *ListCriteriaRequest) GetAnalysisId() string {
+func (x *ListCriteriaRequest) GetUserId() string {
 	if x != nil {
-		return x.AnalysisId
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *ListCriteriaRequest) GetUserSex() string {
+	if x != nil {
+		return x.UserSex
 	}
 	return ""
 }
@@ -318,7 +179,7 @@ type ListCriteriaResponse struct {
 
 func (x *ListCriteriaResponse) Reset() {
 	*x = ListCriteriaResponse{}
-	mi := &file_health_proto_msgTypes[5]
+	mi := &file_health_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -330,7 +191,7 @@ func (x *ListCriteriaResponse) String() string {
 func (*ListCriteriaResponse) ProtoMessage() {}
 
 func (x *ListCriteriaResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[5]
+	mi := &file_health_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -343,7 +204,7 @@ func (x *ListCriteriaResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCriteriaResponse.ProtoReflect.Descriptor instead.
 func (*ListCriteriaResponse) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{5}
+	return file_health_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ListCriteriaResponse) GetCriteria() []*Criterion {
@@ -365,7 +226,7 @@ type SetUserCriterionRequest struct {
 
 func (x *SetUserCriterionRequest) Reset() {
 	*x = SetUserCriterionRequest{}
-	mi := &file_health_proto_msgTypes[6]
+	mi := &file_health_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -377,7 +238,7 @@ func (x *SetUserCriterionRequest) String() string {
 func (*SetUserCriterionRequest) ProtoMessage() {}
 
 func (x *SetUserCriterionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[6]
+	mi := &file_health_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -390,7 +251,7 @@ func (x *SetUserCriterionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetUserCriterionRequest.ProtoReflect.Descriptor instead.
 func (*SetUserCriterionRequest) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{6}
+	return file_health_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *SetUserCriterionRequest) GetUserId() string {
@@ -430,7 +291,7 @@ type SetUserCriterionResponse struct {
 
 func (x *SetUserCriterionResponse) Reset() {
 	*x = SetUserCriterionResponse{}
-	mi := &file_health_proto_msgTypes[7]
+	mi := &file_health_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -442,7 +303,7 @@ func (x *SetUserCriterionResponse) String() string {
 func (*SetUserCriterionResponse) ProtoMessage() {}
 
 func (x *SetUserCriterionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[7]
+	mi := &file_health_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -455,10 +316,98 @@ func (x *SetUserCriterionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetUserCriterionResponse.ProtoReflect.Descriptor instead.
 func (*SetUserCriterionResponse) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{7}
+	return file_health_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *SetUserCriterionResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+type ResetCriteriaRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResetCriteriaRequest) Reset() {
+	*x = ResetCriteriaRequest{}
+	mi := &file_health_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResetCriteriaRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResetCriteriaRequest) ProtoMessage() {}
+
+func (x *ResetCriteriaRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_health_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResetCriteriaRequest.ProtoReflect.Descriptor instead.
+func (*ResetCriteriaRequest) Descriptor() ([]byte, []int) {
+	return file_health_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ResetCriteriaRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type ResetCriteriaResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ResetCriteriaResponse) Reset() {
+	*x = ResetCriteriaResponse{}
+	mi := &file_health_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ResetCriteriaResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ResetCriteriaResponse) ProtoMessage() {}
+
+func (x *ResetCriteriaResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_health_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ResetCriteriaResponse.ProtoReflect.Descriptor instead.
+func (*ResetCriteriaResponse) Descriptor() ([]byte, []int) {
+	return file_health_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *ResetCriteriaResponse) GetSuccess() bool {
 	if x != nil {
 		return x.Success
 	}
@@ -469,20 +418,19 @@ type UserCriterionEntry struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	CriterionId    string                 `protobuf:"bytes,1,opt,name=criterion_id,json=criterionId,proto3" json:"criterion_id,omitempty"`
 	CriterionName  string                 `protobuf:"bytes,2,opt,name=criterion_name,json=criterionName,proto3" json:"criterion_name,omitempty"`
-	AnalysisId     string                 `protobuf:"bytes,3,opt,name=analysis_id,json=analysisId,proto3" json:"analysis_id,omitempty"`
-	AnalysisName   string                 `protobuf:"bytes,4,opt,name=analysis_name,json=analysisName,proto3" json:"analysis_name,omitempty"`
-	Value          string                 `protobuf:"bytes,5,opt,name=value,proto3" json:"value,omitempty"`
-	Status         string                 `protobuf:"bytes,6,opt,name=status,proto3" json:"status,omitempty"`
-	Recommendation string                 `protobuf:"bytes,7,opt,name=recommendation,proto3" json:"recommendation,omitempty"`
-	Level          int32                  `protobuf:"varint,8,opt,name=level,proto3" json:"level,omitempty"`
-	Severity       string                 `protobuf:"bytes,9,opt,name=severity,proto3" json:"severity,omitempty"`
+	Value          string                 `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
+	Status         string                 `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
+	Recommendation string                 `protobuf:"bytes,5,opt,name=recommendation,proto3" json:"recommendation,omitempty"`
+	Level          int32                  `protobuf:"varint,6,opt,name=level,proto3" json:"level,omitempty"`
+	Severity       string                 `protobuf:"bytes,7,opt,name=severity,proto3" json:"severity,omitempty"`
+	InputType      string                 `protobuf:"bytes,8,opt,name=input_type,json=inputType,proto3" json:"input_type,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
 
 func (x *UserCriterionEntry) Reset() {
 	*x = UserCriterionEntry{}
-	mi := &file_health_proto_msgTypes[8]
+	mi := &file_health_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -494,7 +442,7 @@ func (x *UserCriterionEntry) String() string {
 func (*UserCriterionEntry) ProtoMessage() {}
 
 func (x *UserCriterionEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[8]
+	mi := &file_health_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -507,7 +455,7 @@ func (x *UserCriterionEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserCriterionEntry.ProtoReflect.Descriptor instead.
 func (*UserCriterionEntry) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{8}
+	return file_health_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *UserCriterionEntry) GetCriterionId() string {
@@ -520,20 +468,6 @@ func (x *UserCriterionEntry) GetCriterionId() string {
 func (x *UserCriterionEntry) GetCriterionName() string {
 	if x != nil {
 		return x.CriterionName
-	}
-	return ""
-}
-
-func (x *UserCriterionEntry) GetAnalysisId() string {
-	if x != nil {
-		return x.AnalysisId
-	}
-	return ""
-}
-
-func (x *UserCriterionEntry) GetAnalysisName() string {
-	if x != nil {
-		return x.AnalysisName
 	}
 	return ""
 }
@@ -573,6 +507,13 @@ func (x *UserCriterionEntry) GetSeverity() string {
 	return ""
 }
 
+func (x *UserCriterionEntry) GetInputType() string {
+	if x != nil {
+		return x.InputType
+	}
+	return ""
+}
+
 type GetUserCriteriaRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
@@ -583,7 +524,7 @@ type GetUserCriteriaRequest struct {
 
 func (x *GetUserCriteriaRequest) Reset() {
 	*x = GetUserCriteriaRequest{}
-	mi := &file_health_proto_msgTypes[9]
+	mi := &file_health_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -595,7 +536,7 @@ func (x *GetUserCriteriaRequest) String() string {
 func (*GetUserCriteriaRequest) ProtoMessage() {}
 
 func (x *GetUserCriteriaRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[9]
+	mi := &file_health_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -608,7 +549,7 @@ func (x *GetUserCriteriaRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUserCriteriaRequest.ProtoReflect.Descriptor instead.
 func (*GetUserCriteriaRequest) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{9}
+	return file_health_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetUserCriteriaRequest) GetUserId() string {
@@ -634,7 +575,7 @@ type GetUserCriteriaResponse struct {
 
 func (x *GetUserCriteriaResponse) Reset() {
 	*x = GetUserCriteriaResponse{}
-	mi := &file_health_proto_msgTypes[10]
+	mi := &file_health_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -646,7 +587,7 @@ func (x *GetUserCriteriaResponse) String() string {
 func (*GetUserCriteriaResponse) ProtoMessage() {}
 
 func (x *GetUserCriteriaResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[10]
+	mi := &file_health_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -659,7 +600,7 @@ func (x *GetUserCriteriaResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUserCriteriaResponse.ProtoReflect.Descriptor instead.
 func (*GetUserCriteriaResponse) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{10}
+	return file_health_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetUserCriteriaResponse) GetEntries() []*UserCriterionEntry {
@@ -678,7 +619,7 @@ type GetProgressRequest struct {
 
 func (x *GetProgressRequest) Reset() {
 	*x = GetProgressRequest{}
-	mi := &file_health_proto_msgTypes[11]
+	mi := &file_health_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -690,7 +631,7 @@ func (x *GetProgressRequest) String() string {
 func (*GetProgressRequest) ProtoMessage() {}
 
 func (x *GetProgressRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[11]
+	mi := &file_health_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -703,7 +644,7 @@ func (x *GetProgressRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetProgressRequest.ProtoReflect.Descriptor instead.
 func (*GetProgressRequest) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{11}
+	return file_health_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetProgressRequest) GetUserId() string {
@@ -725,7 +666,7 @@ type GetProgressResponse struct {
 
 func (x *GetProgressResponse) Reset() {
 	*x = GetProgressResponse{}
-	mi := &file_health_proto_msgTypes[12]
+	mi := &file_health_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -737,7 +678,7 @@ func (x *GetProgressResponse) String() string {
 func (*GetProgressResponse) ProtoMessage() {}
 
 func (x *GetProgressResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[12]
+	mi := &file_health_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -750,7 +691,7 @@ func (x *GetProgressResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetProgressResponse.ProtoReflect.Descriptor instead.
 func (*GetProgressResponse) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{12}
+	return file_health_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetProgressResponse) GetTotal() int32 {
@@ -785,16 +726,15 @@ type Recommendation struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	CriterionId   string                 `protobuf:"bytes,1,opt,name=criterion_id,json=criterionId,proto3" json:"criterion_id,omitempty"`
 	CriterionName string                 `protobuf:"bytes,2,opt,name=criterion_name,json=criterionName,proto3" json:"criterion_name,omitempty"`
-	AnalysisName  string                 `protobuf:"bytes,3,opt,name=analysis_name,json=analysisName,proto3" json:"analysis_name,omitempty"`
-	Text          string                 `protobuf:"bytes,4,opt,name=text,proto3" json:"text,omitempty"`
-	Severity      string                 `protobuf:"bytes,5,opt,name=severity,proto3" json:"severity,omitempty"`
+	Text          string                 `protobuf:"bytes,3,opt,name=text,proto3" json:"text,omitempty"`
+	Severity      string                 `protobuf:"bytes,4,opt,name=severity,proto3" json:"severity,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Recommendation) Reset() {
 	*x = Recommendation{}
-	mi := &file_health_proto_msgTypes[13]
+	mi := &file_health_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -806,7 +746,7 @@ func (x *Recommendation) String() string {
 func (*Recommendation) ProtoMessage() {}
 
 func (x *Recommendation) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[13]
+	mi := &file_health_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -819,7 +759,7 @@ func (x *Recommendation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Recommendation.ProtoReflect.Descriptor instead.
 func (*Recommendation) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{13}
+	return file_health_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *Recommendation) GetCriterionId() string {
@@ -832,13 +772,6 @@ func (x *Recommendation) GetCriterionId() string {
 func (x *Recommendation) GetCriterionName() string {
 	if x != nil {
 		return x.CriterionName
-	}
-	return ""
-}
-
-func (x *Recommendation) GetAnalysisName() string {
-	if x != nil {
-		return x.AnalysisName
 	}
 	return ""
 }
@@ -867,7 +800,7 @@ type GetRecommendationsRequest struct {
 
 func (x *GetRecommendationsRequest) Reset() {
 	*x = GetRecommendationsRequest{}
-	mi := &file_health_proto_msgTypes[14]
+	mi := &file_health_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -879,7 +812,7 @@ func (x *GetRecommendationsRequest) String() string {
 func (*GetRecommendationsRequest) ProtoMessage() {}
 
 func (x *GetRecommendationsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[14]
+	mi := &file_health_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -892,7 +825,7 @@ func (x *GetRecommendationsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRecommendationsRequest.ProtoReflect.Descriptor instead.
 func (*GetRecommendationsRequest) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{14}
+	return file_health_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *GetRecommendationsRequest) GetUserId() string {
@@ -918,7 +851,7 @@ type GetRecommendationsResponse struct {
 
 func (x *GetRecommendationsResponse) Reset() {
 	*x = GetRecommendationsResponse{}
-	mi := &file_health_proto_msgTypes[15]
+	mi := &file_health_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -930,7 +863,7 @@ func (x *GetRecommendationsResponse) String() string {
 func (*GetRecommendationsResponse) ProtoMessage() {}
 
 func (x *GetRecommendationsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[15]
+	mi := &file_health_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -943,7 +876,7 @@ func (x *GetRecommendationsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRecommendationsResponse.ProtoReflect.Descriptor instead.
 func (*GetRecommendationsResponse) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{15}
+	return file_health_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *GetRecommendationsResponse) GetRecommendations() []*Recommendation {
@@ -951,102 +884,6 @@ func (x *GetRecommendationsResponse) GetRecommendations() []*Recommendation {
 		return x.Recommendations
 	}
 	return nil
-}
-
-type ResetAnalysisCriteriaRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	AnalysisId    string                 `protobuf:"bytes,2,opt,name=analysis_id,json=analysisId,proto3" json:"analysis_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ResetAnalysisCriteriaRequest) Reset() {
-	*x = ResetAnalysisCriteriaRequest{}
-	mi := &file_health_proto_msgTypes[16]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ResetAnalysisCriteriaRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ResetAnalysisCriteriaRequest) ProtoMessage() {}
-
-func (x *ResetAnalysisCriteriaRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[16]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ResetAnalysisCriteriaRequest.ProtoReflect.Descriptor instead.
-func (*ResetAnalysisCriteriaRequest) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{16}
-}
-
-func (x *ResetAnalysisCriteriaRequest) GetUserId() string {
-	if x != nil {
-		return x.UserId
-	}
-	return ""
-}
-
-func (x *ResetAnalysisCriteriaRequest) GetAnalysisId() string {
-	if x != nil {
-		return x.AnalysisId
-	}
-	return ""
-}
-
-type ResetAnalysisCriteriaResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ResetAnalysisCriteriaResponse) Reset() {
-	*x = ResetAnalysisCriteriaResponse{}
-	mi := &file_health_proto_msgTypes[17]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ResetAnalysisCriteriaResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ResetAnalysisCriteriaResponse) ProtoMessage() {}
-
-func (x *ResetAnalysisCriteriaResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[17]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ResetAnalysisCriteriaResponse.ProtoReflect.Descriptor instead.
-func (*ResetAnalysisCriteriaResponse) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{17}
-}
-
-func (x *ResetAnalysisCriteriaResponse) GetSuccess() bool {
-	if x != nil {
-		return x.Success
-	}
-	return false
 }
 
 type SendNotificationRequest struct {
@@ -1062,7 +899,7 @@ type SendNotificationRequest struct {
 
 func (x *SendNotificationRequest) Reset() {
 	*x = SendNotificationRequest{}
-	mi := &file_health_proto_msgTypes[18]
+	mi := &file_health_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1074,7 +911,7 @@ func (x *SendNotificationRequest) String() string {
 func (*SendNotificationRequest) ProtoMessage() {}
 
 func (x *SendNotificationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[18]
+	mi := &file_health_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1087,7 +924,7 @@ func (x *SendNotificationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendNotificationRequest.ProtoReflect.Descriptor instead.
 func (*SendNotificationRequest) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{18}
+	return file_health_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *SendNotificationRequest) GetUserId() string {
@@ -1133,7 +970,7 @@ type SendNotificationResponse struct {
 
 func (x *SendNotificationResponse) Reset() {
 	*x = SendNotificationResponse{}
-	mi := &file_health_proto_msgTypes[19]
+	mi := &file_health_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1145,7 +982,7 @@ func (x *SendNotificationResponse) String() string {
 func (*SendNotificationResponse) ProtoMessage() {}
 
 func (x *SendNotificationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_health_proto_msgTypes[19]
+	mi := &file_health_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1158,35 +995,27 @@ func (x *SendNotificationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendNotificationResponse.ProtoReflect.Descriptor instead.
 func (*SendNotificationResponse) Descriptor() ([]byte, []int) {
-	return file_health_proto_rawDescGZIP(), []int{19}
+	return file_health_proto_rawDescGZIP(), []int{16}
 }
 
 var File_health_proto protoreflect.FileDescriptor
 
 const file_health_proto_rawDesc = "" +
 	"\n" +
-	"\fhealth.proto\x12\x06health\"{\n" +
-	"\bAnalysis\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1a\n" +
-	"\blifetime\x18\x03 \x01(\x05R\blifetime\x12\x10\n" +
-	"\x03sex\x18\x04 \x01(\tR\x03sex\x12\x1d\n" +
-	"\n" +
-	"blocked_by\x18\x05 \x01(\tR\tblockedBy\"I\n" +
-	"\x13ListAnalysisRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x19\n" +
-	"\buser_sex\x18\x02 \x01(\tR\auserSex\"D\n" +
-	"\x14ListAnalysisResponse\x12,\n" +
-	"\banalyses\x18\x01 \x03(\v2\x10.health.AnalysisR\banalyses\"f\n" +
+	"\fhealth.proto\x12\x06health\"\xb1\x01\n" +
 	"\tCriterion\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1f\n" +
-	"\vanalysis_id\x18\x03 \x01(\tR\n" +
-	"analysisId\x12\x14\n" +
-	"\x05level\x18\x04 \x01(\x05R\x05level\"6\n" +
-	"\x13ListCriteriaRequest\x12\x1f\n" +
-	"\vanalysis_id\x18\x01 \x01(\tR\n" +
-	"analysisId\"E\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
+	"\x05level\x18\x03 \x01(\x05R\x05level\x12\x10\n" +
+	"\x03sex\x18\x04 \x01(\tR\x03sex\x12\x1d\n" +
+	"\n" +
+	"blocked_by\x18\x05 \x01(\tR\tblockedBy\x12\x1d\n" +
+	"\n" +
+	"input_type\x18\x06 \x01(\tR\tinputType\x12\x1a\n" +
+	"\blifetime\x18\a \x01(\x05R\blifetime\"I\n" +
+	"\x13ListCriteriaRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x19\n" +
+	"\buser_sex\x18\x02 \x01(\tR\auserSex\"E\n" +
 	"\x14ListCriteriaResponse\x12-\n" +
 	"\bcriteria\x18\x01 \x03(\v2\x11.health.CriterionR\bcriteria\"\x83\x01\n" +
 	"\x17SetUserCriterionRequest\x12\x17\n" +
@@ -1195,18 +1024,21 @@ const file_health_proto_rawDesc = "" +
 	"\x05value\x18\x03 \x01(\tR\x05value\x12\x16\n" +
 	"\x06source\x18\x04 \x01(\tR\x06source\"4\n" +
 	"\x18SetUserCriterionResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xac\x02\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"/\n" +
+	"\x14ResetCriteriaRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"1\n" +
+	"\x15ResetCriteriaResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x85\x02\n" +
 	"\x12UserCriterionEntry\x12!\n" +
 	"\fcriterion_id\x18\x01 \x01(\tR\vcriterionId\x12%\n" +
-	"\x0ecriterion_name\x18\x02 \x01(\tR\rcriterionName\x12\x1f\n" +
-	"\vanalysis_id\x18\x03 \x01(\tR\n" +
-	"analysisId\x12#\n" +
-	"\ranalysis_name\x18\x04 \x01(\tR\fanalysisName\x12\x14\n" +
-	"\x05value\x18\x05 \x01(\tR\x05value\x12\x16\n" +
-	"\x06status\x18\x06 \x01(\tR\x06status\x12&\n" +
-	"\x0erecommendation\x18\a \x01(\tR\x0erecommendation\x12\x14\n" +
-	"\x05level\x18\b \x01(\x05R\x05level\x12\x1a\n" +
-	"\bseverity\x18\t \x01(\tR\bseverity\"L\n" +
+	"\x0ecriterion_name\x18\x02 \x01(\tR\rcriterionName\x12\x14\n" +
+	"\x05value\x18\x03 \x01(\tR\x05value\x12\x16\n" +
+	"\x06status\x18\x04 \x01(\tR\x06status\x12&\n" +
+	"\x0erecommendation\x18\x05 \x01(\tR\x0erecommendation\x12\x14\n" +
+	"\x05level\x18\x06 \x01(\x05R\x05level\x12\x1a\n" +
+	"\bseverity\x18\a \x01(\tR\bseverity\x12\x1d\n" +
+	"\n" +
+	"input_type\x18\b \x01(\tR\tinputType\"L\n" +
 	"\x16GetUserCriteriaRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x19\n" +
 	"\buser_sex\x18\x02 \x01(\tR\auserSex\"O\n" +
@@ -1219,36 +1051,28 @@ const file_health_proto_rawDesc = "" +
 	"\x06filled\x18\x02 \x01(\x05R\x06filled\x12\x18\n" +
 	"\apercent\x18\x03 \x01(\x01R\apercent\x12\x1f\n" +
 	"\vlevel_label\x18\x04 \x01(\tR\n" +
-	"levelLabel\"\xaf\x01\n" +
+	"levelLabel\"\x8a\x01\n" +
 	"\x0eRecommendation\x12!\n" +
 	"\fcriterion_id\x18\x01 \x01(\tR\vcriterionId\x12%\n" +
-	"\x0ecriterion_name\x18\x02 \x01(\tR\rcriterionName\x12#\n" +
-	"\ranalysis_name\x18\x03 \x01(\tR\fanalysisName\x12\x12\n" +
-	"\x04text\x18\x04 \x01(\tR\x04text\x12\x1a\n" +
-	"\bseverity\x18\x05 \x01(\tR\bseverity\"O\n" +
+	"\x0ecriterion_name\x18\x02 \x01(\tR\rcriterionName\x12\x12\n" +
+	"\x04text\x18\x03 \x01(\tR\x04text\x12\x1a\n" +
+	"\bseverity\x18\x04 \x01(\tR\bseverity\"O\n" +
 	"\x19GetRecommendationsRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x19\n" +
 	"\buser_sex\x18\x02 \x01(\tR\auserSex\"^\n" +
 	"\x1aGetRecommendationsResponse\x12@\n" +
-	"\x0frecommendations\x18\x01 \x03(\v2\x16.health.RecommendationR\x0frecommendations\"X\n" +
-	"\x1cResetAnalysisCriteriaRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1f\n" +
-	"\vanalysis_id\x18\x02 \x01(\tR\n" +
-	"analysisId\"9\n" +
-	"\x1dResetAnalysisCriteriaResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xc1\x01\n" +
+	"\x0frecommendations\x18\x01 \x03(\v2\x16.health.RecommendationR\x0frecommendations\"\xc1\x01\n" +
 	"\x17SendNotificationRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x18\n" +
 	"\achannel\x18\x02 \x01(\tR\achannel\x12+\n" +
 	"\x11notification_type\x18\x03 \x01(\tR\x10notificationType\x12#\n" +
 	"\rtemplate_code\x18\x04 \x01(\tR\ftemplateCode\x12!\n" +
 	"\fpayload_json\x18\x05 \x01(\tR\vpayloadJson\"\x1a\n" +
-	"\x18SendNotificationResponse2\xb2\x05\n" +
+	"\x18SendNotificationResponse2\xcf\x04\n" +
 	"\rHealthService\x12I\n" +
-	"\fListAnalysis\x12\x1b.health.ListAnalysisRequest\x1a\x1c.health.ListAnalysisResponse\x12I\n" +
 	"\fListCriteria\x12\x1b.health.ListCriteriaRequest\x1a\x1c.health.ListCriteriaResponse\x12U\n" +
-	"\x10SetUserCriterion\x12\x1f.health.SetUserCriterionRequest\x1a .health.SetUserCriterionResponse\x12d\n" +
-	"\x15ResetAnalysisCriteria\x12$.health.ResetAnalysisCriteriaRequest\x1a%.health.ResetAnalysisCriteriaResponse\x12R\n" +
+	"\x10SetUserCriterion\x12\x1f.health.SetUserCriterionRequest\x1a .health.SetUserCriterionResponse\x12L\n" +
+	"\rResetCriteria\x12\x1c.health.ResetCriteriaRequest\x1a\x1d.health.ResetCriteriaResponse\x12R\n" +
 	"\x0fGetUserCriteria\x12\x1e.health.GetUserCriteriaRequest\x1a\x1f.health.GetUserCriteriaResponse\x12F\n" +
 	"\vGetProgress\x12\x1a.health.GetProgressRequest\x1a\x1b.health.GetProgressResponse\x12[\n" +
 	"\x12GetRecommendations\x12!.health.GetRecommendationsRequest\x1a\".health.GetRecommendationsResponse\x12U\n" +
@@ -1266,55 +1090,49 @@ func file_health_proto_rawDescGZIP() []byte {
 	return file_health_proto_rawDescData
 }
 
-var file_health_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_health_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_health_proto_goTypes = []any{
-	(*Analysis)(nil),                      // 0: health.Analysis
-	(*ListAnalysisRequest)(nil),           // 1: health.ListAnalysisRequest
-	(*ListAnalysisResponse)(nil),          // 2: health.ListAnalysisResponse
-	(*Criterion)(nil),                     // 3: health.Criterion
-	(*ListCriteriaRequest)(nil),           // 4: health.ListCriteriaRequest
-	(*ListCriteriaResponse)(nil),          // 5: health.ListCriteriaResponse
-	(*SetUserCriterionRequest)(nil),       // 6: health.SetUserCriterionRequest
-	(*SetUserCriterionResponse)(nil),      // 7: health.SetUserCriterionResponse
-	(*UserCriterionEntry)(nil),            // 8: health.UserCriterionEntry
-	(*GetUserCriteriaRequest)(nil),        // 9: health.GetUserCriteriaRequest
-	(*GetUserCriteriaResponse)(nil),       // 10: health.GetUserCriteriaResponse
-	(*GetProgressRequest)(nil),            // 11: health.GetProgressRequest
-	(*GetProgressResponse)(nil),           // 12: health.GetProgressResponse
-	(*Recommendation)(nil),                // 13: health.Recommendation
-	(*GetRecommendationsRequest)(nil),     // 14: health.GetRecommendationsRequest
-	(*GetRecommendationsResponse)(nil),    // 15: health.GetRecommendationsResponse
-	(*ResetAnalysisCriteriaRequest)(nil),  // 16: health.ResetAnalysisCriteriaRequest
-	(*ResetAnalysisCriteriaResponse)(nil), // 17: health.ResetAnalysisCriteriaResponse
-	(*SendNotificationRequest)(nil),       // 18: health.SendNotificationRequest
-	(*SendNotificationResponse)(nil),      // 19: health.SendNotificationResponse
+	(*Criterion)(nil),                  // 0: health.Criterion
+	(*ListCriteriaRequest)(nil),        // 1: health.ListCriteriaRequest
+	(*ListCriteriaResponse)(nil),       // 2: health.ListCriteriaResponse
+	(*SetUserCriterionRequest)(nil),    // 3: health.SetUserCriterionRequest
+	(*SetUserCriterionResponse)(nil),   // 4: health.SetUserCriterionResponse
+	(*ResetCriteriaRequest)(nil),       // 5: health.ResetCriteriaRequest
+	(*ResetCriteriaResponse)(nil),      // 6: health.ResetCriteriaResponse
+	(*UserCriterionEntry)(nil),         // 7: health.UserCriterionEntry
+	(*GetUserCriteriaRequest)(nil),     // 8: health.GetUserCriteriaRequest
+	(*GetUserCriteriaResponse)(nil),    // 9: health.GetUserCriteriaResponse
+	(*GetProgressRequest)(nil),         // 10: health.GetProgressRequest
+	(*GetProgressResponse)(nil),        // 11: health.GetProgressResponse
+	(*Recommendation)(nil),             // 12: health.Recommendation
+	(*GetRecommendationsRequest)(nil),  // 13: health.GetRecommendationsRequest
+	(*GetRecommendationsResponse)(nil), // 14: health.GetRecommendationsResponse
+	(*SendNotificationRequest)(nil),    // 15: health.SendNotificationRequest
+	(*SendNotificationResponse)(nil),   // 16: health.SendNotificationResponse
 }
 var file_health_proto_depIdxs = []int32{
-	0,  // 0: health.ListAnalysisResponse.analyses:type_name -> health.Analysis
-	3,  // 1: health.ListCriteriaResponse.criteria:type_name -> health.Criterion
-	8,  // 2: health.GetUserCriteriaResponse.entries:type_name -> health.UserCriterionEntry
-	13, // 3: health.GetRecommendationsResponse.recommendations:type_name -> health.Recommendation
-	1,  // 4: health.HealthService.ListAnalysis:input_type -> health.ListAnalysisRequest
-	4,  // 5: health.HealthService.ListCriteria:input_type -> health.ListCriteriaRequest
-	6,  // 6: health.HealthService.SetUserCriterion:input_type -> health.SetUserCriterionRequest
-	16, // 7: health.HealthService.ResetAnalysisCriteria:input_type -> health.ResetAnalysisCriteriaRequest
-	9,  // 8: health.HealthService.GetUserCriteria:input_type -> health.GetUserCriteriaRequest
-	11, // 9: health.HealthService.GetProgress:input_type -> health.GetProgressRequest
-	14, // 10: health.HealthService.GetRecommendations:input_type -> health.GetRecommendationsRequest
-	18, // 11: health.HealthService.SendNotification:input_type -> health.SendNotificationRequest
-	2,  // 12: health.HealthService.ListAnalysis:output_type -> health.ListAnalysisResponse
-	5,  // 13: health.HealthService.ListCriteria:output_type -> health.ListCriteriaResponse
-	7,  // 14: health.HealthService.SetUserCriterion:output_type -> health.SetUserCriterionResponse
-	17, // 15: health.HealthService.ResetAnalysisCriteria:output_type -> health.ResetAnalysisCriteriaResponse
-	10, // 16: health.HealthService.GetUserCriteria:output_type -> health.GetUserCriteriaResponse
-	12, // 17: health.HealthService.GetProgress:output_type -> health.GetProgressResponse
-	15, // 18: health.HealthService.GetRecommendations:output_type -> health.GetRecommendationsResponse
-	19, // 19: health.HealthService.SendNotification:output_type -> health.SendNotificationResponse
-	12, // [12:20] is the sub-list for method output_type
-	4,  // [4:12] is the sub-list for method input_type
-	4,  // [4:4] is the sub-list for extension type_name
-	4,  // [4:4] is the sub-list for extension extendee
-	0,  // [0:4] is the sub-list for field type_name
+	0,  // 0: health.ListCriteriaResponse.criteria:type_name -> health.Criterion
+	7,  // 1: health.GetUserCriteriaResponse.entries:type_name -> health.UserCriterionEntry
+	12, // 2: health.GetRecommendationsResponse.recommendations:type_name -> health.Recommendation
+	1,  // 3: health.HealthService.ListCriteria:input_type -> health.ListCriteriaRequest
+	3,  // 4: health.HealthService.SetUserCriterion:input_type -> health.SetUserCriterionRequest
+	5,  // 5: health.HealthService.ResetCriteria:input_type -> health.ResetCriteriaRequest
+	8,  // 6: health.HealthService.GetUserCriteria:input_type -> health.GetUserCriteriaRequest
+	10, // 7: health.HealthService.GetProgress:input_type -> health.GetProgressRequest
+	13, // 8: health.HealthService.GetRecommendations:input_type -> health.GetRecommendationsRequest
+	15, // 9: health.HealthService.SendNotification:input_type -> health.SendNotificationRequest
+	2,  // 10: health.HealthService.ListCriteria:output_type -> health.ListCriteriaResponse
+	4,  // 11: health.HealthService.SetUserCriterion:output_type -> health.SetUserCriterionResponse
+	6,  // 12: health.HealthService.ResetCriteria:output_type -> health.ResetCriteriaResponse
+	9,  // 13: health.HealthService.GetUserCriteria:output_type -> health.GetUserCriteriaResponse
+	11, // 14: health.HealthService.GetProgress:output_type -> health.GetProgressResponse
+	14, // 15: health.HealthService.GetRecommendations:output_type -> health.GetRecommendationsResponse
+	16, // 16: health.HealthService.SendNotification:output_type -> health.SendNotificationResponse
+	10, // [10:17] is the sub-list for method output_type
+	3,  // [3:10] is the sub-list for method input_type
+	3,  // [3:3] is the sub-list for extension type_name
+	3,  // [3:3] is the sub-list for extension extendee
+	0,  // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_health_proto_init() }
@@ -1328,7 +1146,7 @@ func file_health_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_health_proto_rawDesc), len(file_health_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   20,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
