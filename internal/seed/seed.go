@@ -42,20 +42,20 @@ func Run(db *gorm.DB) error {
 	// Lifetime: days (0 = no expiry)
 	criteria := []model.Criterion{
 		// --- Blood ---
-		{ID: uid("a0000001-0000-0000-0000-000000000001"), GroupID: &gBlood, Name: "Гемоглобин", Level: 1, InputType: "numeric", Lifetime: 365, SortOrder: 1},
-		{ID: uid("a0000001-0000-0000-0000-000000000003"), GroupID: &gBlood, Name: "Лейкоциты", Level: 1, InputType: "numeric", Lifetime: 365, SortOrder: 2},
-		{ID: uid("a0000001-0000-0000-0000-000000000004"), GroupID: &gBlood, Name: "Тромбоциты", Level: 2, InputType: "numeric", Lifetime: 365, SortOrder: 3},
+		{ID: uid("a0000001-0000-0000-0000-000000000001"), GroupID: &gBlood, Name: "Гемоглобин", Level: 1, InputType: "numeric", Lifetime: 365, SortOrder: 1, MinValue: pf(120), MaxValue: pf(175), Delta: pf(10)},
+		{ID: uid("a0000001-0000-0000-0000-000000000003"), GroupID: &gBlood, Name: "Лейкоциты", Level: 1, InputType: "numeric", Lifetime: 365, SortOrder: 2, MinValue: pf(4), MaxValue: pf(9), Delta: pf(1)},
+		{ID: uid("a0000001-0000-0000-0000-000000000004"), GroupID: &gBlood, Name: "Тромбоциты", Level: 2, InputType: "numeric", Lifetime: 365, SortOrder: 3, MinValue: pf(150), MaxValue: pf(400), Delta: pf(20)},
 		// --- Biochemistry ---
-		{ID: uid("a0000001-0000-0000-0000-000000000002"), GroupID: &gBiochem, Name: "Глюкоза", Level: 1, InputType: "numeric", Lifetime: 365, SortOrder: 1},
-		{ID: uid("a0000001-0000-0000-0000-000000000005"), GroupID: &gBiochem, Name: "Холестерин", Level: 1, InputType: "numeric", Lifetime: 365, SortOrder: 2},
+		{ID: uid("a0000001-0000-0000-0000-000000000002"), GroupID: &gBiochem, Name: "Глюкоза", Level: 1, InputType: "numeric", Lifetime: 365, SortOrder: 1, MinValue: pf(3.3), MaxValue: pf(5.5), Delta: pf(0.5)},
+		{ID: uid("a0000001-0000-0000-0000-000000000005"), GroupID: &gBiochem, Name: "Холестерин", Level: 1, InputType: "numeric", Lifetime: 365, SortOrder: 2, MinValue: pf(0), MaxValue: pf(5.2), Delta: pf(0.5)},
 		{ID: uid("a0000001-0000-0000-0000-000000000017"), GroupID: &gBiochem, Name: "Липидный профиль", Level: 3, InputType: "numeric", Lifetime: 365, SortOrder: 3},
 		// --- Blood pressure ---
-		{ID: uid("a0000001-0000-0000-0000-000000000006"), GroupID: &gPressure, Name: "Давление систолическое", Level: 1, InputType: "numeric", Lifetime: 30, SortOrder: 1},
-		{ID: uid("a0000001-0000-0000-0000-000000000007"), GroupID: &gPressure, Name: "Давление диастолическое", Level: 1, InputType: "numeric", Lifetime: 30, SortOrder: 2},
+		{ID: uid("a0000001-0000-0000-0000-000000000006"), GroupID: &gPressure, Name: "Давление систолическое", Level: 1, InputType: "numeric", Lifetime: 30, SortOrder: 1, MinValue: pf(90), MaxValue: pf(130), Delta: pf(10)},
+		{ID: uid("a0000001-0000-0000-0000-000000000007"), GroupID: &gPressure, Name: "Давление диастолическое", Level: 1, InputType: "numeric", Lifetime: 30, SortOrder: 2, MinValue: pf(60), MaxValue: pf(85), Delta: pf(10)},
 		// --- Vision ---
 		{ID: uid("a0000001-0000-0000-0000-000000000008"), GroupID: &gInstrumental, Name: "Острота зрения", Level: 2, InputType: "numeric", Lifetime: 365, SortOrder: 1},
 		// --- Activity ---
-		{ID: uid("a0000001-0000-0000-0000-000000000009"), GroupID: &gActivity, Name: "Шаги в неделю", Level: 1, InputType: "numeric", Lifetime: 7, SortOrder: 1},
+		{ID: uid("a0000001-0000-0000-0000-000000000009"), GroupID: &gActivity, Name: "Шаги в неделю", Level: 1, InputType: "numeric", Lifetime: 7, SortOrder: 1, MinValue: pf(70000), MaxValue: nil, Delta: pf(35000)},
 		// --- Preventive visits ---
 		{ID: uid("a0000001-0000-0000-0000-000000000010"), GroupID: &gVisits, Name: "Стоматолог", Level: 1, InputType: "check", Lifetime: 180, SortOrder: 1},
 		{ID: uid("a0000001-0000-0000-0000-000000000011"), GroupID: &gVisits, Name: "Терапевт", Level: 1, InputType: "check", Lifetime: 365, SortOrder: 2},
@@ -176,7 +176,6 @@ func Run(db *gorm.DB) error {
 		{
 			ID: uid("e0000001-0000-0000-0000-000000000010"), CriterionID: criteria[0].ID,
 			Type: "recommendation", Title: "Питание для повышения гемоглобина", BaseWeight: 4,
-			MinValue: nil, MaxValue: pf(119),
 			Texts: js([]string{
 				"Сегодня попробуйте съесть гречку или красное мясо — они богаты железом и помогут повысить гемоглобин.",
 				"Добавьте в рацион шпинат, чечевицу или говяжью печень — отличные источники железа.",
@@ -186,7 +185,6 @@ func Run(db *gorm.DB) error {
 		{
 			ID: uid("e0000001-0000-0000-0000-000000000011"), CriterionID: criteria[4].ID,
 			Type: "recommendation", Title: "Снизьте холестерин питанием", BaseWeight: 4,
-			MinValue: pf(5.2), MaxValue: nil,
 			Texts: js([]string{
 				"Сегодня замените жирное мясо на рыбу или бобовые — это поможет снизить холестерин.",
 				"Овсяная каша на завтрак — отличный способ снизить уровень холестерина.",
@@ -196,7 +194,6 @@ func Run(db *gorm.DB) error {
 		{
 			ID: uid("e0000001-0000-0000-0000-000000000012"), CriterionID: criteria[9].ID,
 			Type: "recommendation", Title: "Увеличьте физическую активность", BaseWeight: 4,
-			MinValue: nil, MaxValue: pf(34999),
 			Texts: js([]string{
 				"Сегодня пройдите хотя бы 30 минут пешком — это около 3 000 шагов. Маленький шаг к здоровью!",
 				"Поднимитесь по лестнице вместо лифта и сделайте небольшую прогулку в обед.",
@@ -206,7 +203,6 @@ func Run(db *gorm.DB) error {
 		{
 			ID: uid("e0000001-0000-0000-0000-000000000013"), CriterionID: criteria[6].ID,
 			Type: "recommendation", Title: "Контроль давления: образ жизни", BaseWeight: 4,
-			MinValue: pf(130), MaxValue: nil,
 			Texts: js([]string{
 				"Сократите потребление соли сегодня — замените солёные снеки на свежие овощи.",
 				"Медитация 10 минут в день помогает снизить артериальное давление. Попробуйте сегодня.",
@@ -225,7 +221,6 @@ func Run(db *gorm.DB) error {
 		{
 			ID: uid("e0000001-0000-0000-0000-000000000021"), CriterionID: criteria[3].ID,
 			Type: "alarm", Title: "Тревога: глюкоза повышена", BaseWeight: 10,
-			MinValue: pf(5.6), MaxValue: nil,
 			Texts: js([]string{
 				"⚠️ Ваш уровень глюкозы повышен. Пожалуйста, проконсультируйтесь с эндокринологом.",
 				"⚠️ Высокий сахар крови — повод немедленно обратиться к врачу.",

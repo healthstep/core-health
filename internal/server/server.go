@@ -251,6 +251,9 @@ func (s *HealthServer) AdminUpsertCriterion(ctx context.Context, req *pb.AdminUp
 		InputType: pc.GetInputType(),
 		Lifetime:  int(pc.GetLifetime()),
 		SortOrder: int(pc.GetSortOrder()),
+		MinValue:  pc.MinValue,
+		MaxValue:  pc.MaxValue,
+		Delta:     pc.Delta,
 	}
 	if pc.GetId() != "" {
 		id, err := uuid.Parse(pc.GetId())
@@ -278,6 +281,9 @@ func (s *HealthServer) AdminUpsertCriterion(ctx context.Context, req *pb.AdminUp
 		InputType: c.InputType,
 		Lifetime:  int32(c.Lifetime),
 		SortOrder: int32(c.SortOrder),
+		MinValue:  c.MinValue,
+		MaxValue:  c.MaxValue,
+		Delta:     c.Delta,
 	}
 	if c.GroupID != nil {
 		pc2.GroupId = c.GroupID.String()
@@ -288,7 +294,7 @@ func (s *HealthServer) AdminUpsertCriterion(ctx context.Context, req *pb.AdminUp
 // --- Helpers ---
 
 func modelRecToProto(r model.Recommendation) *pb.AdminRecommendation {
-	pr := &pb.AdminRecommendation{
+	return &pb.AdminRecommendation{
 		Id:          r.ID.String(),
 		CriterionId: r.CriterionID.String(),
 		Type:        r.Type,
@@ -296,15 +302,6 @@ func modelRecToProto(r model.Recommendation) *pb.AdminRecommendation {
 		Texts:       r.Texts.Data(),
 		BaseWeight:  int32(r.BaseWeight),
 	}
-	if r.MinValue != nil {
-		v := *r.MinValue
-		pr.MinValue = &v
-	}
-	if r.MaxValue != nil {
-		v := *r.MaxValue
-		pr.MaxValue = &v
-	}
-	return pr
 }
 
 func protoRecToModel(pr *pb.AdminRecommendation) (*model.Recommendation, error) {
@@ -318,8 +315,6 @@ func protoRecToModel(pr *pb.AdminRecommendation) (*model.Recommendation, error) 
 		Title:       pr.GetTitle(),
 		Texts:       datatypes.NewJSONType(pr.GetTexts()),
 		BaseWeight:  int(pr.GetBaseWeight()),
-		MinValue:    pr.MinValue,
-		MaxValue:    pr.MaxValue,
 	}
 	if pr.GetId() != "" {
 		id, err := uuid.Parse(pr.GetId())

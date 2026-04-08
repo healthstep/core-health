@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/rand"
 	"sort"
 	"strconv"
@@ -259,29 +260,69 @@ func currentWeekStart() time.Time {
 	return time.Date(monday.Year(), monday.Month(), monday.Day(), 0, 0, 0, 0, time.UTC)
 }
 
-// isRecommendationApplicable checks if a Recommendation applies to the user given their current value for the criterion.
-func isRecommendationApplicable(rec model.Recommendation, value string) bool {
+// isRecommendationApplicable checks if a Recommendation applies to the user given their current value.
+// Applicability is determined using the Criterion's MinValue/MaxValue/Delta fields:
+//   - reminder: no value for the criterion
+//   - recommendation: value exists AND is in the non-critical deviation range (warning zone)
+//   - alarm: value exists AND is outside the warning range (critical)
+//   - expiration_reminder: handled by the expiry scheduler (never selected here)
+func isRecommendationApplicable(rec model.Recommendation, crit model.Criterion, value string) bool {
 	switch rec.Type {
 	case "reminder":
 		return value == ""
 	case "expiration_reminder":
-		return false // handled by the expiry scheduler
-	default: // "recommendation", "alarm"
+		return false
+	case "recommendation":
 		if value == "" {
+			return false
+		}
+		if crit.MinValue == nil && crit.MaxValue == nil {
+			// No normal range defined — always applicable
+			return true
+		}
+		numVal, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			return true // non-numeric but has value
+		}
+		delta := 0.0
+		if crit.Delta != nil {
+			delta = *crit.Delta
+		}
+		inNormal := (crit.MinValue == nil || numVal >= *crit.MinValue) &&
+			(crit.MaxValue == nil || numVal <= *crit.MaxValue)
+		if inNormal {
+			return false // value is fine, recommendation not needed
+		}
+		// In warning (non-critical) range?
+		warnLow := math.Inf(-1)
+		warnHigh := math.Inf(1)
+		if crit.MinValue != nil {
+			warnLow = *crit.MinValue - delta
+		}
+		if crit.MaxValue != nil {
+			warnHigh = *crit.MaxValue + delta
+		}
+		return numVal >= warnLow && numVal <= warnHigh
+	case "alarm":
+		if value == "" {
+			return false
+		}
+		if crit.MinValue == nil && crit.MaxValue == nil {
 			return false
 		}
 		numVal, err := strconv.ParseFloat(value, 64)
 		if err != nil {
-			// non-numeric criterion: applicable if no range constraint
-			return rec.MinValue == nil && rec.MaxValue == nil
-		}
-		if rec.MinValue != nil && numVal < *rec.MinValue {
 			return false
 		}
-		if rec.MaxValue != nil && numVal >= *rec.MaxValue {
-			return false
+		delta := 0.0
+		if crit.Delta != nil {
+			delta = *crit.Delta
 		}
-		return true
+		belowWarning := crit.MinValue != nil && numVal < *crit.MinValue-delta
+		aboveWarning := crit.MaxValue != nil && numVal > *crit.MaxValue+delta
+		return belowWarning || aboveWarning
+	default:
+		return false
 	}
 }
 
@@ -333,7 +374,7 @@ func (s *HealthService) GenerateWeeklyRecommendations(ctx context.Context, userI
 			continue
 		}
 		value := valueMap[rec.CriterionID]
-		if isRecommendationApplicable(rec, value) {
+		if isRecommendationApplicable(rec, crit, value) {
 			weights[rec.ID.String()] = rec.BaseWeight
 		}
 	}
@@ -595,8 +636,9 @@ func (s *HealthService) RunAlarmScheduler(ctx context.Context, channels []string
 				if rec.Type != "alarm" {
 					continue
 				}
+				crit := criterionMap[rec.CriterionID]
 				value := valueMap[rec.CriterionID]
-				if !isRecommendationApplicable(rec, value) {
+				if !isRecommendationApplicable(rec, crit, value) {
 					continue
 				}
 				dedupeKey := fmt.Sprintf("alarm_notif:%s:%s", userID.String(), rec.ID.String())

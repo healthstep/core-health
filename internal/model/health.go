@@ -23,6 +23,8 @@ func (CriterionGroup) TableName() string { return "criterion_groups" }
 // InputType: "numeric", "check", or "boolean"
 // Lifetime: days after entry before expiry; 0 = no expiry
 // GroupID: optional reference to CriterionGroup for UI grouping
+// MinValue/MaxValue: normal range bounds for numeric criteria
+// Delta: non-critical (warning) deviation from normal range
 type Criterion struct {
 	ID        uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	GroupID   *uuid.UUID `gorm:"type:uuid;index"`
@@ -33,6 +35,9 @@ type Criterion struct {
 	InputType string     `gorm:"type:text;not null;default:'numeric'"`
 	Lifetime  int        `gorm:"type:int;not null;default:0"`
 	SortOrder int        `gorm:"type:int;not null;default:0"`
+	MinValue  *float64   `gorm:"type:decimal"`
+	MaxValue  *float64   `gorm:"type:decimal"`
+	Delta     *float64   `gorm:"type:decimal"`
 	CreatedAt time.Time
 }
 
@@ -81,8 +86,8 @@ func (RecommendationRule) TableName() string { return "recommendation_rules" }
 //   - "expiration_reminder"   — data is about to expire (sent by the expiry scheduler)
 //
 // Texts: multiple notification text variants; one is picked randomly per send.
-// MinValue/MaxValue: value range for applicability (nil = any value / no-data check).
 // BaseWeight: initial auction weight; higher = more likely to be picked in daily auction.
+// Applicability is derived from the linked Criterion's MinValue/MaxValue/Delta fields.
 type Recommendation struct {
 	ID          uuid.UUID                    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	CriterionID uuid.UUID                    `gorm:"type:uuid;not null;index"`
@@ -90,8 +95,6 @@ type Recommendation struct {
 	Title       string                       `gorm:"type:text;not null"`
 	Texts       datatypes.JSONType[[]string] `gorm:"type:jsonb;not null"`
 	BaseWeight  int                          `gorm:"type:int;not null;default:1"`
-	MinValue    *float64                     `gorm:"type:decimal"`
-	MaxValue    *float64                     `gorm:"type:decimal"`
 	CreatedAt   time.Time
 }
 
