@@ -5,19 +5,44 @@ package health;
 option go_package = "github.com/helthtech/core-health/pkg/proto/health";
 
 service HealthService {
+  // --- Criteria ---
+  rpc ListGroups(ListGroupsRequest) returns (ListGroupsResponse);
   rpc ListCriteria(ListCriteriaRequest) returns (ListCriteriaResponse);
   rpc SetUserCriterion(SetUserCriterionRequest) returns (SetUserCriterionResponse);
   rpc ResetCriteria(ResetCriteriaRequest) returns (ResetCriteriaResponse);
   rpc GetUserCriteria(GetUserCriteriaRequest) returns (GetUserCriteriaResponse);
   rpc GetProgress(GetProgressRequest) returns (GetProgressResponse);
+  // --- Recommendations ---
   rpc GetRecommendations(GetRecommendationsRequest) returns (GetRecommendationsResponse);
+  rpc GetWeeklyRecommendations(GetWeeklyRecommendationsRequest) returns (GetWeeklyRecommendationsResponse);
+  // --- Notifications ---
   rpc SendNotification(SendNotificationRequest) returns (SendNotificationResponse);
+  // --- Admin ---
+  rpc AdminListRecommendations(AdminListRecommendationsRequest) returns (AdminListRecommendationsResponse);
+  rpc AdminUpsertRecommendation(AdminUpsertRecommendationRequest) returns (AdminUpsertRecommendationResponse);
+  rpc AdminDeleteRecommendation(AdminDeleteRecommendationRequest) returns (AdminDeleteRecommendationResponse);
+  rpc AdminUpsertCriterion(AdminUpsertCriterionRequest) returns (AdminUpsertCriterionResponse);
 }
 
-// Criterion is a single health metric.
+// --- Criterion groups ---
+
+message CriterionGroup {
+  string id = 1;
+  string name = 2;
+  int32 sort_order = 3;
+}
+
+message ListGroupsRequest {}
+
+message ListGroupsResponse {
+  repeated CriterionGroup groups = 1;
+}
+
+// --- Criteria ---
+
 // blocked_by: "", "level_1", "level_2", or "criteria_<uuid>"
 // sex: "male", "female", or "" for all
-// input_type: "numeric" or "check"
+// input_type: "numeric", "check", or "boolean"
 // lifetime: days before expiry; 0 = no expiry
 message Criterion {
   string id = 1;
@@ -27,6 +52,8 @@ message Criterion {
   string blocked_by = 5;
   string input_type = 6;
   int32 lifetime = 7;
+  string group_id = 8;
+  int32 sort_order = 9;
 }
 
 message ListCriteriaRequest {
@@ -66,6 +93,7 @@ message UserCriterionEntry {
   int32 level = 6;
   string severity = 7;
   string input_type = 8;
+  string group_id = 9;
 }
 
 message GetUserCriteriaRequest {
@@ -88,6 +116,8 @@ message GetProgressResponse {
   string level_label = 4;
 }
 
+// --- Recommendations ---
+
 message Recommendation {
   string criterion_id = 1;
   string criterion_name = 2;
@@ -104,6 +134,27 @@ message GetRecommendationsResponse {
   repeated Recommendation recommendations = 1;
 }
 
+// WeeklyRecommendationItem is one entry in a user's weekly plan.
+message WeeklyRecommendationItem {
+  string recommendation_id = 1;
+  string criterion_id = 2;
+  string criterion_name = 3;
+  string type = 4;
+  string title = 5;
+  int32 weight = 6;
+}
+
+message GetWeeklyRecommendationsRequest {
+  string user_id = 1;
+}
+
+message GetWeeklyRecommendationsResponse {
+  repeated WeeklyRecommendationItem items = 1;
+  string week_start = 2;
+}
+
+// --- Notifications ---
+
 message SendNotificationRequest {
   string user_id = 1;
   string channel = 2;
@@ -113,3 +164,48 @@ message SendNotificationRequest {
 }
 
 message SendNotificationResponse {}
+
+// --- Admin ---
+
+message AdminRecommendation {
+  string id = 1;
+  string criterion_id = 2;
+  string type = 3;
+  string title = 4;
+  repeated string texts = 5;
+  int32 base_weight = 6;
+  optional double min_value = 7;
+  optional double max_value = 8;
+}
+
+message AdminListRecommendationsRequest {
+  string criterion_id = 1; // empty = all
+}
+
+message AdminListRecommendationsResponse {
+  repeated AdminRecommendation recommendations = 1;
+}
+
+message AdminUpsertRecommendationRequest {
+  AdminRecommendation recommendation = 1;
+}
+
+message AdminUpsertRecommendationResponse {
+  AdminRecommendation recommendation = 1;
+}
+
+message AdminDeleteRecommendationRequest {
+  string id = 1;
+}
+
+message AdminDeleteRecommendationResponse {
+  bool success = 1;
+}
+
+message AdminUpsertCriterionRequest {
+  Criterion criterion = 1;
+}
+
+message AdminUpsertCriterionResponse {
+  Criterion criterion = 1;
+}

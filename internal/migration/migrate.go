@@ -7,9 +7,12 @@ import (
 
 func Run(db *gorm.DB) error {
 	return db.AutoMigrate(
+		&model.CriterionGroup{},
 		&model.Criterion{},
 		&model.UserCriterion{},
 		&model.RecommendationRule{},
+		&model.Recommendation{},
+		&model.WeeklyRecommendation{},
 		&model.NotificationLog{},
 	)
 }

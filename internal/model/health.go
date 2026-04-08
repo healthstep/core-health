@@ -4,22 +4,35 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
+
+// CriterionGroup groups criteria for display in bots and dashboard.
+type CriterionGroup struct {
+	ID        uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	Name      string    `gorm:"type:text;not null"`
+	SortOrder int       `gorm:"type:int;not null;default:0"`
+}
+
+func (CriterionGroup) TableName() string { return "criterion_groups" }
 
 // Criterion is a single health metric.
 // BlockedBy: "", "level_1", "level_2", or "criteria_<uuid>"
 // Sex: "male", "female", or "" for all users
-// InputType: "numeric" or "check"
+// InputType: "numeric", "check", or "boolean"
 // Lifetime: days after entry before expiry; 0 = no expiry
+// GroupID: optional reference to CriterionGroup for UI grouping
 type Criterion struct {
-	ID        uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	Name      string    `gorm:"type:text;not null"`
-	Level     int       `gorm:"type:int;not null;default:1"`
-	Sex       string    `gorm:"type:text;not null;default:''"`
-	BlockedBy string    `gorm:"type:text;not null;default:''"`
-	InputType string    `gorm:"type:text;not null;default:'numeric'"`
-	Lifetime  int       `gorm:"type:int;not null;default:0"`
+	ID        uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	GroupID   *uuid.UUID `gorm:"type:uuid;index"`
+	Name      string     `gorm:"type:text;not null"`
+	Level     int        `gorm:"type:int;not null;default:1"`
+	Sex       string     `gorm:"type:text;not null;default:''"`
+	BlockedBy string     `gorm:"type:text;not null;default:''"`
+	InputType string     `gorm:"type:text;not null;default:'numeric'"`
+	Lifetime  int        `gorm:"type:int;not null;default:0"`
+	SortOrder int        `gorm:"type:int;not null;default:0"`
 	CreatedAt time.Time
 }
 
@@ -45,7 +58,8 @@ func (uc *UserCriterion) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
-// RecommendationRule defines a range → recommendation for a criterion.
+// RecommendationRule defines a range → severity + short text for a criterion.
+// Used by the health dashboard to evaluate and label criterion status.
 // When MinValue == nil && MaxValue == nil → "no data" recommendation.
 type RecommendationRule struct {
 	ID             uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
@@ -57,6 +71,43 @@ type RecommendationRule struct {
 }
 
 func (RecommendationRule) TableName() string { return "recommendation_rules" }
+
+// Recommendation is the new recommendation entity for the notification/auction system.
+//
+// Type:
+//   - "reminder"              — user has no value for this criterion
+//   - "recommendation"        — actionable suggestion (nutrition, lifestyle, etc.)
+//   - "alarm"                 — values significantly out of norm (sent separately, not in daily auction)
+//   - "expiration_reminder"   — data is about to expire (sent by the expiry scheduler)
+//
+// Texts: multiple notification text variants; one is picked randomly per send.
+// MinValue/MaxValue: value range for applicability (nil = any value / no-data check).
+// BaseWeight: initial auction weight; higher = more likely to be picked in daily auction.
+type Recommendation struct {
+	ID          uuid.UUID                    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	CriterionID uuid.UUID                    `gorm:"type:uuid;not null;index"`
+	Type        string                       `gorm:"type:text;not null;default:'recommendation'"`
+	Title       string                       `gorm:"type:text;not null"`
+	Texts       datatypes.JSONType[[]string] `gorm:"type:jsonb;not null"`
+	BaseWeight  int                          `gorm:"type:int;not null;default:1"`
+	MinValue    *float64                     `gorm:"type:decimal"`
+	MaxValue    *float64                     `gorm:"type:decimal"`
+	CreatedAt   time.Time
+}
+
+func (Recommendation) TableName() string { return "recommendations" }
+
+// WeeklyRecommendation stores per-user per-week recommendation weights for the daily auction.
+// Generated fresh every Monday; weight decreases after each daily send and reaches 0 when spent.
+type WeeklyRecommendation struct {
+	ID        uuid.UUID                          `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	UserID    uuid.UUID                          `gorm:"type:uuid;not null;uniqueIndex:idx_user_week"`
+	WeekStart time.Time                          `gorm:"type:date;not null;uniqueIndex:idx_user_week"`
+	Weights   datatypes.JSONType[map[string]int] `gorm:"type:jsonb;not null"`
+	UpdatedAt time.Time
+}
+
+func (WeeklyRecommendation) TableName() string { return "weekly_recommendations" }
 
 // NotificationLog records sent notifications.
 type NotificationLog struct {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/helthtech/core-health/internal/model"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -19,9 +20,26 @@ func NewHealthRepository(db *gorm.DB) *HealthRepository {
 	return &HealthRepository{db: db}
 }
 
+// --- Groups ---
+
+func (r *HealthRepository) ListGroups(ctx context.Context) ([]model.CriterionGroup, error) {
+	var groups []model.CriterionGroup
+	err := r.db.WithContext(ctx).Order("sort_order, name").Find(&groups).Error
+	return groups, err
+}
+
+func (r *HealthRepository) UpsertGroup(ctx context.Context, g *model.CriterionGroup) error {
+	return r.db.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"name", "sort_order"}),
+	}).Create(g).Error
+}
+
+// --- Criteria ---
+
 func (r *HealthRepository) ListCriteria(ctx context.Context) ([]model.Criterion, error) {
 	var criteria []model.Criterion
-	err := r.db.WithContext(ctx).Order("level, name").Find(&criteria).Error
+	err := r.db.WithContext(ctx).Order("level, sort_order, name").Find(&criteria).Error
 	return criteria, err
 }
 
@@ -33,6 +51,15 @@ func (r *HealthRepository) GetCriterion(ctx context.Context, id uuid.UUID) (*mod
 	}
 	return &c, nil
 }
+
+func (r *HealthRepository) UpsertCriterion(ctx context.Context, c *model.Criterion) error {
+	return r.db.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"group_id", "name", "level", "sex", "blocked_by", "input_type", "lifetime", "sort_order"}),
+	}).Create(c).Error
+}
+
+// --- User Criteria ---
 
 // SetUserCriterion upserts a user_criterion record (insert or update on conflict).
 // Also restores soft-deleted records.
@@ -128,6 +155,8 @@ func (r *HealthRepository) GetNearExpiryEntries(ctx context.Context, warnWithin 
 	return result, nil
 }
 
+// --- Recommendation Rules ---
+
 func (r *HealthRepository) GetRecommendationRules(ctx context.Context, criterionID uuid.UUID) ([]model.RecommendationRule, error) {
 	var rules []model.RecommendationRule
 	err := r.db.WithContext(ctx).Where("criterion_id = ?", criterionID).Find(&rules).Error
@@ -139,6 +168,66 @@ func (r *HealthRepository) GetAllRecommendationRules(ctx context.Context) ([]mod
 	err := r.db.WithContext(ctx).Find(&rules).Error
 	return rules, err
 }
+
+// --- Recommendations (notification/auction system) ---
+
+func (r *HealthRepository) GetAllRecommendations(ctx context.Context) ([]model.Recommendation, error) {
+	var recs []model.Recommendation
+	err := r.db.WithContext(ctx).Find(&recs).Error
+	return recs, err
+}
+
+func (r *HealthRepository) GetRecommendationsByCriterion(ctx context.Context, criterionID uuid.UUID) ([]model.Recommendation, error) {
+	var recs []model.Recommendation
+	err := r.db.WithContext(ctx).Where("criterion_id = ?", criterionID).Find(&recs).Error
+	return recs, err
+}
+
+func (r *HealthRepository) UpsertRecommendation(ctx context.Context, rec *model.Recommendation) error {
+	return r.db.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"criterion_id", "type", "title", "texts", "base_weight", "min_value", "max_value"}),
+	}).Create(rec).Error
+}
+
+func (r *HealthRepository) DeleteRecommendation(ctx context.Context, id uuid.UUID) error {
+	return r.db.WithContext(ctx).Delete(&model.Recommendation{}, "id = ?", id).Error
+}
+
+// --- Weekly Recommendations ---
+
+func (r *HealthRepository) GetWeeklyRecommendation(ctx context.Context, userID uuid.UUID, weekStart time.Time) (*model.WeeklyRecommendation, error) {
+	var wr model.WeeklyRecommendation
+	err := r.db.WithContext(ctx).
+		Where("user_id = ? AND week_start = ?", userID, weekStart).
+		First(&wr).Error
+	if err != nil {
+		return nil, err
+	}
+	return &wr, nil
+}
+
+func (r *HealthRepository) UpsertWeeklyRecommendation(ctx context.Context, wr *model.WeeklyRecommendation) error {
+	return r.db.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}, {Name: "week_start"}},
+		DoUpdates: clause.Assignments(map[string]interface{}{
+			"weights":    wr.Weights,
+			"updated_at": wr.UpdatedAt,
+		}),
+	}).Create(wr).Error
+}
+
+func (r *HealthRepository) SaveWeeklyWeights(ctx context.Context, userID uuid.UUID, weekStart time.Time, weights map[string]int) error {
+	wr := &model.WeeklyRecommendation{
+		UserID:    userID,
+		WeekStart: weekStart,
+		Weights:   datatypes.NewJSONType(weights),
+		UpdatedAt: time.Now(),
+	}
+	return r.UpsertWeeklyRecommendation(ctx, wr)
+}
+
+// --- Notifications ---
 
 func (r *HealthRepository) CreateNotificationLog(ctx context.Context, n *model.NotificationLog) error {
 	return r.db.WithContext(ctx).Create(n).Error
@@ -174,7 +263,7 @@ func EvaluateCriterionStatus(value string, rules []model.RecommendationRule) *mo
 
 	numVal, err := strconv.ParseFloat(value, 64)
 	if err != nil {
-		// Non-numeric (check-type): return the first "ok" rule.
+		// Non-numeric (check/boolean-type): return the first "ok" rule.
 		for i := range rules {
 			if rules[i].Severity == "ok" {
 				return &rules[i]

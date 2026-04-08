@@ -19,26 +19,42 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	HealthService_ListCriteria_FullMethodName       = "/health.HealthService/ListCriteria"
-	HealthService_SetUserCriterion_FullMethodName   = "/health.HealthService/SetUserCriterion"
-	HealthService_ResetCriteria_FullMethodName      = "/health.HealthService/ResetCriteria"
-	HealthService_GetUserCriteria_FullMethodName    = "/health.HealthService/GetUserCriteria"
-	HealthService_GetProgress_FullMethodName        = "/health.HealthService/GetProgress"
-	HealthService_GetRecommendations_FullMethodName = "/health.HealthService/GetRecommendations"
-	HealthService_SendNotification_FullMethodName   = "/health.HealthService/SendNotification"
+	HealthService_ListGroups_FullMethodName                = "/health.HealthService/ListGroups"
+	HealthService_ListCriteria_FullMethodName              = "/health.HealthService/ListCriteria"
+	HealthService_SetUserCriterion_FullMethodName          = "/health.HealthService/SetUserCriterion"
+	HealthService_ResetCriteria_FullMethodName             = "/health.HealthService/ResetCriteria"
+	HealthService_GetUserCriteria_FullMethodName           = "/health.HealthService/GetUserCriteria"
+	HealthService_GetProgress_FullMethodName               = "/health.HealthService/GetProgress"
+	HealthService_GetRecommendations_FullMethodName        = "/health.HealthService/GetRecommendations"
+	HealthService_GetWeeklyRecommendations_FullMethodName  = "/health.HealthService/GetWeeklyRecommendations"
+	HealthService_SendNotification_FullMethodName          = "/health.HealthService/SendNotification"
+	HealthService_AdminListRecommendations_FullMethodName  = "/health.HealthService/AdminListRecommendations"
+	HealthService_AdminUpsertRecommendation_FullMethodName = "/health.HealthService/AdminUpsertRecommendation"
+	HealthService_AdminDeleteRecommendation_FullMethodName = "/health.HealthService/AdminDeleteRecommendation"
+	HealthService_AdminUpsertCriterion_FullMethodName      = "/health.HealthService/AdminUpsertCriterion"
 )
 
 // HealthServiceClient is the client API for HealthService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type HealthServiceClient interface {
+	// --- Criteria ---
+	ListGroups(ctx context.Context, in *ListGroupsRequest, opts ...grpc.CallOption) (*ListGroupsResponse, error)
 	ListCriteria(ctx context.Context, in *ListCriteriaRequest, opts ...grpc.CallOption) (*ListCriteriaResponse, error)
 	SetUserCriterion(ctx context.Context, in *SetUserCriterionRequest, opts ...grpc.CallOption) (*SetUserCriterionResponse, error)
 	ResetCriteria(ctx context.Context, in *ResetCriteriaRequest, opts ...grpc.CallOption) (*ResetCriteriaResponse, error)
 	GetUserCriteria(ctx context.Context, in *GetUserCriteriaRequest, opts ...grpc.CallOption) (*GetUserCriteriaResponse, error)
 	GetProgress(ctx context.Context, in *GetProgressRequest, opts ...grpc.CallOption) (*GetProgressResponse, error)
+	// --- Recommendations ---
 	GetRecommendations(ctx context.Context, in *GetRecommendationsRequest, opts ...grpc.CallOption) (*GetRecommendationsResponse, error)
+	GetWeeklyRecommendations(ctx context.Context, in *GetWeeklyRecommendationsRequest, opts ...grpc.CallOption) (*GetWeeklyRecommendationsResponse, error)
+	// --- Notifications ---
 	SendNotification(ctx context.Context, in *SendNotificationRequest, opts ...grpc.CallOption) (*SendNotificationResponse, error)
+	// --- Admin ---
+	AdminListRecommendations(ctx context.Context, in *AdminListRecommendationsRequest, opts ...grpc.CallOption) (*AdminListRecommendationsResponse, error)
+	AdminUpsertRecommendation(ctx context.Context, in *AdminUpsertRecommendationRequest, opts ...grpc.CallOption) (*AdminUpsertRecommendationResponse, error)
+	AdminDeleteRecommendation(ctx context.Context, in *AdminDeleteRecommendationRequest, opts ...grpc.CallOption) (*AdminDeleteRecommendationResponse, error)
+	AdminUpsertCriterion(ctx context.Context, in *AdminUpsertCriterionRequest, opts ...grpc.CallOption) (*AdminUpsertCriterionResponse, error)
 }
 
 type healthServiceClient struct {
@@ -47,6 +63,16 @@ type healthServiceClient struct {
 
 func NewHealthServiceClient(cc grpc.ClientConnInterface) HealthServiceClient {
 	return &healthServiceClient{cc}
+}
+
+func (c *healthServiceClient) ListGroups(ctx context.Context, in *ListGroupsRequest, opts ...grpc.CallOption) (*ListGroupsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListGroupsResponse)
+	err := c.cc.Invoke(ctx, HealthService_ListGroups_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *healthServiceClient) ListCriteria(ctx context.Context, in *ListCriteriaRequest, opts ...grpc.CallOption) (*ListCriteriaResponse, error) {
@@ -109,6 +135,16 @@ func (c *healthServiceClient) GetRecommendations(ctx context.Context, in *GetRec
 	return out, nil
 }
 
+func (c *healthServiceClient) GetWeeklyRecommendations(ctx context.Context, in *GetWeeklyRecommendationsRequest, opts ...grpc.CallOption) (*GetWeeklyRecommendationsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetWeeklyRecommendationsResponse)
+	err := c.cc.Invoke(ctx, HealthService_GetWeeklyRecommendations_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *healthServiceClient) SendNotification(ctx context.Context, in *SendNotificationRequest, opts ...grpc.CallOption) (*SendNotificationResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SendNotificationResponse)
@@ -119,17 +155,67 @@ func (c *healthServiceClient) SendNotification(ctx context.Context, in *SendNoti
 	return out, nil
 }
 
+func (c *healthServiceClient) AdminListRecommendations(ctx context.Context, in *AdminListRecommendationsRequest, opts ...grpc.CallOption) (*AdminListRecommendationsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminListRecommendationsResponse)
+	err := c.cc.Invoke(ctx, HealthService_AdminListRecommendations_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *healthServiceClient) AdminUpsertRecommendation(ctx context.Context, in *AdminUpsertRecommendationRequest, opts ...grpc.CallOption) (*AdminUpsertRecommendationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminUpsertRecommendationResponse)
+	err := c.cc.Invoke(ctx, HealthService_AdminUpsertRecommendation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *healthServiceClient) AdminDeleteRecommendation(ctx context.Context, in *AdminDeleteRecommendationRequest, opts ...grpc.CallOption) (*AdminDeleteRecommendationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminDeleteRecommendationResponse)
+	err := c.cc.Invoke(ctx, HealthService_AdminDeleteRecommendation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *healthServiceClient) AdminUpsertCriterion(ctx context.Context, in *AdminUpsertCriterionRequest, opts ...grpc.CallOption) (*AdminUpsertCriterionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminUpsertCriterionResponse)
+	err := c.cc.Invoke(ctx, HealthService_AdminUpsertCriterion_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // HealthServiceServer is the server API for HealthService service.
 // All implementations must embed UnimplementedHealthServiceServer
 // for forward compatibility.
 type HealthServiceServer interface {
+	// --- Criteria ---
+	ListGroups(context.Context, *ListGroupsRequest) (*ListGroupsResponse, error)
 	ListCriteria(context.Context, *ListCriteriaRequest) (*ListCriteriaResponse, error)
 	SetUserCriterion(context.Context, *SetUserCriterionRequest) (*SetUserCriterionResponse, error)
 	ResetCriteria(context.Context, *ResetCriteriaRequest) (*ResetCriteriaResponse, error)
 	GetUserCriteria(context.Context, *GetUserCriteriaRequest) (*GetUserCriteriaResponse, error)
 	GetProgress(context.Context, *GetProgressRequest) (*GetProgressResponse, error)
+	// --- Recommendations ---
 	GetRecommendations(context.Context, *GetRecommendationsRequest) (*GetRecommendationsResponse, error)
+	GetWeeklyRecommendations(context.Context, *GetWeeklyRecommendationsRequest) (*GetWeeklyRecommendationsResponse, error)
+	// --- Notifications ---
 	SendNotification(context.Context, *SendNotificationRequest) (*SendNotificationResponse, error)
+	// --- Admin ---
+	AdminListRecommendations(context.Context, *AdminListRecommendationsRequest) (*AdminListRecommendationsResponse, error)
+	AdminUpsertRecommendation(context.Context, *AdminUpsertRecommendationRequest) (*AdminUpsertRecommendationResponse, error)
+	AdminDeleteRecommendation(context.Context, *AdminDeleteRecommendationRequest) (*AdminDeleteRecommendationResponse, error)
+	AdminUpsertCriterion(context.Context, *AdminUpsertCriterionRequest) (*AdminUpsertCriterionResponse, error)
 	mustEmbedUnimplementedHealthServiceServer()
 }
 
@@ -140,6 +226,9 @@ type HealthServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedHealthServiceServer struct{}
 
+func (UnimplementedHealthServiceServer) ListGroups(context.Context, *ListGroupsRequest) (*ListGroupsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListGroups not implemented")
+}
 func (UnimplementedHealthServiceServer) ListCriteria(context.Context, *ListCriteriaRequest) (*ListCriteriaResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListCriteria not implemented")
 }
@@ -158,8 +247,23 @@ func (UnimplementedHealthServiceServer) GetProgress(context.Context, *GetProgres
 func (UnimplementedHealthServiceServer) GetRecommendations(context.Context, *GetRecommendationsRequest) (*GetRecommendationsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetRecommendations not implemented")
 }
+func (UnimplementedHealthServiceServer) GetWeeklyRecommendations(context.Context, *GetWeeklyRecommendationsRequest) (*GetWeeklyRecommendationsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetWeeklyRecommendations not implemented")
+}
 func (UnimplementedHealthServiceServer) SendNotification(context.Context, *SendNotificationRequest) (*SendNotificationResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SendNotification not implemented")
+}
+func (UnimplementedHealthServiceServer) AdminListRecommendations(context.Context, *AdminListRecommendationsRequest) (*AdminListRecommendationsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AdminListRecommendations not implemented")
+}
+func (UnimplementedHealthServiceServer) AdminUpsertRecommendation(context.Context, *AdminUpsertRecommendationRequest) (*AdminUpsertRecommendationResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AdminUpsertRecommendation not implemented")
+}
+func (UnimplementedHealthServiceServer) AdminDeleteRecommendation(context.Context, *AdminDeleteRecommendationRequest) (*AdminDeleteRecommendationResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AdminDeleteRecommendation not implemented")
+}
+func (UnimplementedHealthServiceServer) AdminUpsertCriterion(context.Context, *AdminUpsertCriterionRequest) (*AdminUpsertCriterionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AdminUpsertCriterion not implemented")
 }
 func (UnimplementedHealthServiceServer) mustEmbedUnimplementedHealthServiceServer() {}
 func (UnimplementedHealthServiceServer) testEmbeddedByValue()                       {}
@@ -180,6 +284,24 @@ func RegisterHealthServiceServer(s grpc.ServiceRegistrar, srv HealthServiceServe
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&HealthService_ServiceDesc, srv)
+}
+
+func _HealthService_ListGroups_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListGroupsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HealthServiceServer).ListGroups(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: HealthService_ListGroups_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HealthServiceServer).ListGroups(ctx, req.(*ListGroupsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _HealthService_ListCriteria_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -290,6 +412,24 @@ func _HealthService_GetRecommendations_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _HealthService_GetWeeklyRecommendations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetWeeklyRecommendationsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HealthServiceServer).GetWeeklyRecommendations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: HealthService_GetWeeklyRecommendations_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HealthServiceServer).GetWeeklyRecommendations(ctx, req.(*GetWeeklyRecommendationsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _HealthService_SendNotification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SendNotificationRequest)
 	if err := dec(in); err != nil {
@@ -308,6 +448,78 @@ func _HealthService_SendNotification_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _HealthService_AdminListRecommendations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminListRecommendationsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HealthServiceServer).AdminListRecommendations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: HealthService_AdminListRecommendations_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HealthServiceServer).AdminListRecommendations(ctx, req.(*AdminListRecommendationsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _HealthService_AdminUpsertRecommendation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminUpsertRecommendationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HealthServiceServer).AdminUpsertRecommendation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: HealthService_AdminUpsertRecommendation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HealthServiceServer).AdminUpsertRecommendation(ctx, req.(*AdminUpsertRecommendationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _HealthService_AdminDeleteRecommendation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminDeleteRecommendationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HealthServiceServer).AdminDeleteRecommendation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: HealthService_AdminDeleteRecommendation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HealthServiceServer).AdminDeleteRecommendation(ctx, req.(*AdminDeleteRecommendationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _HealthService_AdminUpsertCriterion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminUpsertCriterionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HealthServiceServer).AdminUpsertCriterion(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: HealthService_AdminUpsertCriterion_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HealthServiceServer).AdminUpsertCriterion(ctx, req.(*AdminUpsertCriterionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // HealthService_ServiceDesc is the grpc.ServiceDesc for HealthService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -315,6 +527,10 @@ var HealthService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "health.HealthService",
 	HandlerType: (*HealthServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ListGroups",
+			Handler:    _HealthService_ListGroups_Handler,
+		},
 		{
 			MethodName: "ListCriteria",
 			Handler:    _HealthService_ListCriteria_Handler,
@@ -340,8 +556,28 @@ var HealthService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _HealthService_GetRecommendations_Handler,
 		},
 		{
+			MethodName: "GetWeeklyRecommendations",
+			Handler:    _HealthService_GetWeeklyRecommendations_Handler,
+		},
+		{
 			MethodName: "SendNotification",
 			Handler:    _HealthService_SendNotification_Handler,
+		},
+		{
+			MethodName: "AdminListRecommendations",
+			Handler:    _HealthService_AdminListRecommendations_Handler,
+		},
+		{
+			MethodName: "AdminUpsertRecommendation",
+			Handler:    _HealthService_AdminUpsertRecommendation_Handler,
+		},
+		{
+			MethodName: "AdminDeleteRecommendation",
+			Handler:    _HealthService_AdminDeleteRecommendation_Handler,
+		},
+		{
+			MethodName: "AdminUpsertCriterion",
+			Handler:    _HealthService_AdminUpsertCriterion_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

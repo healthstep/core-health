@@ -11,24 +11,33 @@ import (
 	"github.com/helthtech/core-health/internal/repository"
 )
 
-// CriteriaCache holds in-memory snapshots of criteria and recommendation rules,
-// refreshed from the database every minute.
+// CriteriaCache holds in-memory snapshots of groups, criteria, recommendation rules, and
+// recommendations, refreshed from the database every minute.
 type CriteriaCache struct {
-	mu               sync.RWMutex
-	criteria         []model.Criterion
-	criterionMap     map[uuid.UUID]model.Criterion
-	rulesByCriterion map[uuid.UUID][]model.RecommendationRule
+	mu                  sync.RWMutex
+	groups              []model.CriterionGroup
+	criteria            []model.Criterion
+	criterionMap        map[uuid.UUID]model.Criterion
+	rulesByCriterion    map[uuid.UUID][]model.RecommendationRule
+	recommendations     []model.Recommendation
+	recsByCriterion     map[uuid.UUID][]model.Recommendation
 }
 
 func NewCriteriaCache() *CriteriaCache {
 	return &CriteriaCache{
 		criterionMap:     make(map[uuid.UUID]model.Criterion),
 		rulesByCriterion: make(map[uuid.UUID][]model.RecommendationRule),
+		recsByCriterion:  make(map[uuid.UUID][]model.Recommendation),
 	}
 }
 
 func (c *CriteriaCache) refresh(repo *repository.HealthRepository) {
 	ctx := context.Background()
+
+	groups, err := repo.ListGroups(ctx)
+	if err != nil {
+		log.Printf("cache refresh groups: %v", err)
+	}
 
 	criteria, err := repo.ListCriteria(ctx)
 	if err != nil {
@@ -40,6 +49,10 @@ func (c *CriteriaCache) refresh(repo *repository.HealthRepository) {
 		log.Printf("cache refresh rules: %v", err)
 		return
 	}
+	recs, err := repo.GetAllRecommendations(ctx)
+	if err != nil {
+		log.Printf("cache refresh recommendations: %v", err)
+	}
 
 	cm := make(map[uuid.UUID]model.Criterion, len(criteria))
 	for _, cr := range criteria {
@@ -49,11 +62,18 @@ func (c *CriteriaCache) refresh(repo *repository.HealthRepository) {
 	for _, r := range rules {
 		rbm[r.CriterionID] = append(rbm[r.CriterionID], r)
 	}
+	recm := make(map[uuid.UUID][]model.Recommendation)
+	for _, r := range recs {
+		recm[r.CriterionID] = append(recm[r.CriterionID], r)
+	}
 
 	c.mu.Lock()
+	c.groups = groups
 	c.criteria = criteria
 	c.criterionMap = cm
 	c.rulesByCriterion = rbm
+	c.recommendations = recs
+	c.recsByCriterion = recm
 	c.mu.Unlock()
 }
 
@@ -70,6 +90,14 @@ func (c *CriteriaCache) RunRefreshLoop(ctx context.Context, repo *repository.Hea
 			c.refresh(repo)
 		}
 	}
+}
+
+func (c *CriteriaCache) GetGroups() []model.CriterionGroup {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	out := make([]model.CriterionGroup, len(c.groups))
+	copy(out, c.groups)
+	return out
 }
 
 func (c *CriteriaCache) GetCriteria() []model.Criterion {
@@ -91,4 +119,18 @@ func (c *CriteriaCache) GetRulesForCriterion(id uuid.UUID) []model.Recommendatio
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.rulesByCriterion[id]
+}
+
+func (c *CriteriaCache) GetAllRecommendations() []model.Recommendation {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	out := make([]model.Recommendation, len(c.recommendations))
+	copy(out, c.recommendations)
+	return out
+}
+
+func (c *CriteriaCache) GetRecsForCriterion(id uuid.UUID) []model.Recommendation {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.recsByCriterion[id]
 }
