@@ -112,8 +112,7 @@ func (s *HealthService) GetUserCriteria(ctx context.Context, userID uuid.UUID, u
 		}
 
 		value := valueMap[c.ID]
-		rules := s.cache.GetRulesForCriterion(c.ID)
-		rule := repository.EvaluateCriterionStatus(value, rules)
+		st, rec := DashboardCriterionStatus(c, value)
 
 		groupID := ""
 		if c.GroupID != nil {
@@ -121,21 +120,15 @@ func (s *HealthService) GetUserCriteria(ctx context.Context, userID uuid.UUID, u
 		}
 
 		entry := UserCriterionEntry{
-			CriterionID:   c.ID.String(),
-			CriterionName: c.Name,
-			Value:         value,
-			Level:         c.Level,
-			InputType:     c.InputType,
-			GroupID:       groupID,
-		}
-		if rule != nil {
-			entry.Recommendation = rule.Recommendation
-			entry.Status = rule.Severity
-			entry.Severity = rule.Severity
-		} else if value == "" {
-			entry.Status = "empty"
-		} else {
-			entry.Status = "ok"
+			CriterionID:    c.ID.String(),
+			CriterionName:  c.Name,
+			Value:          value,
+			Level:          c.Level,
+			InputType:      c.InputType,
+			GroupID:        groupID,
+			Status:         st,
+			Severity:       st,
+			Recommendation: rec,
 		}
 		entries = append(entries, entry)
 	}
@@ -174,8 +167,7 @@ func (s *HealthService) GetProgress(ctx context.Context, userID uuid.UUID) (*Pro
 	}, nil
 }
 
-// GetRecommendations returns ranked recommendations using the old rule-based system
-// (for dashboard display compatibility).
+// GetRecommendations returns ranked items derived from criterion status (for API / bots).
 func (s *HealthService) GetRecommendations(ctx context.Context, userID uuid.UUID, userSex string) ([]RecommendationItem, error) {
 	entries, err := s.GetUserCriteria(ctx, userID, userSex)
 	if err != nil {

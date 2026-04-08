@@ -64,20 +64,6 @@ func (uc *UserCriterion) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
-// RecommendationRule defines a range → severity + short text for a criterion.
-// Used by the health dashboard to evaluate and label criterion status.
-// When MinValue == nil && MaxValue == nil → "no data" recommendation.
-type RecommendationRule struct {
-	ID             uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	CriterionID    uuid.UUID `gorm:"type:uuid;not null;index"`
-	MinValue       *float64  `gorm:"type:decimal"`
-	MaxValue       *float64  `gorm:"type:decimal"`
-	Recommendation string    `gorm:"type:text;not null"`
-	Severity       string    `gorm:"type:text;not null"` // ok, warning, critical
-}
-
-func (RecommendationRule) TableName() string { return "recommendation_rules" }
-
 // Recommendation is the new recommendation entity for the notification/auction system.
 //
 // Type:

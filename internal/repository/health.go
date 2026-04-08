@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -155,20 +154,6 @@ func (r *HealthRepository) GetNearExpiryEntries(ctx context.Context, warnWithin 
 	return result, nil
 }
 
-// --- Recommendation Rules ---
-
-func (r *HealthRepository) GetRecommendationRules(ctx context.Context, criterionID uuid.UUID) ([]model.RecommendationRule, error) {
-	var rules []model.RecommendationRule
-	err := r.db.WithContext(ctx).Where("criterion_id = ?", criterionID).Find(&rules).Error
-	return rules, err
-}
-
-func (r *HealthRepository) GetAllRecommendationRules(ctx context.Context) ([]model.RecommendationRule, error) {
-	var rules []model.RecommendationRule
-	err := r.db.WithContext(ctx).Find(&rules).Error
-	return rules, err
-}
-
 // --- Recommendations (notification/auction system) ---
 
 func (r *HealthRepository) GetAllRecommendations(ctx context.Context) ([]model.Recommendation, error) {
@@ -186,7 +171,7 @@ func (r *HealthRepository) GetRecommendationsByCriterion(ctx context.Context, cr
 func (r *HealthRepository) UpsertRecommendation(ctx context.Context, rec *model.Recommendation) error {
 	return r.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"criterion_id", "type", "title", "texts", "base_weight", "min_value", "max_value"}),
+		DoUpdates: clause.AssignmentColumns([]string{"criterion_id", "type", "title", "texts", "base_weight"}),
 	}).Create(rec).Error
 }
 
@@ -248,42 +233,4 @@ func (r *HealthRepository) GetAllDistinctUserIDs(ctx context.Context) ([]uuid.UU
 		ids = append(ids, row.UserID)
 	}
 	return ids, nil
-}
-
-// EvaluateCriterionStatus finds the matching recommendation rule for a value.
-func EvaluateCriterionStatus(value string, rules []model.RecommendationRule) *model.RecommendationRule {
-	if value == "" {
-		for i := range rules {
-			if rules[i].MinValue == nil && rules[i].MaxValue == nil {
-				return &rules[i]
-			}
-		}
-		return nil
-	}
-
-	numVal, err := strconv.ParseFloat(value, 64)
-	if err != nil {
-		// Non-numeric (check/boolean-type): return the first "ok" rule.
-		for i := range rules {
-			if rules[i].Severity == "ok" {
-				return &rules[i]
-			}
-		}
-		return nil
-	}
-
-	for i := range rules {
-		r := &rules[i]
-		if r.MinValue == nil && r.MaxValue == nil {
-			continue
-		}
-		if r.MinValue != nil && numVal < *r.MinValue {
-			continue
-		}
-		if r.MaxValue != nil && numVal >= *r.MaxValue {
-			continue
-		}
-		return r
-	}
-	return nil
 }

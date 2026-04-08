@@ -10,7 +10,6 @@ func Run(db *gorm.DB) error {
 		&model.CriterionGroup{},
 		&model.Criterion{},
 		&model.UserCriterion{},
-		&model.RecommendationRule{},
 		&model.Recommendation{},
 		&model.WeeklyRecommendation{},
 		&model.NotificationLog{},
