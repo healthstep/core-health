@@ -8,7 +8,6 @@ import (
 
 	"github.com/helthtech/core-health/internal/migration"
 	"github.com/helthtech/core-health/internal/repository"
-	"github.com/helthtech/core-health/internal/seed"
 	"github.com/helthtech/core-health/internal/server"
 	"github.com/helthtech/core-health/internal/service"
 	pb "github.com/helthtech/core-health/pkg/proto/health"
@@ -35,9 +34,6 @@ func Run(ctx context.Context) error {
 	}
 	if err = migration.Run(db); err != nil {
 		return fmt.Errorf("migration: %w", err)
-	}
-	if err = seed.Run(db); err != nil {
-		log.Printf("seed (non-fatal): %v", err)
 	}
 
 	nc, err := initNATS(ctx)

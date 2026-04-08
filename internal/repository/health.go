@@ -55,7 +55,7 @@ func (r *HealthRepository) GetCriterion(ctx context.Context, id uuid.UUID) (*mod
 func (r *HealthRepository) UpsertCriterion(ctx context.Context, c *model.Criterion) error {
 	return r.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"group_id", "name", "level", "sex", "blocked_by", "input_type", "lifetime", "sort_order"}),
+		DoUpdates: clause.AssignmentColumns([]string{"group_id", "name", "level", "sex", "input_type", "lifetime", "sort_order", "min_value", "max_value", "delta"}),
 	}).Create(c).Error
 }
 

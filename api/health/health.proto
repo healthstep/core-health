@@ -40,17 +40,15 @@ message ListGroupsResponse {
 
 // --- Criteria ---
 
-// blocked_by: "", "level_1", "level_2", or "criteria_<uuid>"
 // sex: "male", "female", or "" for all
 // input_type: "numeric", "check", or "boolean"
 // lifetime: days before expiry; 0 = no expiry
-// min_value/max_value: normal value range; delta: non-critical deviation width
+// min_value/max_value: normal value range (numeric only); delta: non-critical deviation width
 message Criterion {
   string id = 1;
   string name = 2;
   int32 level = 3;
   string sex = 4;
-  string blocked_by = 5;
   string input_type = 6;
   int32 lifetime = 7;
   string group_id = 8;

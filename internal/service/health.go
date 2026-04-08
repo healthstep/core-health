@@ -48,8 +48,7 @@ func (s *HealthService) ListGroups(ctx context.Context) ([]model.CriterionGroup,
 	return groups, nil
 }
 
-// ListCriteria returns criteria filtered by user sex and blocking rules.
-// userID is optional (pass uuid.Nil to skip blocking check).
+// ListCriteria returns criteria filtered by user sex.
 func (s *HealthService) ListCriteria(ctx context.Context, userID uuid.UUID, userSex string) ([]model.Criterion, error) {
 	allCriteria := s.cache.GetCriteria()
 	if len(allCriteria) == 0 {
@@ -60,23 +59,9 @@ func (s *HealthService) ListCriteria(ctx context.Context, userID uuid.UUID, user
 		}
 	}
 
-	// Build user values map for blocking check.
-	userValues := map[uuid.UUID]string{}
-	if userID != uuid.Nil {
-		ucs, err := s.repo.GetUserCriteria(ctx, userID)
-		if err == nil {
-			for _, uc := range ucs {
-				userValues[uc.CriterionID] = uc.Value
-			}
-		}
-	}
-
 	var result []model.Criterion
 	for _, c := range allCriteria {
 		if !CriterionMatchesSex(c, userSex) {
-			continue
-		}
-		if userID != uuid.Nil && IsCriterionBlocked(c, allCriteria, userValues) {
 			continue
 		}
 		result = append(result, c)
@@ -261,28 +246,39 @@ func currentWeekStart() time.Time {
 }
 
 // isRecommendationApplicable checks if a Recommendation applies to the user given their current value.
-// Applicability is determined using the Criterion's MinValue/MaxValue/Delta fields:
-//   - reminder: no value for the criterion
-//   - recommendation: value exists AND is in the non-critical deviation range (warning zone)
-//   - alarm: value exists AND is outside the warning range (critical)
-//   - expiration_reminder: handled by the expiry scheduler (never selected here)
+//
+// InputType semantics:
+//   - numeric: MinValue/MaxValue define normal range; Delta defines non-critical deviation width
+//   - check:   "1" = done (ok); "" = not done (reminder triggers)
+//   - boolean: "1" = positive/ok; "0" = negative (alarm triggers); "" = no data (reminder)
+//
+// Recommendation types:
+//   - reminder:             value == "" (no data entered)
+//   - recommendation:       numeric only — value in warning (non-critical) zone
+//   - alarm:                numeric with value outside warning zone, OR boolean with value "0"
+//   - expiration_reminder:  handled by expiry scheduler (never selected here)
 func isRecommendationApplicable(rec model.Recommendation, crit model.Criterion, value string) bool {
 	switch rec.Type {
 	case "reminder":
 		return value == ""
+
 	case "expiration_reminder":
 		return false
+
 	case "recommendation":
 		if value == "" {
 			return false
 		}
+		// recommendation only makes sense for numeric criteria with a defined normal range
+		if crit.InputType != "numeric" {
+			return false
+		}
 		if crit.MinValue == nil && crit.MaxValue == nil {
-			// No normal range defined — always applicable
-			return true
+			return true // no range defined — always applicable
 		}
 		numVal, err := strconv.ParseFloat(value, 64)
 		if err != nil {
-			return true // non-numeric but has value
+			return false
 		}
 		delta := 0.0
 		if crit.Delta != nil {
@@ -291,9 +287,9 @@ func isRecommendationApplicable(rec model.Recommendation, crit model.Criterion, 
 		inNormal := (crit.MinValue == nil || numVal >= *crit.MinValue) &&
 			(crit.MaxValue == nil || numVal <= *crit.MaxValue)
 		if inNormal {
-			return false // value is fine, recommendation not needed
+			return false
 		}
-		// In warning (non-critical) range?
+		// In non-critical (warning) zone?
 		warnLow := math.Inf(-1)
 		warnHigh := math.Inf(1)
 		if crit.MinValue != nil {
@@ -303,8 +299,17 @@ func isRecommendationApplicable(rec model.Recommendation, crit model.Criterion, 
 			warnHigh = *crit.MaxValue + delta
 		}
 		return numVal >= warnLow && numVal <= warnHigh
+
 	case "alarm":
 		if value == "" {
+			return false
+		}
+		// boolean: negative result ("0") is always an alarm
+		if crit.InputType == "boolean" {
+			return value == "0"
+		}
+		// numeric: value outside the warning zone
+		if crit.InputType != "numeric" {
 			return false
 		}
 		if crit.MinValue == nil && crit.MaxValue == nil {
@@ -321,6 +326,7 @@ func isRecommendationApplicable(rec model.Recommendation, crit model.Criterion, 
 		belowWarning := crit.MinValue != nil && numVal < *crit.MinValue-delta
 		aboveWarning := crit.MaxValue != nil && numVal > *crit.MaxValue+delta
 		return belowWarning || aboveWarning
+
 	default:
 		return false
 	}

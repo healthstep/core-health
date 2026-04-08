@@ -18,20 +18,21 @@ type CriterionGroup struct {
 func (CriterionGroup) TableName() string { return "criterion_groups" }
 
 // Criterion is a single health metric.
-// BlockedBy: "", "level_1", "level_2", or "criteria_<uuid>"
 // Sex: "male", "female", or "" for all users
 // InputType: "numeric", "check", or "boolean"
+//   - numeric: user enters a number; MinValue/MaxValue/Delta define normal range and warning zone
+//   - check:   user marks whether they have done this (e.g., visited dentist)
+//   - boolean: binary result — "1" positive (ok), "0" negative (alarm)
 // Lifetime: days after entry before expiry; 0 = no expiry
 // GroupID: optional reference to CriterionGroup for UI grouping
-// MinValue/MaxValue: normal range bounds for numeric criteria
-// Delta: non-critical (warning) deviation from normal range
+// MinValue/MaxValue: normal range bounds (numeric only)
+// Delta: non-critical (warning) deviation width from norm boundary
 type Criterion struct {
 	ID        uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	GroupID   *uuid.UUID `gorm:"type:uuid;index"`
 	Name      string     `gorm:"type:text;not null"`
 	Level     int        `gorm:"type:int;not null;default:1"`
 	Sex       string     `gorm:"type:text;not null;default:''"`
-	BlockedBy string     `gorm:"type:text;not null;default:''"`
 	InputType string     `gorm:"type:text;not null;default:'numeric'"`
 	Lifetime  int        `gorm:"type:int;not null;default:0"`
 	SortOrder int        `gorm:"type:int;not null;default:0"`

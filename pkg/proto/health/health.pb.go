@@ -161,18 +161,16 @@ func (x *ListGroupsResponse) GetGroups() []*CriterionGroup {
 	return nil
 }
 
-// blocked_by: "", "level_1", "level_2", or "criteria_<uuid>"
 // sex: "male", "female", or "" for all
 // input_type: "numeric", "check", or "boolean"
 // lifetime: days before expiry; 0 = no expiry
-// min_value/max_value: normal value range; delta: non-critical deviation width
+// min_value/max_value: normal value range (numeric only); delta: non-critical deviation width
 type Criterion struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Level         int32                  `protobuf:"varint,3,opt,name=level,proto3" json:"level,omitempty"`
 	Sex           string                 `protobuf:"bytes,4,opt,name=sex,proto3" json:"sex,omitempty"`
-	BlockedBy     string                 `protobuf:"bytes,5,opt,name=blocked_by,json=blockedBy,proto3" json:"blocked_by,omitempty"`
 	InputType     string                 `protobuf:"bytes,6,opt,name=input_type,json=inputType,proto3" json:"input_type,omitempty"`
 	Lifetime      int32                  `protobuf:"varint,7,opt,name=lifetime,proto3" json:"lifetime,omitempty"`
 	GroupId       string                 `protobuf:"bytes,8,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
@@ -238,13 +236,6 @@ func (x *Criterion) GetLevel() int32 {
 func (x *Criterion) GetSex() string {
 	if x != nil {
 		return x.Sex
-	}
-	return ""
-}
-
-func (x *Criterion) GetBlockedBy() string {
-	if x != nil {
-		return x.BlockedBy
 	}
 	return ""
 }
@@ -1815,14 +1806,12 @@ const file_api_health_health_proto_rawDesc = "" +
 	"sort_order\x18\x03 \x01(\x05R\tsortOrder\"\x13\n" +
 	"\x11ListGroupsRequest\"D\n" +
 	"\x12ListGroupsResponse\x12.\n" +
-	"\x06groups\x18\x01 \x03(\v2\x16.health.CriterionGroupR\x06groups\"\xf0\x02\n" +
+	"\x06groups\x18\x01 \x03(\v2\x16.health.CriterionGroupR\x06groups\"\xd1\x02\n" +
 	"\tCriterion\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
 	"\x05level\x18\x03 \x01(\x05R\x05level\x12\x10\n" +
 	"\x03sex\x18\x04 \x01(\tR\x03sex\x12\x1d\n" +
-	"\n" +
-	"blocked_by\x18\x05 \x01(\tR\tblockedBy\x12\x1d\n" +
 	"\n" +
 	"input_type\x18\x06 \x01(\tR\tinputType\x12\x1a\n" +
 	"\blifetime\x18\a \x01(\x05R\blifetime\x12\x19\n" +

@@ -54,19 +54,7 @@ func (s *HealthServer) ListCriteria(ctx context.Context, req *pb.ListCriteriaReq
 	}
 	resp := &pb.ListCriteriaResponse{}
 	for _, c := range criteria {
-		pc := &pb.Criterion{
-			Id:        c.ID.String(),
-			Name:      c.Name,
-			Level:     int32(c.Level),
-			Sex:       c.Sex,
-			BlockedBy: c.BlockedBy,
-			InputType: c.InputType,
-			Lifetime:  int32(c.Lifetime),
-			SortOrder: int32(c.SortOrder),
-		}
-		if c.GroupID != nil {
-			pc.GroupId = c.GroupID.String()
-		}
+		pc := criterionToProto(c)
 		resp.Criteria = append(resp.Criteria, pc)
 	}
 	return resp, nil
@@ -247,7 +235,6 @@ func (s *HealthServer) AdminUpsertCriterion(ctx context.Context, req *pb.AdminUp
 		Name:      pc.GetName(),
 		Level:     int(pc.GetLevel()),
 		Sex:       pc.GetSex(),
-		BlockedBy: pc.GetBlockedBy(),
 		InputType: pc.GetInputType(),
 		Lifetime:  int(pc.GetLifetime()),
 		SortOrder: int(pc.GetSortOrder()),
@@ -272,12 +259,17 @@ func (s *HealthServer) AdminUpsertCriterion(ctx context.Context, req *pb.AdminUp
 	if err := s.svc.AdminUpsertCriterion(ctx, c); err != nil {
 		return nil, status.Errorf(codes.Internal, "upsert criterion: %v", err)
 	}
-	pc2 := &pb.Criterion{
+	return &pb.AdminUpsertCriterionResponse{Criterion: criterionToProto(*c)}, nil
+}
+
+// --- Helpers ---
+
+func criterionToProto(c model.Criterion) *pb.Criterion {
+	pc := &pb.Criterion{
 		Id:        c.ID.String(),
 		Name:      c.Name,
 		Level:     int32(c.Level),
 		Sex:       c.Sex,
-		BlockedBy: c.BlockedBy,
 		InputType: c.InputType,
 		Lifetime:  int32(c.Lifetime),
 		SortOrder: int32(c.SortOrder),
@@ -286,12 +278,10 @@ func (s *HealthServer) AdminUpsertCriterion(ctx context.Context, req *pb.AdminUp
 		Delta:     c.Delta,
 	}
 	if c.GroupID != nil {
-		pc2.GroupId = c.GroupID.String()
+		pc.GroupId = c.GroupID.String()
 	}
-	return &pb.AdminUpsertCriterionResponse{Criterion: pc2}, nil
+	return pc
 }
-
-// --- Helpers ---
 
 func modelRecToProto(r model.Recommendation) *pb.AdminRecommendation {
 	return &pb.AdminRecommendation{
