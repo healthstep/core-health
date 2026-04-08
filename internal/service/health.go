@@ -15,7 +15,6 @@ import (
 	"github.com/helthtech/core-health/internal/repository"
 	"github.com/nats-io/nats.go"
 	"github.com/redis/go-redis/v9"
-	"gorm.io/gorm"
 )
 
 type HealthService struct {
@@ -833,5 +832,3 @@ type WeeklyPlan struct {
 	Weights   map[string]int
 }
 
-// Ensure we still reference gorm to avoid "imported and not used" if needed.
-var _ = gorm.ErrRecordNotFound
