@@ -13,6 +13,7 @@ import (
 	pb "github.com/helthtech/core-health/pkg/proto/health"
 	"github.com/nats-io/nats.go"
 	"github.com/porebric/configs"
+	plogger "github.com/porebric/logger"
 	"github.com/porebric/resty"
 	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
@@ -24,7 +25,7 @@ import (
 	"google.golang.org/grpc"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
+	gorml "gorm.io/gorm/logger"
 )
 
 func Run(ctx context.Context) error {
@@ -84,7 +85,8 @@ func Run(ctx context.Context) error {
 		}
 	}()
 
-	router := resty.NewRouter(nil, nil)
+	l := plogger.New(plogger.InfoLevel)
+	router := resty.NewRouter(func() *plogger.Logger { return l }, nil)
 	resty.RunServer(ctx, router, func(ctx context.Context) error {
 		grpcServer.GracefulStop()
 		nc.Close()
@@ -97,7 +99,7 @@ func Run(ctx context.Context) error {
 func initDB(ctx context.Context) (*gorm.DB, error) {
 	dsn := configs.Value(ctx, "db_dsn").String()
 	return gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Warn),
+		Logger: gorml.Default.LogMode(gorml.Warn),
 	})
 }
 
