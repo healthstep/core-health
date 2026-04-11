@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        v7.34.1
-// source: api/health/health.proto
+// source: health.proto
 
 package health
 
@@ -32,7 +32,7 @@ type CriterionGroup struct {
 
 func (x *CriterionGroup) Reset() {
 	*x = CriterionGroup{}
-	mi := &file_api_health_health_proto_msgTypes[0]
+	mi := &file_health_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -44,7 +44,7 @@ func (x *CriterionGroup) String() string {
 func (*CriterionGroup) ProtoMessage() {}
 
 func (x *CriterionGroup) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[0]
+	mi := &file_health_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -57,7 +57,7 @@ func (x *CriterionGroup) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CriterionGroup.ProtoReflect.Descriptor instead.
 func (*CriterionGroup) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{0}
+	return file_health_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *CriterionGroup) GetId() string {
@@ -89,7 +89,7 @@ type ListGroupsRequest struct {
 
 func (x *ListGroupsRequest) Reset() {
 	*x = ListGroupsRequest{}
-	mi := &file_api_health_health_proto_msgTypes[1]
+	mi := &file_health_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -101,7 +101,7 @@ func (x *ListGroupsRequest) String() string {
 func (*ListGroupsRequest) ProtoMessage() {}
 
 func (x *ListGroupsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[1]
+	mi := &file_health_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -114,7 +114,7 @@ func (x *ListGroupsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListGroupsRequest.ProtoReflect.Descriptor instead.
 func (*ListGroupsRequest) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{1}
+	return file_health_proto_rawDescGZIP(), []int{1}
 }
 
 type ListGroupsResponse struct {
@@ -126,7 +126,7 @@ type ListGroupsResponse struct {
 
 func (x *ListGroupsResponse) Reset() {
 	*x = ListGroupsResponse{}
-	mi := &file_api_health_health_proto_msgTypes[2]
+	mi := &file_health_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -138,7 +138,7 @@ func (x *ListGroupsResponse) String() string {
 func (*ListGroupsResponse) ProtoMessage() {}
 
 func (x *ListGroupsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[2]
+	mi := &file_health_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -151,7 +151,7 @@ func (x *ListGroupsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListGroupsResponse.ProtoReflect.Descriptor instead.
 func (*ListGroupsResponse) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{2}
+	return file_health_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ListGroupsResponse) GetGroups() []*CriterionGroup {
@@ -184,7 +184,7 @@ type Criterion struct {
 
 func (x *Criterion) Reset() {
 	*x = Criterion{}
-	mi := &file_api_health_health_proto_msgTypes[3]
+	mi := &file_health_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -196,7 +196,7 @@ func (x *Criterion) String() string {
 func (*Criterion) ProtoMessage() {}
 
 func (x *Criterion) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[3]
+	mi := &file_health_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -209,7 +209,7 @@ func (x *Criterion) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Criterion.ProtoReflect.Descriptor instead.
 func (*Criterion) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{3}
+	return file_health_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *Criterion) GetId() string {
@@ -299,7 +299,7 @@ type ListCriteriaRequest struct {
 
 func (x *ListCriteriaRequest) Reset() {
 	*x = ListCriteriaRequest{}
-	mi := &file_api_health_health_proto_msgTypes[4]
+	mi := &file_health_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -311,7 +311,7 @@ func (x *ListCriteriaRequest) String() string {
 func (*ListCriteriaRequest) ProtoMessage() {}
 
 func (x *ListCriteriaRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[4]
+	mi := &file_health_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -324,7 +324,7 @@ func (x *ListCriteriaRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCriteriaRequest.ProtoReflect.Descriptor instead.
 func (*ListCriteriaRequest) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{4}
+	return file_health_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ListCriteriaRequest) GetUserId() string {
@@ -350,7 +350,7 @@ type ListCriteriaResponse struct {
 
 func (x *ListCriteriaResponse) Reset() {
 	*x = ListCriteriaResponse{}
-	mi := &file_api_health_health_proto_msgTypes[5]
+	mi := &file_health_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -362,7 +362,7 @@ func (x *ListCriteriaResponse) String() string {
 func (*ListCriteriaResponse) ProtoMessage() {}
 
 func (x *ListCriteriaResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[5]
+	mi := &file_health_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -375,7 +375,7 @@ func (x *ListCriteriaResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCriteriaResponse.ProtoReflect.Descriptor instead.
 func (*ListCriteriaResponse) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{5}
+	return file_health_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ListCriteriaResponse) GetCriteria() []*Criterion {
@@ -391,13 +391,14 @@ type SetUserCriterionRequest struct {
 	CriterionId   string                 `protobuf:"bytes,2,opt,name=criterion_id,json=criterionId,proto3" json:"criterion_id,omitempty"`
 	Value         string                 `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
 	Source        string                 `protobuf:"bytes,4,opt,name=source,proto3" json:"source,omitempty"`
+	MeasuredAt    string                 `protobuf:"bytes,5,opt,name=measured_at,json=measuredAt,proto3" json:"measured_at,omitempty"` // ISO 8601 date, optional (e.g. "2025-03-15")
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *SetUserCriterionRequest) Reset() {
 	*x = SetUserCriterionRequest{}
-	mi := &file_api_health_health_proto_msgTypes[6]
+	mi := &file_health_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -409,7 +410,7 @@ func (x *SetUserCriterionRequest) String() string {
 func (*SetUserCriterionRequest) ProtoMessage() {}
 
 func (x *SetUserCriterionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[6]
+	mi := &file_health_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -422,7 +423,7 @@ func (x *SetUserCriterionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetUserCriterionRequest.ProtoReflect.Descriptor instead.
 func (*SetUserCriterionRequest) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{6}
+	return file_health_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *SetUserCriterionRequest) GetUserId() string {
@@ -453,6 +454,13 @@ func (x *SetUserCriterionRequest) GetSource() string {
 	return ""
 }
 
+func (x *SetUserCriterionRequest) GetMeasuredAt() string {
+	if x != nil {
+		return x.MeasuredAt
+	}
+	return ""
+}
+
 type SetUserCriterionResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
@@ -462,7 +470,7 @@ type SetUserCriterionResponse struct {
 
 func (x *SetUserCriterionResponse) Reset() {
 	*x = SetUserCriterionResponse{}
-	mi := &file_api_health_health_proto_msgTypes[7]
+	mi := &file_health_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -474,7 +482,7 @@ func (x *SetUserCriterionResponse) String() string {
 func (*SetUserCriterionResponse) ProtoMessage() {}
 
 func (x *SetUserCriterionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[7]
+	mi := &file_health_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -487,7 +495,7 @@ func (x *SetUserCriterionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetUserCriterionResponse.ProtoReflect.Descriptor instead.
 func (*SetUserCriterionResponse) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{7}
+	return file_health_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *SetUserCriterionResponse) GetSuccess() bool {
@@ -506,7 +514,7 @@ type ResetCriteriaRequest struct {
 
 func (x *ResetCriteriaRequest) Reset() {
 	*x = ResetCriteriaRequest{}
-	mi := &file_api_health_health_proto_msgTypes[8]
+	mi := &file_health_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -518,7 +526,7 @@ func (x *ResetCriteriaRequest) String() string {
 func (*ResetCriteriaRequest) ProtoMessage() {}
 
 func (x *ResetCriteriaRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[8]
+	mi := &file_health_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -531,7 +539,7 @@ func (x *ResetCriteriaRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResetCriteriaRequest.ProtoReflect.Descriptor instead.
 func (*ResetCriteriaRequest) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{8}
+	return file_health_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ResetCriteriaRequest) GetUserId() string {
@@ -550,7 +558,7 @@ type ResetCriteriaResponse struct {
 
 func (x *ResetCriteriaResponse) Reset() {
 	*x = ResetCriteriaResponse{}
-	mi := &file_api_health_health_proto_msgTypes[9]
+	mi := &file_health_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -562,7 +570,7 @@ func (x *ResetCriteriaResponse) String() string {
 func (*ResetCriteriaResponse) ProtoMessage() {}
 
 func (x *ResetCriteriaResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[9]
+	mi := &file_health_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -575,7 +583,7 @@ func (x *ResetCriteriaResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResetCriteriaResponse.ProtoReflect.Descriptor instead.
 func (*ResetCriteriaResponse) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{9}
+	return file_health_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ResetCriteriaResponse) GetSuccess() bool {
@@ -602,7 +610,7 @@ type UserCriterionEntry struct {
 
 func (x *UserCriterionEntry) Reset() {
 	*x = UserCriterionEntry{}
-	mi := &file_api_health_health_proto_msgTypes[10]
+	mi := &file_health_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -614,7 +622,7 @@ func (x *UserCriterionEntry) String() string {
 func (*UserCriterionEntry) ProtoMessage() {}
 
 func (x *UserCriterionEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[10]
+	mi := &file_health_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -627,7 +635,7 @@ func (x *UserCriterionEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserCriterionEntry.ProtoReflect.Descriptor instead.
 func (*UserCriterionEntry) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{10}
+	return file_health_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *UserCriterionEntry) GetCriterionId() string {
@@ -703,7 +711,7 @@ type GetUserCriteriaRequest struct {
 
 func (x *GetUserCriteriaRequest) Reset() {
 	*x = GetUserCriteriaRequest{}
-	mi := &file_api_health_health_proto_msgTypes[11]
+	mi := &file_health_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -715,7 +723,7 @@ func (x *GetUserCriteriaRequest) String() string {
 func (*GetUserCriteriaRequest) ProtoMessage() {}
 
 func (x *GetUserCriteriaRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[11]
+	mi := &file_health_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -728,7 +736,7 @@ func (x *GetUserCriteriaRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUserCriteriaRequest.ProtoReflect.Descriptor instead.
 func (*GetUserCriteriaRequest) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{11}
+	return file_health_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetUserCriteriaRequest) GetUserId() string {
@@ -754,7 +762,7 @@ type GetUserCriteriaResponse struct {
 
 func (x *GetUserCriteriaResponse) Reset() {
 	*x = GetUserCriteriaResponse{}
-	mi := &file_api_health_health_proto_msgTypes[12]
+	mi := &file_health_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -766,7 +774,7 @@ func (x *GetUserCriteriaResponse) String() string {
 func (*GetUserCriteriaResponse) ProtoMessage() {}
 
 func (x *GetUserCriteriaResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[12]
+	mi := &file_health_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -779,7 +787,7 @@ func (x *GetUserCriteriaResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUserCriteriaResponse.ProtoReflect.Descriptor instead.
 func (*GetUserCriteriaResponse) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{12}
+	return file_health_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetUserCriteriaResponse) GetEntries() []*UserCriterionEntry {
@@ -798,7 +806,7 @@ type GetProgressRequest struct {
 
 func (x *GetProgressRequest) Reset() {
 	*x = GetProgressRequest{}
-	mi := &file_api_health_health_proto_msgTypes[13]
+	mi := &file_health_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -810,7 +818,7 @@ func (x *GetProgressRequest) String() string {
 func (*GetProgressRequest) ProtoMessage() {}
 
 func (x *GetProgressRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[13]
+	mi := &file_health_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -823,7 +831,7 @@ func (x *GetProgressRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetProgressRequest.ProtoReflect.Descriptor instead.
 func (*GetProgressRequest) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{13}
+	return file_health_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *GetProgressRequest) GetUserId() string {
@@ -845,7 +853,7 @@ type GetProgressResponse struct {
 
 func (x *GetProgressResponse) Reset() {
 	*x = GetProgressResponse{}
-	mi := &file_api_health_health_proto_msgTypes[14]
+	mi := &file_health_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -857,7 +865,7 @@ func (x *GetProgressResponse) String() string {
 func (*GetProgressResponse) ProtoMessage() {}
 
 func (x *GetProgressResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[14]
+	mi := &file_health_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -870,7 +878,7 @@ func (x *GetProgressResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetProgressResponse.ProtoReflect.Descriptor instead.
 func (*GetProgressResponse) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{14}
+	return file_health_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *GetProgressResponse) GetTotal() int32 {
@@ -913,7 +921,7 @@ type Recommendation struct {
 
 func (x *Recommendation) Reset() {
 	*x = Recommendation{}
-	mi := &file_api_health_health_proto_msgTypes[15]
+	mi := &file_health_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -925,7 +933,7 @@ func (x *Recommendation) String() string {
 func (*Recommendation) ProtoMessage() {}
 
 func (x *Recommendation) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[15]
+	mi := &file_health_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -938,7 +946,7 @@ func (x *Recommendation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Recommendation.ProtoReflect.Descriptor instead.
 func (*Recommendation) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{15}
+	return file_health_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *Recommendation) GetCriterionId() string {
@@ -979,7 +987,7 @@ type GetRecommendationsRequest struct {
 
 func (x *GetRecommendationsRequest) Reset() {
 	*x = GetRecommendationsRequest{}
-	mi := &file_api_health_health_proto_msgTypes[16]
+	mi := &file_health_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -991,7 +999,7 @@ func (x *GetRecommendationsRequest) String() string {
 func (*GetRecommendationsRequest) ProtoMessage() {}
 
 func (x *GetRecommendationsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[16]
+	mi := &file_health_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1004,7 +1012,7 @@ func (x *GetRecommendationsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRecommendationsRequest.ProtoReflect.Descriptor instead.
 func (*GetRecommendationsRequest) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{16}
+	return file_health_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *GetRecommendationsRequest) GetUserId() string {
@@ -1030,7 +1038,7 @@ type GetRecommendationsResponse struct {
 
 func (x *GetRecommendationsResponse) Reset() {
 	*x = GetRecommendationsResponse{}
-	mi := &file_api_health_health_proto_msgTypes[17]
+	mi := &file_health_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1042,7 +1050,7 @@ func (x *GetRecommendationsResponse) String() string {
 func (*GetRecommendationsResponse) ProtoMessage() {}
 
 func (x *GetRecommendationsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[17]
+	mi := &file_health_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1055,7 +1063,7 @@ func (x *GetRecommendationsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRecommendationsResponse.ProtoReflect.Descriptor instead.
 func (*GetRecommendationsResponse) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{17}
+	return file_health_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *GetRecommendationsResponse) GetRecommendations() []*Recommendation {
@@ -1080,7 +1088,7 @@ type WeeklyRecommendationItem struct {
 
 func (x *WeeklyRecommendationItem) Reset() {
 	*x = WeeklyRecommendationItem{}
-	mi := &file_api_health_health_proto_msgTypes[18]
+	mi := &file_health_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1092,7 +1100,7 @@ func (x *WeeklyRecommendationItem) String() string {
 func (*WeeklyRecommendationItem) ProtoMessage() {}
 
 func (x *WeeklyRecommendationItem) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[18]
+	mi := &file_health_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1105,7 +1113,7 @@ func (x *WeeklyRecommendationItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WeeklyRecommendationItem.ProtoReflect.Descriptor instead.
 func (*WeeklyRecommendationItem) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{18}
+	return file_health_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *WeeklyRecommendationItem) GetRecommendationId() string {
@@ -1159,7 +1167,7 @@ type GetWeeklyRecommendationsRequest struct {
 
 func (x *GetWeeklyRecommendationsRequest) Reset() {
 	*x = GetWeeklyRecommendationsRequest{}
-	mi := &file_api_health_health_proto_msgTypes[19]
+	mi := &file_health_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1171,7 +1179,7 @@ func (x *GetWeeklyRecommendationsRequest) String() string {
 func (*GetWeeklyRecommendationsRequest) ProtoMessage() {}
 
 func (x *GetWeeklyRecommendationsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[19]
+	mi := &file_health_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1184,7 +1192,7 @@ func (x *GetWeeklyRecommendationsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetWeeklyRecommendationsRequest.ProtoReflect.Descriptor instead.
 func (*GetWeeklyRecommendationsRequest) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{19}
+	return file_health_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *GetWeeklyRecommendationsRequest) GetUserId() string {
@@ -1204,7 +1212,7 @@ type GetWeeklyRecommendationsResponse struct {
 
 func (x *GetWeeklyRecommendationsResponse) Reset() {
 	*x = GetWeeklyRecommendationsResponse{}
-	mi := &file_api_health_health_proto_msgTypes[20]
+	mi := &file_health_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1216,7 +1224,7 @@ func (x *GetWeeklyRecommendationsResponse) String() string {
 func (*GetWeeklyRecommendationsResponse) ProtoMessage() {}
 
 func (x *GetWeeklyRecommendationsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[20]
+	mi := &file_health_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1229,7 +1237,7 @@ func (x *GetWeeklyRecommendationsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetWeeklyRecommendationsResponse.ProtoReflect.Descriptor instead.
 func (*GetWeeklyRecommendationsResponse) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{20}
+	return file_health_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *GetWeeklyRecommendationsResponse) GetItems() []*WeeklyRecommendationItem {
@@ -1259,7 +1267,7 @@ type SendNotificationRequest struct {
 
 func (x *SendNotificationRequest) Reset() {
 	*x = SendNotificationRequest{}
-	mi := &file_api_health_health_proto_msgTypes[21]
+	mi := &file_health_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1271,7 +1279,7 @@ func (x *SendNotificationRequest) String() string {
 func (*SendNotificationRequest) ProtoMessage() {}
 
 func (x *SendNotificationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[21]
+	mi := &file_health_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1284,7 +1292,7 @@ func (x *SendNotificationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendNotificationRequest.ProtoReflect.Descriptor instead.
 func (*SendNotificationRequest) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{21}
+	return file_health_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *SendNotificationRequest) GetUserId() string {
@@ -1330,7 +1338,7 @@ type SendNotificationResponse struct {
 
 func (x *SendNotificationResponse) Reset() {
 	*x = SendNotificationResponse{}
-	mi := &file_api_health_health_proto_msgTypes[22]
+	mi := &file_health_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1342,7 +1350,7 @@ func (x *SendNotificationResponse) String() string {
 func (*SendNotificationResponse) ProtoMessage() {}
 
 func (x *SendNotificationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[22]
+	mi := &file_health_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1355,7 +1363,7 @@ func (x *SendNotificationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendNotificationResponse.ProtoReflect.Descriptor instead.
 func (*SendNotificationResponse) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{22}
+	return file_health_proto_rawDescGZIP(), []int{22}
 }
 
 type AdminRecommendation struct {
@@ -1372,7 +1380,7 @@ type AdminRecommendation struct {
 
 func (x *AdminRecommendation) Reset() {
 	*x = AdminRecommendation{}
-	mi := &file_api_health_health_proto_msgTypes[23]
+	mi := &file_health_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1384,7 +1392,7 @@ func (x *AdminRecommendation) String() string {
 func (*AdminRecommendation) ProtoMessage() {}
 
 func (x *AdminRecommendation) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[23]
+	mi := &file_health_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1397,7 +1405,7 @@ func (x *AdminRecommendation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminRecommendation.ProtoReflect.Descriptor instead.
 func (*AdminRecommendation) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{23}
+	return file_health_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *AdminRecommendation) GetId() string {
@@ -1451,7 +1459,7 @@ type AdminListRecommendationsRequest struct {
 
 func (x *AdminListRecommendationsRequest) Reset() {
 	*x = AdminListRecommendationsRequest{}
-	mi := &file_api_health_health_proto_msgTypes[24]
+	mi := &file_health_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1463,7 +1471,7 @@ func (x *AdminListRecommendationsRequest) String() string {
 func (*AdminListRecommendationsRequest) ProtoMessage() {}
 
 func (x *AdminListRecommendationsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[24]
+	mi := &file_health_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1476,7 +1484,7 @@ func (x *AdminListRecommendationsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminListRecommendationsRequest.ProtoReflect.Descriptor instead.
 func (*AdminListRecommendationsRequest) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{24}
+	return file_health_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *AdminListRecommendationsRequest) GetCriterionId() string {
@@ -1495,7 +1503,7 @@ type AdminListRecommendationsResponse struct {
 
 func (x *AdminListRecommendationsResponse) Reset() {
 	*x = AdminListRecommendationsResponse{}
-	mi := &file_api_health_health_proto_msgTypes[25]
+	mi := &file_health_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1507,7 +1515,7 @@ func (x *AdminListRecommendationsResponse) String() string {
 func (*AdminListRecommendationsResponse) ProtoMessage() {}
 
 func (x *AdminListRecommendationsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[25]
+	mi := &file_health_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1520,7 +1528,7 @@ func (x *AdminListRecommendationsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminListRecommendationsResponse.ProtoReflect.Descriptor instead.
 func (*AdminListRecommendationsResponse) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{25}
+	return file_health_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *AdminListRecommendationsResponse) GetRecommendations() []*AdminRecommendation {
@@ -1539,7 +1547,7 @@ type AdminUpsertRecommendationRequest struct {
 
 func (x *AdminUpsertRecommendationRequest) Reset() {
 	*x = AdminUpsertRecommendationRequest{}
-	mi := &file_api_health_health_proto_msgTypes[26]
+	mi := &file_health_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1551,7 +1559,7 @@ func (x *AdminUpsertRecommendationRequest) String() string {
 func (*AdminUpsertRecommendationRequest) ProtoMessage() {}
 
 func (x *AdminUpsertRecommendationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[26]
+	mi := &file_health_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1564,7 +1572,7 @@ func (x *AdminUpsertRecommendationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminUpsertRecommendationRequest.ProtoReflect.Descriptor instead.
 func (*AdminUpsertRecommendationRequest) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{26}
+	return file_health_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *AdminUpsertRecommendationRequest) GetRecommendation() *AdminRecommendation {
@@ -1583,7 +1591,7 @@ type AdminUpsertRecommendationResponse struct {
 
 func (x *AdminUpsertRecommendationResponse) Reset() {
 	*x = AdminUpsertRecommendationResponse{}
-	mi := &file_api_health_health_proto_msgTypes[27]
+	mi := &file_health_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1595,7 +1603,7 @@ func (x *AdminUpsertRecommendationResponse) String() string {
 func (*AdminUpsertRecommendationResponse) ProtoMessage() {}
 
 func (x *AdminUpsertRecommendationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[27]
+	mi := &file_health_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1608,7 +1616,7 @@ func (x *AdminUpsertRecommendationResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use AdminUpsertRecommendationResponse.ProtoReflect.Descriptor instead.
 func (*AdminUpsertRecommendationResponse) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{27}
+	return file_health_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *AdminUpsertRecommendationResponse) GetRecommendation() *AdminRecommendation {
@@ -1627,7 +1635,7 @@ type AdminDeleteRecommendationRequest struct {
 
 func (x *AdminDeleteRecommendationRequest) Reset() {
 	*x = AdminDeleteRecommendationRequest{}
-	mi := &file_api_health_health_proto_msgTypes[28]
+	mi := &file_health_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1639,7 +1647,7 @@ func (x *AdminDeleteRecommendationRequest) String() string {
 func (*AdminDeleteRecommendationRequest) ProtoMessage() {}
 
 func (x *AdminDeleteRecommendationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[28]
+	mi := &file_health_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1652,7 +1660,7 @@ func (x *AdminDeleteRecommendationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminDeleteRecommendationRequest.ProtoReflect.Descriptor instead.
 func (*AdminDeleteRecommendationRequest) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{28}
+	return file_health_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *AdminDeleteRecommendationRequest) GetId() string {
@@ -1671,7 +1679,7 @@ type AdminDeleteRecommendationResponse struct {
 
 func (x *AdminDeleteRecommendationResponse) Reset() {
 	*x = AdminDeleteRecommendationResponse{}
-	mi := &file_api_health_health_proto_msgTypes[29]
+	mi := &file_health_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1683,7 +1691,7 @@ func (x *AdminDeleteRecommendationResponse) String() string {
 func (*AdminDeleteRecommendationResponse) ProtoMessage() {}
 
 func (x *AdminDeleteRecommendationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[29]
+	mi := &file_health_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1696,7 +1704,7 @@ func (x *AdminDeleteRecommendationResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use AdminDeleteRecommendationResponse.ProtoReflect.Descriptor instead.
 func (*AdminDeleteRecommendationResponse) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{29}
+	return file_health_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *AdminDeleteRecommendationResponse) GetSuccess() bool {
@@ -1715,7 +1723,7 @@ type AdminUpsertCriterionRequest struct {
 
 func (x *AdminUpsertCriterionRequest) Reset() {
 	*x = AdminUpsertCriterionRequest{}
-	mi := &file_api_health_health_proto_msgTypes[30]
+	mi := &file_health_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1727,7 +1735,7 @@ func (x *AdminUpsertCriterionRequest) String() string {
 func (*AdminUpsertCriterionRequest) ProtoMessage() {}
 
 func (x *AdminUpsertCriterionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[30]
+	mi := &file_health_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1740,7 +1748,7 @@ func (x *AdminUpsertCriterionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminUpsertCriterionRequest.ProtoReflect.Descriptor instead.
 func (*AdminUpsertCriterionRequest) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{30}
+	return file_health_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *AdminUpsertCriterionRequest) GetCriterion() *Criterion {
@@ -1759,7 +1767,7 @@ type AdminUpsertCriterionResponse struct {
 
 func (x *AdminUpsertCriterionResponse) Reset() {
 	*x = AdminUpsertCriterionResponse{}
-	mi := &file_api_health_health_proto_msgTypes[31]
+	mi := &file_health_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1771,7 +1779,7 @@ func (x *AdminUpsertCriterionResponse) String() string {
 func (*AdminUpsertCriterionResponse) ProtoMessage() {}
 
 func (x *AdminUpsertCriterionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_health_health_proto_msgTypes[31]
+	mi := &file_health_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1784,7 +1792,7 @@ func (x *AdminUpsertCriterionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminUpsertCriterionResponse.ProtoReflect.Descriptor instead.
 func (*AdminUpsertCriterionResponse) Descriptor() ([]byte, []int) {
-	return file_api_health_health_proto_rawDescGZIP(), []int{31}
+	return file_health_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *AdminUpsertCriterionResponse) GetCriterion() *Criterion {
@@ -1794,11 +1802,11 @@ func (x *AdminUpsertCriterionResponse) GetCriterion() *Criterion {
 	return nil
 }
 
-var File_api_health_health_proto protoreflect.FileDescriptor
+var File_health_proto protoreflect.FileDescriptor
 
-const file_api_health_health_proto_rawDesc = "" +
+const file_health_proto_rawDesc = "" +
 	"\n" +
-	"\x17api/health/health.proto\x12\x06health\"S\n" +
+	"\fhealth.proto\x12\x06health\"S\n" +
 	"\x0eCriterionGroup\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1d\n" +
@@ -1831,12 +1839,14 @@ const file_api_health_health_proto_rawDesc = "" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x19\n" +
 	"\buser_sex\x18\x02 \x01(\tR\auserSex\"E\n" +
 	"\x14ListCriteriaResponse\x12-\n" +
-	"\bcriteria\x18\x01 \x03(\v2\x11.health.CriterionR\bcriteria\"\x83\x01\n" +
+	"\bcriteria\x18\x01 \x03(\v2\x11.health.CriterionR\bcriteria\"\xa4\x01\n" +
 	"\x17SetUserCriterionRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12!\n" +
 	"\fcriterion_id\x18\x02 \x01(\tR\vcriterionId\x12\x14\n" +
 	"\x05value\x18\x03 \x01(\tR\x05value\x12\x16\n" +
-	"\x06source\x18\x04 \x01(\tR\x06source\"4\n" +
+	"\x06source\x18\x04 \x01(\tR\x06source\x12\x1f\n" +
+	"\vmeasured_at\x18\x05 \x01(\tR\n" +
+	"measuredAt\"4\n" +
 	"\x18SetUserCriterionResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\"/\n" +
 	"\x14ResetCriteriaRequest\x12\x17\n" +
@@ -1938,19 +1948,19 @@ const file_api_health_health_proto_rawDesc = "" +
 	"\x14AdminUpsertCriterion\x12#.health.AdminUpsertCriterionRequest\x1a$.health.AdminUpsertCriterionResponseB3Z1github.com/helthtech/core-health/pkg/proto/healthb\x06proto3"
 
 var (
-	file_api_health_health_proto_rawDescOnce sync.Once
-	file_api_health_health_proto_rawDescData []byte
+	file_health_proto_rawDescOnce sync.Once
+	file_health_proto_rawDescData []byte
 )
 
-func file_api_health_health_proto_rawDescGZIP() []byte {
-	file_api_health_health_proto_rawDescOnce.Do(func() {
-		file_api_health_health_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_api_health_health_proto_rawDesc), len(file_api_health_health_proto_rawDesc)))
+func file_health_proto_rawDescGZIP() []byte {
+	file_health_proto_rawDescOnce.Do(func() {
+		file_health_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_health_proto_rawDesc), len(file_health_proto_rawDesc)))
 	})
-	return file_api_health_health_proto_rawDescData
+	return file_health_proto_rawDescData
 }
 
-var file_api_health_health_proto_msgTypes = make([]protoimpl.MessageInfo, 32)
-var file_api_health_health_proto_goTypes = []any{
+var file_health_proto_msgTypes = make([]protoimpl.MessageInfo, 32)
+var file_health_proto_goTypes = []any{
 	(*CriterionGroup)(nil),                    // 0: health.CriterionGroup
 	(*ListGroupsRequest)(nil),                 // 1: health.ListGroupsRequest
 	(*ListGroupsResponse)(nil),                // 2: health.ListGroupsResponse
@@ -1984,7 +1994,7 @@ var file_api_health_health_proto_goTypes = []any{
 	(*AdminUpsertCriterionRequest)(nil),       // 30: health.AdminUpsertCriterionRequest
 	(*AdminUpsertCriterionResponse)(nil),      // 31: health.AdminUpsertCriterionResponse
 }
-var file_api_health_health_proto_depIdxs = []int32{
+var file_health_proto_depIdxs = []int32{
 	0,  // 0: health.ListGroupsResponse.groups:type_name -> health.CriterionGroup
 	3,  // 1: health.ListCriteriaResponse.criteria:type_name -> health.Criterion
 	10, // 2: health.GetUserCriteriaResponse.entries:type_name -> health.UserCriterionEntry
@@ -2028,27 +2038,27 @@ var file_api_health_health_proto_depIdxs = []int32{
 	0,  // [0:10] is the sub-list for field type_name
 }
 
-func init() { file_api_health_health_proto_init() }
-func file_api_health_health_proto_init() {
-	if File_api_health_health_proto != nil {
+func init() { file_health_proto_init() }
+func file_health_proto_init() {
+	if File_health_proto != nil {
 		return
 	}
-	file_api_health_health_proto_msgTypes[3].OneofWrappers = []any{}
+	file_health_proto_msgTypes[3].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_health_health_proto_rawDesc), len(file_api_health_health_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_health_proto_rawDesc), len(file_health_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   32,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_api_health_health_proto_goTypes,
-		DependencyIndexes: file_api_health_health_proto_depIdxs,
-		MessageInfos:      file_api_health_health_proto_msgTypes,
+		GoTypes:           file_health_proto_goTypes,
+		DependencyIndexes: file_health_proto_depIdxs,
+		MessageInfos:      file_health_proto_msgTypes,
 	}.Build()
-	File_api_health_health_proto = out.File
-	file_api_health_health_proto_goTypes = nil
-	file_api_health_health_proto_depIdxs = nil
+	File_health_proto = out.File
+	file_health_proto_goTypes = nil
+	file_health_proto_depIdxs = nil
 }

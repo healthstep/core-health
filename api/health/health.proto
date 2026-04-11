@@ -72,6 +72,7 @@ message SetUserCriterionRequest {
   string criterion_id = 2;
   string value = 3;
   string source = 4;
+  string measured_at = 5; // ISO 8601 date, optional (e.g. "2025-03-15")
 }
 
 message SetUserCriterionResponse {

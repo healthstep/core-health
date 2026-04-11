@@ -71,12 +71,17 @@ func (s *HealthService) ListCriteria(ctx context.Context, userID uuid.UUID, user
 }
 
 // SetUserCriterion stores or updates a user's criterion value.
-func (s *HealthService) SetUserCriterion(ctx context.Context, userID, criterionID uuid.UUID, value, source string) error {
+func (s *HealthService) SetUserCriterion(ctx context.Context, userID, criterionID uuid.UUID, value, source, measuredAtStr string) error {
 	uc := &model.UserCriterion{
 		UserID:      userID,
 		CriterionID: criterionID,
 		Value:       value,
 		UpdatedAt:   time.Now(),
+	}
+	if measuredAtStr != "" {
+		if t, err := time.Parse("2006-01-02", measuredAtStr); err == nil {
+			uc.MeasuredAt = &t
+		}
 	}
 	return s.repo.SetUserCriterion(ctx, uc)
 }

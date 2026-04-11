@@ -68,9 +68,10 @@ func (r *HealthRepository) SetUserCriterion(ctx context.Context, uc *model.UserC
 		Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "user_id"}, {Name: "criterion_id"}},
 			DoUpdates: clause.Assignments(map[string]interface{}{
-				"value":      uc.Value,
-				"updated_at": uc.UpdatedAt,
-				"deleted_at": nil,
+				"value":       uc.Value,
+				"measured_at": uc.MeasuredAt,
+				"updated_at":  uc.UpdatedAt,
+				"deleted_at":  nil,
 			}),
 		}).
 		Create(uc).Error

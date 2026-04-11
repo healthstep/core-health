@@ -69,7 +69,7 @@ func (s *HealthServer) SetUserCriterion(ctx context.Context, req *pb.SetUserCrit
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid criterion_id")
 	}
-	if err := s.svc.SetUserCriterion(ctx, userID, criterionID, req.GetValue(), req.GetSource()); err != nil {
+	if err := s.svc.SetUserCriterion(ctx, userID, criterionID, req.GetValue(), req.GetSource(), req.GetMeasuredAt()); err != nil {
 		return nil, status.Errorf(codes.Internal, fmt.Sprintf("set criterion: %v", err))
 	}
 	return &pb.SetUserCriterionResponse{Success: true}, nil

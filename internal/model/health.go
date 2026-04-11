@@ -51,6 +51,7 @@ type UserCriterion struct {
 	UserID      uuid.UUID      `gorm:"type:uuid;not null;uniqueIndex:idx_user_criterion"`
 	CriterionID uuid.UUID      `gorm:"type:uuid;not null;uniqueIndex:idx_user_criterion"`
 	Value       string         `gorm:"type:text"`
+	MeasuredAt  *time.Time     `gorm:"type:date"` // date when the test/measurement was actually performed
 	UpdatedAt   time.Time
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
 }
