@@ -4,8 +4,10 @@ go 1.25.2
 
 require (
 	github.com/google/uuid v1.6.0
+	github.com/ledongthuc/pdf v0.0.0-20250511090121-5959a4027728
 	github.com/nats-io/nats.go v1.39.1
 	github.com/porebric/configs v1.0.3
+	github.com/porebric/logger v0.1.0
 	github.com/porebric/resty v0.0.6-0.20260213102226-fc22aa7f513e
 	github.com/redis/go-redis/v9 v9.18.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.58.0
@@ -43,7 +45,6 @@ require (
 	github.com/nats-io/nkeys v0.4.9 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/porebric/logger v0.1.0 // indirect
 	github.com/porebric/tracer v0.1.0 // indirect
 	github.com/prometheus/client_golang v1.19.0 // indirect
 	github.com/prometheus/client_model v0.5.0 // indirect

@@ -126,15 +126,16 @@ func (s *HealthService) GetUserCriteria(ctx context.Context, userID uuid.UUID, u
 		}
 
 		entry := UserCriterionEntry{
-			CriterionID:    c.ID.String(),
-			CriterionName:  c.Name,
-			Value:          value,
-			Level:          c.Level,
-			InputType:      c.InputType,
-			GroupID:        groupID,
-			Status:         st,
-			Severity:       st,
-			Recommendation: rec,
+			CriterionID:      c.ID.String(),
+			CriterionName:    c.Name,
+			Value:            value,
+			Level:            c.Level,
+			InputType:        c.InputType,
+			GroupID:          groupID,
+			Status:           st,
+			Severity:         st,
+			Recommendation:   rec,
+			Instruction:      c.Instruction,
 		}
 		entries = append(entries, entry)
 	}
@@ -425,6 +426,19 @@ func (s *HealthService) buildWeeklyItems(weights map[string]int) []WeeklyItem {
 	return items
 }
 
+func pickRandomNotificationText(rec model.Recommendation, titleFallback string) string {
+	var variants []string
+	for _, n := range rec.Notifications {
+		if strings.TrimSpace(n.Text) != "" {
+			variants = append(variants, n.Text)
+		}
+	}
+	if len(variants) == 0 {
+		return titleFallback
+	}
+	return variants[rand.Intn(len(variants))]
+}
+
 // SelectDailyRecommendation picks one recommendation using weighted random selection from the weekly plan.
 // Alarms are NOT included in the daily auction.
 func (s *HealthService) SelectDailyRecommendation(ctx context.Context, userID uuid.UUID, userSex string) (*DailyRec, error) {
@@ -469,18 +483,14 @@ func (s *HealthService) SelectDailyRecommendation(ctx context.Context, userID uu
 		chosen = &pool[0]
 	}
 
-	// Pick a random text from the recommendation's texts.
+	// Pick a random notification text for the chosen recommendation.
 	allRecs := s.cache.GetAllRecommendations()
-	var texts []string
+	text := chosen.item.Title
 	for _, r := range allRecs {
 		if r.ID.String() == chosen.item.RecommendationID {
-			texts = r.Texts.Data()
+			text = pickRandomNotificationText(r, chosen.item.Title)
 			break
 		}
-	}
-	text := chosen.item.Title
-	if len(texts) > 0 {
-		text = texts[rand.Intn(len(texts))]
 	}
 
 	// Decrease weight in weekly plan (set to 0 = spent for the week).
@@ -672,11 +682,7 @@ func (s *HealthService) RunAlarmScheduler(ctx context.Context, channels []string
 					continue
 				}
 
-				texts := rec.Texts.Data()
-				text := rec.Title
-				if len(texts) > 0 {
-					text = texts[rand.Intn(len(texts))]
-				}
+				text := pickRandomNotificationText(rec, rec.Title)
 
 				payload, _ := json.Marshal(map[string]string{
 					"title": rec.Title,
@@ -860,6 +866,7 @@ type UserCriterionEntry struct {
 	Level          int
 	InputType      string
 	GroupID        string
+	Instruction    string
 }
 
 type ProgressResult struct {

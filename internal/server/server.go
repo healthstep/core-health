@@ -1,14 +1,18 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"log"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/helthtech/core-health/internal/model"
+	"github.com/helthtech/core-health/internal/pdfextract"
 	"github.com/helthtech/core-health/internal/service"
 	pb "github.com/helthtech/core-health/pkg/proto/health"
-	"gorm.io/datatypes"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -107,6 +111,7 @@ func (s *HealthServer) GetUserCriteria(ctx context.Context, req *pb.GetUserCrite
 			Severity:       e.Severity,
 			InputType:      e.InputType,
 			GroupId:        e.GroupID,
+			Instruction:    e.Instruction,
 		})
 	}
 	return resp, nil
@@ -127,6 +132,57 @@ func (s *HealthServer) GetProgress(ctx context.Context, req *pb.GetProgressReque
 		Percent:    prog.Percent,
 		LevelLabel: prog.LevelLabel,
 	}, nil
+}
+
+func (s *HealthServer) ImportCriteriaFromPdf(stream pb.HealthService_ImportCriteriaFromPdfServer) error {
+	var buf bytes.Buffer
+	var filename string
+	for {
+		msg, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		if fn := msg.GetFilename(); fn != "" {
+			filename = fn
+		}
+		chunk := msg.GetChunk()
+		if len(chunk) == 0 {
+			continue
+		}
+		if buf.Len()+len(chunk) > pdfextract.MaxPDFBytes {
+			return status.Errorf(codes.ResourceExhausted, "pdf exceeds max size (%d bytes)", pdfextract.MaxPDFBytes)
+		}
+		buf.Write(chunk)
+	}
+	if buf.Len() == 0 {
+		return status.Error(codes.InvalidArgument, "empty pdf stream")
+	}
+	text, err := pdfextract.PlainText(buf.Bytes())
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "pdf parse: %v", err)
+	}
+	logPDFImportText(filename, buf.Len(), text)
+	return stream.SendAndClose(&pb.ImportCriteriaFromPdfResponse{UserCriteria: nil})
+}
+
+const maxPDFLogRunes = 12000
+
+func logPDFImportText(filename string, sizeBytes int, text string) {
+	runes := []rune(text)
+	n := len(runes)
+	trunc := n > maxPDFLogRunes
+	if trunc {
+		runes = runes[:maxPDFLogRunes]
+	}
+	suffix := ""
+	if trunc {
+		suffix = " (log truncated)"
+	}
+	log.Printf("[pdf-import] filename=%q size_bytes=%d text_runes=%d%s\n%s",
+		filename, sizeBytes, n, suffix, string(runes))
 }
 
 func (s *HealthServer) GetRecommendations(ctx context.Context, req *pb.GetRecommendationsRequest) (*pb.GetRecommendationsResponse, error) {
@@ -232,15 +288,16 @@ func (s *HealthServer) AdminUpsertCriterion(ctx context.Context, req *pb.AdminUp
 		return nil, status.Errorf(codes.InvalidArgument, "criterion is required")
 	}
 	c := &model.Criterion{
-		Name:      pc.GetName(),
-		Level:     int(pc.GetLevel()),
-		Sex:       pc.GetSex(),
-		InputType: pc.GetInputType(),
-		Lifetime:  int(pc.GetLifetime()),
-		SortOrder: int(pc.GetSortOrder()),
-		MinValue:  pc.MinValue,
-		MaxValue:  pc.MaxValue,
-		Delta:     pc.Delta,
+		Name:        pc.GetName(),
+		Level:       int(pc.GetLevel()),
+		Sex:         pc.GetSex(),
+		InputType:   pc.GetInputType(),
+		Lifetime:    int(pc.GetLifetime()),
+		SortOrder:   int(pc.GetSortOrder()),
+		MinValue:    pc.MinValue,
+		MaxValue:    pc.MaxValue,
+		Delta:       pc.Delta,
+		Instruction: pc.GetInstruction(),
 	}
 	if pc.GetId() != "" {
 		id, err := uuid.Parse(pc.GetId())
@@ -266,16 +323,17 @@ func (s *HealthServer) AdminUpsertCriterion(ctx context.Context, req *pb.AdminUp
 
 func criterionToProto(c model.Criterion) *pb.Criterion {
 	pc := &pb.Criterion{
-		Id:        c.ID.String(),
-		Name:      c.Name,
-		Level:     int32(c.Level),
-		Sex:       c.Sex,
-		InputType: c.InputType,
-		Lifetime:  int32(c.Lifetime),
-		SortOrder: int32(c.SortOrder),
-		MinValue:  c.MinValue,
-		MaxValue:  c.MaxValue,
-		Delta:     c.Delta,
+		Id:          c.ID.String(),
+		Name:        c.Name,
+		Level:       int32(c.Level),
+		Sex:         c.Sex,
+		InputType:   c.InputType,
+		Lifetime:    int32(c.Lifetime),
+		SortOrder:   int32(c.SortOrder),
+		MinValue:    c.MinValue,
+		MaxValue:    c.MaxValue,
+		Delta:       c.Delta,
+		Instruction: c.Instruction,
 	}
 	if c.GroupID != nil {
 		pc.GroupId = c.GroupID.String()
@@ -284,12 +342,16 @@ func criterionToProto(c model.Criterion) *pb.Criterion {
 }
 
 func modelRecToProto(r model.Recommendation) *pb.AdminRecommendation {
+	texts := make([]string, 0, len(r.Notifications))
+	for _, n := range r.Notifications {
+		texts = append(texts, n.Text)
+	}
 	return &pb.AdminRecommendation{
 		Id:          r.ID.String(),
 		CriterionId: r.CriterionID.String(),
 		Type:        r.Type,
 		Title:       r.Title,
-		Texts:       r.Texts.Data(),
+		Texts:       texts,
 		BaseWeight:  int32(r.BaseWeight),
 	}
 }
@@ -303,7 +365,6 @@ func protoRecToModel(pr *pb.AdminRecommendation) (*model.Recommendation, error) 
 		CriterionID: criterionID,
 		Type:        pr.GetType(),
 		Title:       pr.GetTitle(),
-		Texts:       datatypes.NewJSONType(pr.GetTexts()),
 		BaseWeight:  int(pr.GetBaseWeight()),
 	}
 	if pr.GetId() != "" {
@@ -312,6 +373,12 @@ func protoRecToModel(pr *pb.AdminRecommendation) (*model.Recommendation, error) 
 			return nil, fmt.Errorf("invalid id: %w", err)
 		}
 		rec.ID = id
+	}
+	for _, t := range pr.GetTexts() {
+		if strings.TrimSpace(t) == "" {
+			continue
+		}
+		rec.Notifications = append(rec.Notifications, model.RecommendationNotification{Text: t})
 	}
 	return rec, nil
 }

@@ -12,6 +12,8 @@ service HealthService {
   rpc ResetCriteria(ResetCriteriaRequest) returns (ResetCriteriaResponse);
   rpc GetUserCriteria(GetUserCriteriaRequest) returns (GetUserCriteriaResponse);
   rpc GetProgress(GetProgressRequest) returns (GetProgressResponse);
+  // Client streams a PDF with the user's lab analyses. Server extracts text; future: AI maps our DB criteria + values. Response: suggested user criteria (id + value), empty until AI is wired.
+  rpc ImportCriteriaFromPdf(stream ImportCriteriaFromPdfRequest) returns (ImportCriteriaFromPdfResponse);
   // --- Recommendations ---
   rpc GetRecommendations(GetRecommendationsRequest) returns (GetRecommendationsResponse);
   rpc GetWeeklyRecommendations(GetWeeklyRecommendationsRequest) returns (GetWeeklyRecommendationsResponse);
@@ -56,6 +58,8 @@ message Criterion {
   optional double min_value = 10;
   optional double max_value = 11;
   optional double delta = 12;
+  // Where to go / how to obtain this measurement (lab, clinic, home device, etc.).
+  string instruction = 13;
 }
 
 message ListCriteriaRequest {
@@ -97,6 +101,7 @@ message UserCriterionEntry {
   string severity = 7;
   string input_type = 8;
   string group_id = 9;
+  string instruction = 10;
 }
 
 message GetUserCriteriaRequest {
@@ -117,6 +122,26 @@ message GetProgressResponse {
   int32 filled = 2;
   double percent = 3;
   string level_label = 4;
+}
+
+// First message may set filename; every message may carry a chunk of the raw PDF (concatenate in order).
+message ImportCriteriaFromPdfRequest {
+  string filename = 1;
+  bytes chunk = 2;
+}
+
+// Matched catalog criterion + value extracted from the document (same ids as ListCriteria / SetUserCriterion).
+message ImportedUserCriterion {
+  string criterion_id = 1;
+  string criterion_name = 2;
+  string value = 3;
+  string input_type = 4; // "numeric", "check", "boolean" — from our criterion definition
+  string measured_at = 5; // optional ISO 8601 date if derivable from the document
+  string instruction = 6; // from catalog (where to obtain this criterion)
+}
+
+message ImportCriteriaFromPdfResponse {
+  repeated ImportedUserCriterion user_criteria = 1;
 }
 
 // --- Recommendations ---

@@ -39,7 +39,9 @@ type Criterion struct {
 	MinValue  *float64   `gorm:"type:decimal"`
 	MaxValue  *float64   `gorm:"type:decimal"`
 	Delta     *float64   `gorm:"type:decimal"`
-	CreatedAt time.Time
+	// Instruction: where the user should go or what to do to obtain this measurement.
+	Instruction string    `gorm:"type:text;not null;default:''"`
+	CreatedAt   time.Time
 }
 
 func (Criterion) TableName() string { return "criteria" }
@@ -73,20 +75,37 @@ func (uc *UserCriterion) BeforeCreate(tx *gorm.DB) error {
 //   - "alarm"                 — values significantly out of norm (sent separately, not in daily auction)
 //   - "expiration_reminder"   — data is about to expire (sent by the expiry scheduler)
 //
-// Texts: multiple notification text variants; one is picked randomly per send.
+// Notification bodies live in recommendation_notifications; one row is picked randomly per send.
 // BaseWeight: initial auction weight; higher = more likely to be picked in daily auction.
 // Applicability is derived from the linked Criterion's MinValue/MaxValue/Delta fields.
 type Recommendation struct {
-	ID          uuid.UUID                    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	CriterionID uuid.UUID                    `gorm:"type:uuid;not null;index"`
-	Type        string                       `gorm:"type:text;not null;default:'recommendation'"`
-	Title       string                       `gorm:"type:text;not null"`
-	Texts       datatypes.JSONType[[]string] `gorm:"type:jsonb;not null"`
-	BaseWeight  int                          `gorm:"type:int;not null;default:1"`
-	CreatedAt   time.Time
+	ID            uuid.UUID                      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	CriterionID   uuid.UUID                      `gorm:"type:uuid;not null;index"`
+	Type          string                         `gorm:"type:text;not null;default:'recommendation'"`
+	Title         string                         `gorm:"type:text;not null"`
+	BaseWeight    int                            `gorm:"type:int;not null;default:1"`
+	CreatedAt     time.Time
+	Notifications []RecommendationNotification `gorm:"foreignKey:RecommendationID;constraint:OnDelete:CASCADE"`
 }
 
 func (Recommendation) TableName() string { return "recommendations" }
+
+// RecommendationNotification is one variant of notification text for a recommendation.
+type RecommendationNotification struct {
+	ID               uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	RecommendationID uuid.UUID `gorm:"type:uuid;not null;index"`
+	Text             string    `gorm:"type:text;not null"`
+	CreatedAt        time.Time
+}
+
+func (RecommendationNotification) TableName() string { return "recommendation_notifications" }
+
+func (n *RecommendationNotification) BeforeCreate(tx *gorm.DB) error {
+	if n.ID == uuid.Nil {
+		n.ID = uuid.New()
+	}
+	return nil
+}
 
 // WeeklyRecommendation stores per-user per-week recommendation weights for the daily auction.
 // Generated fresh every Monday; weight decreases after each daily send and reaches 0 when spent.

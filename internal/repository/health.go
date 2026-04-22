@@ -54,7 +54,7 @@ func (r *HealthRepository) GetCriterion(ctx context.Context, id uuid.UUID) (*mod
 func (r *HealthRepository) UpsertCriterion(ctx context.Context, c *model.Criterion) error {
 	return r.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"group_id", "name", "level", "sex", "input_type", "lifetime", "sort_order", "min_value", "max_value", "delta"}),
+		DoUpdates: clause.AssignmentColumns([]string{"group_id", "name", "level", "sex", "input_type", "lifetime", "sort_order", "min_value", "max_value", "delta", "instruction"}),
 	}).Create(c).Error
 }
 
@@ -159,21 +159,42 @@ func (r *HealthRepository) GetNearExpiryEntries(ctx context.Context, warnWithin 
 
 func (r *HealthRepository) GetAllRecommendations(ctx context.Context) ([]model.Recommendation, error) {
 	var recs []model.Recommendation
-	err := r.db.WithContext(ctx).Find(&recs).Error
+	err := r.db.WithContext(ctx).Preload("Notifications").Order("criterion_id, id").Find(&recs).Error
 	return recs, err
 }
 
 func (r *HealthRepository) GetRecommendationsByCriterion(ctx context.Context, criterionID uuid.UUID) ([]model.Recommendation, error) {
 	var recs []model.Recommendation
-	err := r.db.WithContext(ctx).Where("criterion_id = ?", criterionID).Find(&recs).Error
+	err := r.db.WithContext(ctx).Preload("Notifications").Where("criterion_id = ?", criterionID).Order("id").Find(&recs).Error
 	return recs, err
 }
 
+// UpsertRecommendation inserts or updates the recommendation row and replaces all notification texts.
 func (r *HealthRepository) UpsertRecommendation(ctx context.Context, rec *model.Recommendation) error {
-	return r.db.WithContext(ctx).Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"criterion_id", "type", "title", "texts", "base_weight"}),
-	}).Create(rec).Error
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		q := tx.Session(&gorm.Session{FullSaveAssociations: false}).Omit("Notifications")
+		if err := q.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "id"}},
+			DoUpdates: clause.AssignmentColumns([]string{"criterion_id", "type", "title", "base_weight"}),
+		}).Create(rec).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("recommendation_id = ?", rec.ID).Delete(&model.RecommendationNotification{}).Error; err != nil {
+			return err
+		}
+		for i := range rec.Notifications {
+			rec.Notifications[i].RecommendationID = rec.ID
+			if rec.Notifications[i].ID == uuid.Nil {
+				rec.Notifications[i].ID = uuid.New()
+			}
+		}
+		if len(rec.Notifications) > 0 {
+			if err := tx.Create(&rec.Notifications).Error; err != nil {
+				return err
+			}
+		}
+		return tx.Preload("Notifications").First(rec, "id = ?", rec.ID).Error
+	})
 }
 
 func (r *HealthRepository) DeleteRecommendation(ctx context.Context, id uuid.UUID) error {
