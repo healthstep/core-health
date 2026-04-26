@@ -1,23 +1,26 @@
-# Build with monorepo layout (like public-api): from repo root use
-#   docker build -f core-health/Dockerfile .
-# with ./core-health and ./creteria_parser present. See .github/workflows/docker-image.yml
-FROM golang:1.25-alpine AS builder
-WORKDIR /build/core-health
-RUN apk add --no-cache git
+FROM golang:1.25-alpine AS build
+WORKDIR /app
 
-COPY core-health/go.mod core-health/go.sum ./
-COPY creteria_parser /build/creteria_parser
-RUN go mod edit -replace github.com/porebric/creteria_parser=/build/creteria_parser
-RUN go mod download
+RUN apk update && apk add --no-cache \
+    git \
+    gcc \
+    musl-dev
 
-COPY core-health/ ./
-RUN go mod edit -replace github.com/porebric/creteria_parser=/build/creteria_parser
-RUN CGO_ENABLED=0 go build -o /app/core-health ./cmd/core-health
+ARG GITHUB_TOKEN
+RUN echo "machine github.com login porebric password ${GITHUB_TOKEN}" > /root/.netrc && chmod 600 /root/.netrc
+
+ENV GOPRIVATE=github.com
+
+COPY . .
+
+RUN go mod tidy
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o /app/core-health ./cmd/core-health
 
 FROM alpine:3.19
 RUN apk add --no-cache ca-certificates tzdata
 WORKDIR /app
-COPY --from=builder /app/core-health .
-COPY --from=builder /build/core-health/config/configs_keys.yml ./config/configs_keys.yml
+COPY --from=build /app/core-health .
+COPY --from=build /app/config/configs_keys.yml ./config/configs_keys.yml
 EXPOSE 5002 9002
+ENV APP_ENV=production
 CMD ["./core-health"]
