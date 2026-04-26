@@ -41,5 +41,6 @@ config:
     source: yaml
   grpc_creteria_parser:
     type: string
-    default: "127.0.0.1:5010"
+    # В compose: сервис `creteria-parser:5010`. 127.0.0.1 в контейнере — сам контейнер.
+    default: "creteria-parser:5010"
     source: yaml
