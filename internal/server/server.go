@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"strings"
 	"time"
 
@@ -15,7 +14,8 @@ import (
 	"github.com/helthtech/core-health/internal/pdfextract"
 	"github.com/helthtech/core-health/internal/service"
 	pb "github.com/helthtech/core-health/pkg/proto/health"
-	criteriapb "github.com/helthtech/creteria_parser/pkg/proto/criteria"
+	criteriapb "github.com/porebric/creteria_parser/pkg/proto/criteria"
+	"github.com/porebric/logger"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -135,7 +135,10 @@ func (s *HealthServer) GetProgress(ctx context.Context, req *pb.GetProgressReque
 }
 
 func (s *HealthServer) ImportCriteriaFromPdf(stream pb.HealthService_ImportCriteriaFromPdfServer) error {
+	ctx := stream.Context()
 	if s.parser == nil || s.lab == nil {
+		logger.Error(ctx, fmt.Errorf("import pdf: dependencies missing"), "import pdf: missing deps",
+			"parser_nil", s.parser == nil, "lab_nil", s.lab == nil)
 		return status.Error(codes.Unavailable, "lab import: criteria parser or redis not configured")
 	}
 	type fileAcc struct {
@@ -151,6 +154,7 @@ func (s *HealthServer) ImportCriteriaFromPdf(stream pb.HealthService_ImportCrite
 			break
 		}
 		if err != nil {
+			logger.Error(ctx, err, "import pdf: recv error")
 			return err
 		}
 		if id := msg.GetUserId(); id != "" {
@@ -178,6 +182,7 @@ func (s *HealthServer) ImportCriteriaFromPdf(stream pb.HealthService_ImportCrite
 			cur = &fileAcc{name: filename}
 		}
 		if cur.buf.Len()+len(chunk) > pdfextract.MaxPDFBytes {
+			logger.Error(ctx, fmt.Errorf("size limit"), "import pdf: size limit", "max", pdfextract.MaxPDFBytes)
 			return status.Errorf(codes.ResourceExhausted, "pdf exceeds max size (%d bytes)", pdfextract.MaxPDFBytes)
 		}
 		cur.buf.Write(chunk)
@@ -190,29 +195,33 @@ func (s *HealthServer) ImportCriteriaFromPdf(stream pb.HealthService_ImportCrite
 		total += files[i].buf.Len()
 	}
 	if total == 0 {
+		logger.Error(ctx, fmt.Errorf("empty stream"), "import pdf: empty stream")
 		return status.Error(codes.InvalidArgument, "empty pdf stream")
 	}
 	if userIDStr == "" {
+		logger.Error(ctx, fmt.Errorf("missing user_id"), "import pdf: missing user_id")
 		return status.Error(codes.InvalidArgument, "user_id is required in the first stream message")
 	}
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
+		logger.Error(ctx, err, "import pdf: invalid user_id")
 		return status.Error(codes.InvalidArgument, "invalid user_id")
 	}
 	var textParts []string
 	for _, f := range files {
 		t, err := pdfextract.PlainText(f.buf.Bytes())
 		if err != nil {
+			logger.Error(ctx, err, "import pdf: extract text", "file", f.name)
 			return status.Errorf(codes.InvalidArgument, "pdf parse %q: %v", f.name, err)
 		}
 		textParts = append(textParts, t)
 	}
 	text := strings.Join(textParts, "\n\n---\n\n")
-	logPDFImportText(filename, total, text)
-	ctx := stream.Context()
+	logPDFImportText(ctx, filename, total, text)
 
 	criteria, err := s.svc.ListCriteria(ctx, userID, userSex)
 	if err != nil {
+		logger.Error(ctx, err, "import pdf: list criteria", "user_id", userIDStr)
 		return status.Errorf(codes.Internal, "list criteria: %v", err)
 	}
 	var hints []*criteriapb.CriterionHint
@@ -224,8 +233,8 @@ func (s *HealthServer) ImportCriteriaFromPdf(stream pb.HealthService_ImportCrite
 		}
 		cat[c.ID] = c
 		h := &criteriapb.CriterionHint{
-			Id:   c.ID.String(),
-			Name: c.Name,
+			Id:       c.ID.String(),
+			Name:     c.Name,
 			UnitHint: c.Instruction,
 		}
 		// go pb optional fields
@@ -245,12 +254,13 @@ func (s *HealthServer) ImportCriteriaFromPdf(stream pb.HealthService_ImportCrite
 	}
 
 	pr, err := s.parser.ParseFromText(ctx, &criteriapb.ParseFromTextRequest{
-		Text:              text,
+		Text:            text,
 		AllowedCriteria: hints,
-		UserSex:           userSex,
-		Locale:            "ru",
+		UserSex:         userSex,
+		Locale:          "ru",
 	})
 	if err != nil {
+		logger.Error(ctx, err, "import pdf: parser", "user_id", userIDStr)
 		return status.Errorf(codes.Internal, "ai parse: %v", err)
 	}
 
@@ -291,13 +301,15 @@ func (s *HealthServer) ImportCriteriaFromPdf(stream pb.HealthService_ImportCrite
 
 	pendingID := uuid.NewString()
 	if err := s.lab.Save(ctx, pendingID, labimport.PendingBatch{UserID: userIDStr, Items: items}, time.Hour); err != nil {
+		logger.Error(ctx, err, "import pdf: redis save", "pending_id", pendingID)
 		return status.Errorf(codes.Internal, "redis: %v", err)
 	}
 
+	logger.Info(ctx, "import pdf: success", "user_id", userIDStr, "files", len(files), "items", len(out), "pending_id", pendingID)
 	return stream.SendAndClose(&pb.ImportCriteriaFromPdfResponse{
-		UserCriteria:      out,
-		PendingImportId:  pendingID,
-		ModelNote:         pr.GetModelNote(),
+		UserCriteria:    out,
+		PendingImportId: pendingID,
+		ModelNote:       pr.GetModelNote(),
 	})
 }
 
@@ -342,19 +354,18 @@ func (s *HealthServer) ConfirmPendingImport(ctx context.Context, req *pb.Confirm
 
 const maxPDFLogRunes = 12000
 
-func logPDFImportText(filename string, sizeBytes int, text string) {
+func logPDFImportText(ctx context.Context, filename string, sizeBytes int, text string) {
 	runes := []rune(text)
 	n := len(runes)
 	trunc := n > maxPDFLogRunes
 	if trunc {
 		runes = runes[:maxPDFLogRunes]
 	}
-	suffix := ""
+	s := string(runes)
 	if trunc {
-		suffix = " (log truncated)"
+		s += "...(truncated)"
 	}
-	log.Printf("[pdf-import] filename=%q size_bytes=%d text_runes=%d%s\n%s",
-		filename, sizeBytes, n, suffix, string(runes))
+	logger.Info(ctx, "pdf import extracted text", "filename", filename, "size_bytes", sizeBytes, "text_runes", n, "text_preview", s)
 }
 
 func (s *HealthServer) GetRecommendations(ctx context.Context, req *pb.GetRecommendationsRequest) (*pb.GetRecommendationsResponse, error) {
@@ -495,16 +506,16 @@ func (s *HealthServer) AdminUpsertCriterion(ctx context.Context, req *pb.AdminUp
 
 func userCriterionEntryToProto(e service.UserCriterionEntry) *pb.UserCriterionEntry {
 	return &pb.UserCriterionEntry{
-		CriterionId:      e.CriterionID,
-		CriterionName:    e.CriterionName,
-		Value:            e.Value,
-		Status:           e.Status,
-		Recommendation:   e.Recommendation,
-		Level:            int32(e.Level),
-		Severity:         e.Severity,
-		InputType:        e.InputType,
-		GroupId:          e.GroupID,
-		Instruction:      e.Instruction,
+		CriterionId:    e.CriterionID,
+		CriterionName:  e.CriterionName,
+		Value:          e.Value,
+		Status:         e.Status,
+		Recommendation: e.Recommendation,
+		Level:          int32(e.Level),
+		Severity:       e.Severity,
+		InputType:      e.InputType,
+		GroupId:        e.GroupID,
+		Instruction:    e.Instruction,
 	}
 }
 

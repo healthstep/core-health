@@ -3,19 +3,20 @@ package boot
 import (
 	"context"
 	"fmt"
-	"log"
 	"net"
 
 	"github.com/helthtech/core-health/internal/labimport"
+	"github.com/helthtech/core-health/internal/middleware"
 	"github.com/helthtech/core-health/internal/migration"
+	"github.com/helthtech/core-health/internal/obs"
 	"github.com/helthtech/core-health/internal/repository"
 	"github.com/helthtech/core-health/internal/server"
 	"github.com/helthtech/core-health/internal/service"
 	pb "github.com/helthtech/core-health/pkg/proto/health"
-	criteriapb "github.com/helthtech/creteria_parser/pkg/proto/criteria"
 	"github.com/nats-io/nats.go"
 	"github.com/porebric/configs"
-	plogger "github.com/porebric/logger"
+	criteriapb "github.com/porebric/creteria_parser/pkg/proto/criteria"
+	"github.com/porebric/logger"
 	"github.com/porebric/resty"
 	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
@@ -52,7 +53,7 @@ func Run(ctx context.Context) error {
 
 	tp, err := initTracer(ctx)
 	if err != nil {
-		log.Printf("tracer init failed (non-fatal): %v", err)
+		obs.BG("tracer").Error(err, "tracer init failed (non-fatal)")
 	} else {
 		otel.SetTracerProvider(tp)
 		defer func() { _ = tp.Shutdown(context.Background()) }()
@@ -84,6 +85,8 @@ func Run(ctx context.Context) error {
 
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
+		grpc.ChainUnaryInterceptor(middleware.GRPCUnaryAccessLog()),
+		grpc.ChainStreamInterceptor(middleware.GRPCStreamAccessLog()),
 	)
 	pb.RegisterHealthServiceServer(grpcServer, server.NewHealthServer(svc, parserClient, labStore))
 
@@ -94,14 +97,13 @@ func Run(ctx context.Context) error {
 	}
 
 	go func() {
-		log.Printf("gRPC server listening on :%s", grpcPort)
+		obs.L.Info("gRPC server listening", "addr", grpcPort)
 		if err := grpcServer.Serve(lis); err != nil {
-			log.Printf("gRPC serve error: %v", err)
+			obs.L.Error(err, "gRPC serve error")
 		}
 	}()
 
-	l := plogger.New(plogger.InfoLevel)
-	router := resty.NewRouter(func() *plogger.Logger { return l }, nil)
+	router := resty.NewRouter(func() *logger.Logger { return obs.L }, nil)
 	resty.RunServer(ctx, router, func(ctx context.Context) error {
 		grpcServer.GracefulStop()
 		if parserConn != nil {

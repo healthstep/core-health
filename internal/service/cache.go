@@ -2,12 +2,12 @@ package service
 
 import (
 	"context"
-	"log"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/helthtech/core-health/internal/model"
+	"github.com/helthtech/core-health/internal/obs"
 	"github.com/helthtech/core-health/internal/repository"
 )
 
@@ -30,20 +30,21 @@ func NewCriteriaCache() *CriteriaCache {
 
 func (c *CriteriaCache) refresh(repo *repository.HealthRepository) {
 	ctx := context.Background()
+	log := obs.BG("cache")
 
 	groups, err := repo.ListGroups(ctx)
 	if err != nil {
-		log.Printf("cache refresh groups: %v", err)
+		log.Error(err, "cache: refresh groups")
 	}
 
 	criteria, err := repo.ListCriteria(ctx)
 	if err != nil {
-		log.Printf("cache refresh criteria: %v", err)
+		log.Error(err, "cache: refresh criteria")
 		return
 	}
 	recs, err := repo.GetAllRecommendations(ctx)
 	if err != nil {
-		log.Printf("cache refresh recommendations: %v", err)
+		log.Error(err, "cache: refresh recommendations")
 	}
 
 	cm := make(map[uuid.UUID]model.Criterion, len(criteria))

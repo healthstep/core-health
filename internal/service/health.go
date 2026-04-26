@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"math"
 	"math/rand"
 	"sort"
@@ -14,8 +13,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/helthtech/core-health/internal/model"
+	"github.com/helthtech/core-health/internal/obs"
 	"github.com/helthtech/core-health/internal/repository"
 	"github.com/nats-io/nats.go"
+	"github.com/porebric/logger"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -570,7 +571,7 @@ func (s *HealthService) SendNotification(ctx context.Context, userID uuid.UUID, 
 		DeliveryStatus:   "sent",
 	}
 	if err := s.repo.CreateNotificationLog(ctx, logEntry); err != nil {
-		log.Printf("[notify] CreateNotificationLog user=%s ch=%s: %v", userID, channel, err)
+		logger.Error(ctx, err, "notify: create log", "user_id", userID.String(), "channel", channel)
 	}
 
 	msg := NotificationMessage{
@@ -582,36 +583,37 @@ func (s *HealthService) SendNotification(ctx context.Context, userID uuid.UUID, 
 	d, _ := json.Marshal(msg)
 	subject := "notification." + strings.ToLower(channel)
 	if err := s.nc.Publish(subject, d); err != nil {
-		log.Printf("[notify] NATS publish subject=%s user=%s: %v", subject, userID, err)
+		logger.Error(ctx, err, "notify: nats publish", "subject", subject, "user_id", userID.String())
 		return err
 	}
-	log.Printf("[notify] published subject=%s user=%s type=%s", subject, userID, notifType)
+	logger.Info(ctx, "notify: published", "subject", subject, "user_id", userID.String(), "type", notifType)
 	return nil
 }
 
 // RunDailyScheduler fires at 08:00 UTC — sends daily recommendation notifications.
 func (s *HealthService) RunDailyScheduler(ctx context.Context, channels []string) {
+	log := obs.BG("daily")
 	for {
 		next := nextScheduledTime([]int{8})
-		log.Printf("[daily] next run scheduled for %s (in %s)", next.Format(time.RFC3339), time.Until(next).Round(time.Second))
+		log.Info("daily scheduler next", "at", next.Format(time.RFC3339), "in", time.Until(next).Round(time.Second).String())
 		select {
 		case <-ctx.Done():
 			return
 		case <-time.After(time.Until(next)):
 		}
 
-		log.Printf("[daily] scheduler fired, fetching users")
+		log.Info("daily scheduler fired")
 		userIDs, err := s.repo.GetAllDistinctUserIDs(ctx)
 		if err != nil {
-			log.Printf("[daily] GetAllDistinctUserIDs error: %v", err)
+			log.Error(err, "daily: list users")
 			continue
 		}
-		log.Printf("[daily] sending to %d users via channels %v", len(userIDs), channels)
+		log.Info("daily: sending", "user_count", len(userIDs), "channels", channels)
 
 		for _, userID := range userIDs {
 			rec, err := s.selectAndCacheDailyRec(ctx, userID, "", "daily_rec:"+userID.String())
 			if err != nil {
-				log.Printf("[daily] selectAndCacheDailyRec for %s error: %v", userID, err)
+				log.Error(err, "daily: select cache", "user_id", userID.String())
 				continue
 			}
 			payload, _ := json.Marshal(map[string]string{
@@ -620,38 +622,39 @@ func (s *HealthService) RunDailyScheduler(ctx context.Context, channels []string
 			})
 			for _, ch := range channels {
 				if err := s.SendNotification(ctx, userID, ch, "daily_recommendation", "daily_rec", string(payload)); err != nil {
-					log.Printf("[daily] SendNotification user=%s ch=%s error: %v", userID, ch, err)
+					log.Error(err, "daily: send", "user_id", userID.String(), "channel", ch)
 				}
 			}
 		}
-		log.Printf("[daily] done")
+		log.Info("daily scheduler done")
 	}
 }
 
 // RunWeeklyScheduler generates weekly recommendation plans every Monday at 00:05 UTC.
 func (s *HealthService) RunWeeklyScheduler(ctx context.Context) {
+	wlog := obs.BG("weekly")
 	for {
 		next := nextMondayMidnight()
-		log.Printf("[weekly] next run scheduled for %s (in %s)", next.Format(time.RFC3339), time.Until(next).Round(time.Second))
+		wlog.Info("weekly scheduler next", "at", next.Format(time.RFC3339), "in", time.Until(next).Round(time.Second).String())
 		select {
 		case <-ctx.Done():
 			return
 		case <-time.After(time.Until(next)):
 		}
 
-		log.Printf("[weekly] scheduler fired")
+		wlog.Info("weekly scheduler fired")
 		userIDs, err := s.repo.GetAllDistinctUserIDs(ctx)
 		if err != nil {
-			log.Printf("[weekly] GetAllDistinctUserIDs error: %v", err)
+			wlog.Error(err, "weekly: list users")
 			continue
 		}
-		log.Printf("[weekly] generating plans for %d users", len(userIDs))
+		wlog.Info("weekly: generating", "user_count", len(userIDs))
 		for _, userID := range userIDs {
 			if _, err := s.GenerateWeeklyRecommendations(ctx, userID, ""); err != nil {
-				log.Printf("[weekly] GenerateWeeklyRecommendations for %s error: %v", userID, err)
+				wlog.Error(err, "weekly: generate", "user_id", userID.String())
 			}
 		}
-		log.Printf("[weekly] done")
+		wlog.Info("weekly scheduler done")
 	}
 }
 

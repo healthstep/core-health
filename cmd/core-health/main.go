@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/helthtech/core-health/internal/boot"
+	"github.com/helthtech/core-health/internal/obs"
 	"github.com/porebric/configs"
 )
 
@@ -26,6 +27,7 @@ func main() {
 	if err = configs.New().KeysReader(keysReader).YamlConfigs(confReader).Init(ctx); err != nil {
 		log.Fatalf("init configs: %v", err)
 	}
+	obs.Init(configs.Value(ctx, "service_name").String())
 
 	if err = boot.Run(ctx); err != nil {
 		log.Fatalf("core-health: %v", err)
