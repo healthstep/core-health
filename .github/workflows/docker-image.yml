@@ -16,7 +16,7 @@ jobs:
           path: core-health
       - uses: actions/checkout@v4
         with:
-          repository: healthstep/creteria_parser
+          repository: porebric/creteria_parser
           token: ${{ secrets.GOD_TOKEN }}
           path: creteria_parser
       - name: Build the Docker image
@@ -31,7 +31,7 @@ jobs:
           path: core-health
       - uses: actions/checkout@v4
         with:
-          repository: healthstep/creteria_parser
+          repository: porebric/creteria_parser
           token: ${{ secrets.GOD_TOKEN }}
           path: creteria_parser
       - name: Docker login
