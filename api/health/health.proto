@@ -12,8 +12,10 @@ service HealthService {
   rpc ResetCriteria(ResetCriteriaRequest) returns (ResetCriteriaResponse);
   rpc GetUserCriteria(GetUserCriteriaRequest) returns (GetUserCriteriaResponse);
   rpc GetProgress(GetProgressRequest) returns (GetProgressResponse);
-  // Client streams a PDF with the user's lab analyses. Server extracts text; future: AI maps our DB criteria + values. Response: suggested user criteria (id + value), empty until AI is wired.
+  // Client streams 1+ PDFs (or same stream protocol): extracts text, calls OpenAI via creteria_parser, returns suggestions + pending_import_id (Redis, 1h) until the user confirms.
   rpc ImportCriteriaFromPdf(stream ImportCriteriaFromPdfRequest) returns (ImportCriteriaFromPdfResponse);
+  // Apply or discard a pending import produced by ImportCriteriaFromPdf. accept=false removes Redis only.
+  rpc ConfirmPendingImport(ConfirmPendingImportRequest) returns (ConfirmPendingImportResponse);
   // --- Recommendations ---
   rpc GetRecommendations(GetRecommendationsRequest) returns (GetRecommendationsResponse);
   rpc GetWeeklyRecommendations(GetWeeklyRecommendationsRequest) returns (GetWeeklyRecommendationsResponse);
@@ -77,10 +79,14 @@ message SetUserCriterionRequest {
   string value = 3;
   string source = 4;
   string measured_at = 5; // ISO 8601 date, optional (e.g. "2025-03-15")
+  // Optional; same semantics as GetUserCriteria. Used when building the returned entry (sex-specific criteria).
+  string user_sex = 6;
 }
 
 message SetUserCriterionResponse {
   bool success = 1;
+  // Echo of the updated user row for this criterion (includes instruction). Omitted if criterion is hidden for user_sex.
+  UserCriterionEntry entry = 2;
 }
 
 message ResetCriteriaRequest {
@@ -124,10 +130,12 @@ message GetProgressResponse {
   string level_label = 4;
 }
 
-// First message may set filename; every message may carry a chunk of the raw PDF (concatenate in order).
+// Set user_id and user_sex (optional) in the first message. Every message may carry filename and chunk: concatenate by filename in order, one PDF is expected per stream; user_id is required to store pending state.
 message ImportCriteriaFromPdfRequest {
   string filename = 1;
   bytes chunk = 2;
+  string user_id = 3;
+  string user_sex = 4;
 }
 
 // Matched catalog criterion + value extracted from the document (same ids as ListCriteria / SetUserCriterion).
@@ -142,6 +150,23 @@ message ImportedUserCriterion {
 
 message ImportCriteriaFromPdfResponse {
   repeated ImportedUserCriterion user_criteria = 1;
+  // Staging id for ConfirmPendingImport; empty if no suggestions.
+  string pending_import_id = 2;
+  string model_note = 3;
+}
+
+message ConfirmPendingImportRequest {
+  string user_id = 1;
+  string pending_id = 2;
+  // true: write to user_criteria; false: only delete from Redis
+  bool accept = 3;
+  string user_sex = 4;
+}
+
+message ConfirmPendingImportResponse {
+  int32 applied = 1;
+  bool success = 2;
+  string error_message = 3;
 }
 
 // --- Recommendations ---

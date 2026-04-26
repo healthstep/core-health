@@ -86,6 +86,44 @@ func (s *HealthService) SetUserCriterion(ctx context.Context, userID, criterionI
 	return s.repo.SetUserCriterion(ctx, uc)
 }
 
+func userCriterionEntryFromCriterion(c model.Criterion, value string) UserCriterionEntry {
+	st, rec := DashboardCriterionStatus(c, value)
+	groupID := ""
+	if c.GroupID != nil {
+		groupID = c.GroupID.String()
+	}
+	return UserCriterionEntry{
+		CriterionID:      c.ID.String(),
+		CriterionName:    c.Name,
+		Value:            value,
+		Level:            c.Level,
+		InputType:        c.InputType,
+		GroupID:          groupID,
+		Status:           st,
+		Severity:         st,
+		Recommendation:   rec,
+		Instruction:      c.Instruction,
+	}
+}
+
+// BuildUserCriterionEntryAfterSet returns one dashboard row for a criterion after a value update (for SetUserCriterion response).
+// Returns (nil, nil) if the criterion is not visible for the given userSex.
+func (s *HealthService) BuildUserCriterionEntryAfterSet(ctx context.Context, criterionID uuid.UUID, userSex, value string) (*UserCriterionEntry, error) {
+	c, ok := s.cache.GetCriterion(criterionID)
+	if !ok {
+		rc, err := s.repo.GetCriterion(ctx, criterionID)
+		if err != nil {
+			return nil, err
+		}
+		c = *rc
+	}
+	if !CriterionMatchesSex(c, userSex) {
+		return nil, nil
+	}
+	out := userCriterionEntryFromCriterion(c, value)
+	return &out, nil
+}
+
 // ResetAllCriteria soft-deletes all user criteria.
 func (s *HealthService) ResetAllCriteria(ctx context.Context, userID uuid.UUID) error {
 	return s.repo.SoftDeleteAllUserCriteria(ctx, userID)
@@ -118,26 +156,7 @@ func (s *HealthService) GetUserCriteria(ctx context.Context, userID uuid.UUID, u
 		}
 
 		value := valueMap[c.ID]
-		st, rec := DashboardCriterionStatus(c, value)
-
-		groupID := ""
-		if c.GroupID != nil {
-			groupID = c.GroupID.String()
-		}
-
-		entry := UserCriterionEntry{
-			CriterionID:      c.ID.String(),
-			CriterionName:    c.Name,
-			Value:            value,
-			Level:            c.Level,
-			InputType:        c.InputType,
-			GroupID:          groupID,
-			Status:           st,
-			Severity:         st,
-			Recommendation:   rec,
-			Instruction:      c.Instruction,
-		}
-		entries = append(entries, entry)
+		entries = append(entries, userCriterionEntryFromCriterion(c, value))
 	}
 
 	return entries, nil

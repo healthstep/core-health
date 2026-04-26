@@ -7,23 +7,28 @@ import (
 	"io"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/helthtech/core-health/internal/labimport"
 	"github.com/helthtech/core-health/internal/model"
 	"github.com/helthtech/core-health/internal/pdfextract"
 	"github.com/helthtech/core-health/internal/service"
 	pb "github.com/helthtech/core-health/pkg/proto/health"
+	criteriapb "github.com/helthtech/creteria_parser/pkg/proto/criteria"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type HealthServer struct {
 	pb.UnimplementedHealthServiceServer
-	svc *service.HealthService
+	svc    *service.HealthService
+	parser criteriapb.CriteriaParserClient
+	lab    *labimport.Store
 }
 
-func NewHealthServer(svc *service.HealthService) *HealthServer {
-	return &HealthServer{svc: svc}
+func NewHealthServer(svc *service.HealthService, parser criteriapb.CriteriaParserClient, lab *labimport.Store) *HealthServer {
+	return &HealthServer{svc: svc, parser: parser, lab: lab}
 }
 
 func (s *HealthServer) ListGroups(ctx context.Context, _ *pb.ListGroupsRequest) (*pb.ListGroupsResponse, error) {
@@ -76,7 +81,13 @@ func (s *HealthServer) SetUserCriterion(ctx context.Context, req *pb.SetUserCrit
 	if err := s.svc.SetUserCriterion(ctx, userID, criterionID, req.GetValue(), req.GetSource(), req.GetMeasuredAt()); err != nil {
 		return nil, status.Errorf(codes.Internal, fmt.Sprintf("set criterion: %v", err))
 	}
-	return &pb.SetUserCriterionResponse{Success: true}, nil
+	out := &pb.SetUserCriterionResponse{Success: true}
+	if entry, err := s.svc.BuildUserCriterionEntryAfterSet(ctx, criterionID, req.GetUserSex(), req.GetValue()); err != nil {
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("set criterion: %v", err))
+	} else if entry != nil {
+		out.Entry = userCriterionEntryToProto(*entry)
+	}
+	return out, nil
 }
 
 func (s *HealthServer) ResetCriteria(ctx context.Context, req *pb.ResetCriteriaRequest) (*pb.ResetCriteriaResponse, error) {
@@ -101,18 +112,7 @@ func (s *HealthServer) GetUserCriteria(ctx context.Context, req *pb.GetUserCrite
 	}
 	resp := &pb.GetUserCriteriaResponse{}
 	for _, e := range entries {
-		resp.Entries = append(resp.Entries, &pb.UserCriterionEntry{
-			CriterionId:    e.CriterionID,
-			CriterionName:  e.CriterionName,
-			Value:          e.Value,
-			Status:         e.Status,
-			Recommendation: e.Recommendation,
-			Level:          int32(e.Level),
-			Severity:       e.Severity,
-			InputType:      e.InputType,
-			GroupId:        e.GroupID,
-			Instruction:    e.Instruction,
-		})
+		resp.Entries = append(resp.Entries, userCriterionEntryToProto(e))
 	}
 	return resp, nil
 }
@@ -135,8 +135,16 @@ func (s *HealthServer) GetProgress(ctx context.Context, req *pb.GetProgressReque
 }
 
 func (s *HealthServer) ImportCriteriaFromPdf(stream pb.HealthService_ImportCriteriaFromPdfServer) error {
-	var buf bytes.Buffer
-	var filename string
+	if s.parser == nil || s.lab == nil {
+		return status.Error(codes.Unavailable, "lab import: criteria parser or redis not configured")
+	}
+	type fileAcc struct {
+		name string
+		buf  bytes.Buffer
+	}
+	var files []fileAcc
+	var cur *fileAcc
+	var filename, userIDStr, userSex string
 	for {
 		msg, err := stream.Recv()
 		if err == io.EOF {
@@ -145,27 +153,191 @@ func (s *HealthServer) ImportCriteriaFromPdf(stream pb.HealthService_ImportCrite
 		if err != nil {
 			return err
 		}
+		if id := msg.GetUserId(); id != "" {
+			userIDStr = id
+		}
+		if sx := msg.GetUserSex(); sx != "" {
+			userSex = sx
+		}
 		if fn := msg.GetFilename(); fn != "" {
+			if cur != nil && fn != cur.name && cur.buf.Len() > 0 {
+				files = append(files, *cur)
+				cur = &fileAcc{name: fn}
+			} else if cur == nil {
+				cur = &fileAcc{name: fn}
+			} else if fn != cur.name {
+				cur = &fileAcc{name: fn}
+			}
 			filename = fn
 		}
 		chunk := msg.GetChunk()
 		if len(chunk) == 0 {
 			continue
 		}
-		if buf.Len()+len(chunk) > pdfextract.MaxPDFBytes {
+		if cur == nil {
+			cur = &fileAcc{name: filename}
+		}
+		if cur.buf.Len()+len(chunk) > pdfextract.MaxPDFBytes {
 			return status.Errorf(codes.ResourceExhausted, "pdf exceeds max size (%d bytes)", pdfextract.MaxPDFBytes)
 		}
-		buf.Write(chunk)
+		cur.buf.Write(chunk)
 	}
-	if buf.Len() == 0 {
+	if cur != nil && cur.buf.Len() > 0 {
+		files = append(files, *cur)
+	}
+	var total int
+	for i := range files {
+		total += files[i].buf.Len()
+	}
+	if total == 0 {
 		return status.Error(codes.InvalidArgument, "empty pdf stream")
 	}
-	text, err := pdfextract.PlainText(buf.Bytes())
-	if err != nil {
-		return status.Errorf(codes.InvalidArgument, "pdf parse: %v", err)
+	if userIDStr == "" {
+		return status.Error(codes.InvalidArgument, "user_id is required in the first stream message")
 	}
-	logPDFImportText(filename, buf.Len(), text)
-	return stream.SendAndClose(&pb.ImportCriteriaFromPdfResponse{UserCriteria: nil})
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return status.Error(codes.InvalidArgument, "invalid user_id")
+	}
+	var textParts []string
+	for _, f := range files {
+		t, err := pdfextract.PlainText(f.buf.Bytes())
+		if err != nil {
+			return status.Errorf(codes.InvalidArgument, "pdf parse %q: %v", f.name, err)
+		}
+		textParts = append(textParts, t)
+	}
+	text := strings.Join(textParts, "\n\n---\n\n")
+	logPDFImportText(filename, total, text)
+	ctx := stream.Context()
+
+	criteria, err := s.svc.ListCriteria(ctx, userID, userSex)
+	if err != nil {
+		return status.Errorf(codes.Internal, "list criteria: %v", err)
+	}
+	var hints []*criteriapb.CriterionHint
+	cat := make(map[uuid.UUID]model.Criterion)
+	for _, c := range criteria {
+		it := strings.ToLower(c.InputType)
+		if it != "numeric" && it != "boolean" && it != "check" {
+			continue
+		}
+		cat[c.ID] = c
+		h := &criteriapb.CriterionHint{
+			Id:   c.ID.String(),
+			Name: c.Name,
+			UnitHint: c.Instruction,
+		}
+		// go pb optional fields
+		if c.InputType != "" {
+			h.InputType = c.InputType
+		}
+		if c.MinValue != nil {
+			h.MinValue = c.MinValue
+		}
+		if c.MaxValue != nil {
+			h.MaxValue = c.MaxValue
+		}
+		hints = append(hints, h)
+	}
+	if len(hints) == 0 {
+		return stream.SendAndClose(&pb.ImportCriteriaFromPdfResponse{})
+	}
+
+	pr, err := s.parser.ParseFromText(ctx, &criteriapb.ParseFromTextRequest{
+		Text:              text,
+		AllowedCriteria: hints,
+		UserSex:           userSex,
+		Locale:            "ru",
+	})
+	if err != nil {
+		return status.Errorf(codes.Internal, "ai parse: %v", err)
+	}
+
+	var out []*pb.ImportedUserCriterion
+	var items []labimport.PendingItem
+	for _, r := range pr.GetResults() {
+		cid, err := uuid.Parse(r.GetCriterionId())
+		if err != nil {
+			continue
+		}
+		c, ok := cat[cid]
+		if !ok {
+			continue
+		}
+		out = append(out, &pb.ImportedUserCriterion{
+			CriterionId:   c.ID.String(),
+			CriterionName: c.Name,
+			Value:         r.GetValue(),
+			InputType:     c.InputType,
+			MeasuredAt:    r.GetMeasuredAt(),
+			Instruction:   c.Instruction,
+		})
+		items = append(items, labimport.PendingItem{
+			CriterionID:   c.ID.String(),
+			CriterionName: c.Name,
+			Value:         r.GetValue(),
+			InputType:     c.InputType,
+			MeasuredAt:    r.GetMeasuredAt(),
+			Instruction:   c.Instruction,
+		})
+	}
+
+	if len(out) == 0 {
+		return stream.SendAndClose(&pb.ImportCriteriaFromPdfResponse{
+			ModelNote: pr.GetModelNote(),
+		})
+	}
+
+	pendingID := uuid.NewString()
+	if err := s.lab.Save(ctx, pendingID, labimport.PendingBatch{UserID: userIDStr, Items: items}, time.Hour); err != nil {
+		return status.Errorf(codes.Internal, "redis: %v", err)
+	}
+
+	return stream.SendAndClose(&pb.ImportCriteriaFromPdfResponse{
+		UserCriteria:      out,
+		PendingImportId:  pendingID,
+		ModelNote:         pr.GetModelNote(),
+	})
+}
+
+func (s *HealthServer) ConfirmPendingImport(ctx context.Context, req *pb.ConfirmPendingImportRequest) (*pb.ConfirmPendingImportResponse, error) {
+	if s.lab == nil {
+		return &pb.ConfirmPendingImportResponse{Success: false, ErrorMessage: "redis not configured"}, nil
+	}
+	userID, err := uuid.Parse(req.GetUserId())
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid user_id")
+	}
+	if req.GetPendingId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "pending_id required")
+	}
+	batch, err := s.lab.Load(ctx, req.GetPendingId())
+	if err != nil {
+		return &pb.ConfirmPendingImportResponse{Success: false, ErrorMessage: err.Error()}, nil
+	}
+	if batch.UserID != req.GetUserId() {
+		_ = s.lab.Delete(ctx, req.GetPendingId())
+		return &pb.ConfirmPendingImportResponse{Success: false, ErrorMessage: "forbidden"}, nil
+	}
+	if !req.GetAccept() {
+		_ = s.lab.Delete(ctx, req.GetPendingId())
+		return &pb.ConfirmPendingImportResponse{Success: true}, nil
+	}
+	var n int32
+	for _, it := range batch.Items {
+		cid, err := uuid.Parse(it.CriterionID)
+		if err != nil {
+			continue
+		}
+		if err := s.svc.SetUserCriterion(ctx, userID, cid, it.Value, "import_ai", it.MeasuredAt); err != nil {
+			_ = s.lab.Delete(ctx, req.GetPendingId())
+			return &pb.ConfirmPendingImportResponse{Success: false, ErrorMessage: err.Error(), Applied: n}, nil
+		}
+		n++
+	}
+	_ = s.lab.Delete(ctx, req.GetPendingId())
+	return &pb.ConfirmPendingImportResponse{Success: true, Applied: n}, nil
 }
 
 const maxPDFLogRunes = 12000
@@ -320,6 +492,21 @@ func (s *HealthServer) AdminUpsertCriterion(ctx context.Context, req *pb.AdminUp
 }
 
 // --- Helpers ---
+
+func userCriterionEntryToProto(e service.UserCriterionEntry) *pb.UserCriterionEntry {
+	return &pb.UserCriterionEntry{
+		CriterionId:      e.CriterionID,
+		CriterionName:    e.CriterionName,
+		Value:            e.Value,
+		Status:           e.Status,
+		Recommendation:   e.Recommendation,
+		Level:            int32(e.Level),
+		Severity:         e.Severity,
+		InputType:        e.InputType,
+		GroupId:          e.GroupID,
+		Instruction:      e.Instruction,
+	}
+}
 
 func criterionToProto(c model.Criterion) *pb.Criterion {
 	pc := &pb.Criterion{

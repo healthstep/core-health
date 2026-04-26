@@ -6,11 +6,13 @@ import (
 	"log"
 	"net"
 
+	"github.com/helthtech/core-health/internal/labimport"
 	"github.com/helthtech/core-health/internal/migration"
 	"github.com/helthtech/core-health/internal/repository"
 	"github.com/helthtech/core-health/internal/server"
 	"github.com/helthtech/core-health/internal/service"
 	pb "github.com/helthtech/core-health/pkg/proto/health"
+	criteriapb "github.com/helthtech/creteria_parser/pkg/proto/criteria"
 	"github.com/nats-io/nats.go"
 	"github.com/porebric/configs"
 	plogger "github.com/porebric/logger"
@@ -23,6 +25,7 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	gorml "gorm.io/gorm/logger"
@@ -58,6 +61,18 @@ func Run(ctx context.Context) error {
 	repo := repository.NewHealthRepository(db)
 	svc := service.NewHealthService(repo, nc, rdb)
 
+	var parserClient criteriapb.CriteriaParserClient
+	var parserConn *grpc.ClientConn
+	if addr := configs.Value(ctx, "grpc_creteria_parser").String(); addr != "" {
+		var err error
+		parserConn, err = grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			return fmt.Errorf("grpc creteria_parser: %w", err)
+		}
+		parserClient = criteriapb.NewCriteriaParserClient(parserConn)
+	}
+	labStore := labimport.NewStore(rdb)
+
 	// Start in-memory cache refresh loop.
 	svc.StartCache(ctx)
 
@@ -70,7 +85,7 @@ func Run(ctx context.Context) error {
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 	)
-	pb.RegisterHealthServiceServer(grpcServer, server.NewHealthServer(svc))
+	pb.RegisterHealthServiceServer(grpcServer, server.NewHealthServer(svc, parserClient, labStore))
 
 	grpcPort := configs.Value(ctx, "grpc_port").String()
 	lis, err := net.Listen("tcp", "0.0.0.0:"+grpcPort)
@@ -89,6 +104,9 @@ func Run(ctx context.Context) error {
 	router := resty.NewRouter(func() *plogger.Logger { return l }, nil)
 	resty.RunServer(ctx, router, func(ctx context.Context) error {
 		grpcServer.GracefulStop()
+		if parserConn != nil {
+			_ = parserConn.Close()
+		}
 		nc.Close()
 		return nil
 	})

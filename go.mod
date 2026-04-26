@@ -3,6 +3,7 @@ module github.com/helthtech/core-health
 go 1.25.2
 
 require (
+	github.com/helthtech/creteria_parser v0.0.0-00000000000000-000000000000
 	github.com/google/uuid v1.6.0
 	github.com/ledongthuc/pdf v0.0.0-20250511090121-5959a4027728
 	github.com/nats-io/nats.go v1.39.1
@@ -20,6 +21,8 @@ require (
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.30.0
 )
+
+replace github.com/helthtech/creteria_parser => ../creteria_parser
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect

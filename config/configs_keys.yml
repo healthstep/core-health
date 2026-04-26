@@ -39,3 +39,7 @@ config:
     type: string
     default: "core-health"
     source: yaml
+  grpc_creteria_parser:
+    type: string
+    default: "127.0.0.1:5010"
+    source: yaml
