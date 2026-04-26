@@ -7,7 +7,7 @@ require (
 	github.com/ledongthuc/pdf v0.0.0-20250511090121-5959a4027728
 	github.com/nats-io/nats.go v1.39.1
 	github.com/porebric/configs v1.0.3
-	github.com/porebric/creteria_parser v0.0.0-20260426093427-27d2130f4e00
+	github.com/porebric/creteria_parser v0.0.0-20260426102719-2ecb51979b07
 	github.com/porebric/logger v0.1.0
 	github.com/porebric/resty v0.0.6-0.20260213102226-fc22aa7f513e
 	github.com/prometheus/client_golang v1.19.0
