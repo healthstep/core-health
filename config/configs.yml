@@ -1,0 +1,15 @@
+# porebric/configs читает ТОЛЬКО блок `values` (см. config/yaml provider). Плоский YAML
+# не подхватывается — остаётся default из configs_keys (раньше это и давало 127.0.0.1:5010).
+values:
+  grpc_port: "5002"
+  server_port: "9002"
+  close_timeout: "5s"
+  db_dsn: "host=localhost user=zdravoshag password=zdravoshag_secret dbname=zdravoshag search_path=core_health sslmode=disable"
+  nats_url: "nats://localhost:4222"
+  redis_addr: "127.0.0.1:6379"
+  redis_password: ""
+  # Локальный creteria-parser: go run / docker compose с пробросом 5010
+  grpc_creteria_parser: "127.0.0.1:5010"
+  tracer_host: "localhost"
+  tracer_port: "4317"
+  service_name: "core-health"
