@@ -89,6 +89,7 @@ message Criterion {
   optional double max_value = 11;
   optional double delta = 12;
   optional int64 analysis_id = 13;
+  string lifetime_overrides = 14;
 }
 
 message ListCriteriaRequest {
@@ -188,9 +189,9 @@ message ImportCriteriaFromPdfResponse {
 message ConfirmPendingImportRequest {
   string user_id = 1;
   string pending_id = 2;
-  // true: write to user_criteria; false: only delete from Redis
   bool accept = 3;
   string user_sex = 4;
+  string measured_at = 5;
 }
 
 message ConfirmPendingImportResponse {

@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -19,6 +20,7 @@ import (
 	"github.com/porebric/logger"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -239,7 +241,6 @@ func (s *HealthServer) ImportCriteriaFromPdf(stream pb.HealthService_ImportCrite
 			Name:     c.Name,
 			UnitHint: s.svc.AnalysisInstructionForCriterion(c),
 		}
-		// go pb optional fields
 		if c.InputType != "" {
 			h.InputType = c.InputType
 		}
@@ -339,13 +340,18 @@ func (s *HealthServer) ConfirmPendingImport(ctx context.Context, req *pb.Confirm
 		_ = s.lab.Delete(ctx, req.GetPendingId())
 		return &pb.ConfirmPendingImportResponse{Success: true}, nil
 	}
+	overrideDate := req.GetMeasuredAt()
 	var n int32
 	for _, it := range batch.Items {
 		cid, err := uuid.Parse(it.CriterionID)
 		if err != nil {
 			continue
 		}
-		if err := s.svc.SetUserCriterion(ctx, userID, cid, it.Value, "import_ai", it.MeasuredAt); err != nil {
+		measuredAt := it.MeasuredAt
+		if overrideDate != "" {
+			measuredAt = overrideDate
+		}
+		if err := s.svc.SetUserCriterion(ctx, userID, cid, it.Value, "import_ai", measuredAt); err != nil {
 			_ = s.lab.Delete(ctx, req.GetPendingId())
 			return &pb.ConfirmPendingImportResponse{Success: false, ErrorMessage: err.Error(), Applied: n}, nil
 		}
@@ -428,8 +434,6 @@ func (s *HealthServer) SendNotification(ctx context.Context, req *pb.SendNotific
 	return &pb.SendNotificationResponse{}, nil
 }
 
-// --- Admin ---
-
 func (s *HealthServer) AdminListRecommendations(ctx context.Context, req *pb.AdminListRecommendationsRequest) (*pb.AdminListRecommendationsResponse, error) {
 	recs, err := s.svc.AdminListRecommendations(ctx, req.GetCriterionId())
 	if err != nil {
@@ -487,6 +491,12 @@ func (s *HealthServer) AdminUpsertCriterion(ctx context.Context, req *pb.AdminUp
 	if pc.AnalysisId != nil {
 		aid := pc.GetAnalysisId()
 		c.AnalysisID = &aid
+	}
+	if lo := pc.GetLifetimeOverrides(); lo != "" {
+		var m map[int]int
+		if err := json.Unmarshal([]byte(lo), &m); err == nil {
+			c.LifetimeOverrides = datatypes.NewJSONType(m)
+		}
 	}
 	if pc.GetId() != "" {
 		id, err := uuid.Parse(pc.GetId())
@@ -568,8 +578,6 @@ func (s *HealthServer) AdminDeleteAnalysis(ctx context.Context, req *pb.AdminDel
 	return &pb.AdminDeleteAnalysisResponse{Success: true}, nil
 }
 
-// --- Helpers ---
-
 func userCriterionEntryToProto(e service.UserCriterionEntry) *pb.UserCriterionEntry {
 	out := &pb.UserCriterionEntry{
 		CriterionId:    e.CriterionID,
@@ -610,6 +618,10 @@ func criterionToProto(c model.Criterion) *pb.Criterion {
 	if c.AnalysisID != nil {
 		aid := *c.AnalysisID
 		pc.AnalysisId = &aid
+	}
+	if overrides := c.LifetimeOverrides.Data(); len(overrides) > 0 {
+		raw, _ := json.Marshal(overrides)
+		pc.LifetimeOverrides = string(raw)
 	}
 	return pc
 }

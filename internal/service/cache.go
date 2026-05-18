@@ -11,7 +11,6 @@ import (
 	"github.com/helthtech/core-health/internal/repository"
 )
 
-// CriteriaCache holds in-memory snapshots of groups, analyses, criteria, and recommendations, refreshed from the database every minute.
 type CriteriaCache struct {
 	mu              sync.RWMutex
 	groups          []model.CriterionGroup
@@ -79,9 +78,8 @@ func (c *CriteriaCache) refresh(repo *repository.HealthRepository) {
 	c.mu.Unlock()
 }
 
-// RunRefreshLoop starts a background loop that refreshes the cache every minute.
 func (c *CriteriaCache) RunRefreshLoop(ctx context.Context, repo *repository.HealthRepository) {
-	c.refresh(repo) // initial load
+	c.refresh(repo)
 	ticker := time.NewTicker(time.Minute)
 	defer ticker.Stop()
 	for {

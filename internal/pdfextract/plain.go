@@ -9,11 +9,8 @@ import (
 	pdf "github.com/ledongthuc/pdf"
 )
 
-// MaxPDFBytes limits streamed upload size (single concatenated file).
-const MaxPDFBytes = 40 << 20 // 40 MiB
+const MaxPDFBytes = 40 << 20
 
-// PlainText extracts human-readable text from a PDF byte slice (embedded fonts / UTF-16 / ToUnicode).
-// Pure Go; suitable for CGO_ENABLED=0 builds. Complex layouts may be imperfect.
 func PlainText(data []byte) (string, error) {
 	if len(data) == 0 {
 		return "", fmt.Errorf("empty PDF")

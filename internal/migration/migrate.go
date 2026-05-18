@@ -26,8 +26,6 @@ func Run(db *gorm.DB) error {
 	return migrateLegacyRecommendationTexts(db)
 }
 
-// migrateCriterionInstructionToAnalyses moves legacy criteria.instruction into analyses rows
-// and drops the instruction column once done.
 func migrateCriterionInstructionToAnalyses(db *gorm.DB) error {
 	var hasInstr bool
 	if err := db.Raw(`
@@ -73,8 +71,6 @@ func migrateCriterionInstructionToAnalyses(db *gorm.DB) error {
 	return db.Exec(`ALTER TABLE criteria DROP COLUMN IF EXISTS instruction`).Error
 }
 
-// migrateLegacyRecommendationTexts copies legacy JSONB column recommendations.texts into
-// recommendation_notifications, then drops the column (PostgreSQL).
 func migrateLegacyRecommendationTexts(db *gorm.DB) error {
 	var exists bool
 	if err := db.Raw(`

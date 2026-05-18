@@ -7,8 +7,6 @@ import (
 	"github.com/helthtech/core-health/internal/model"
 )
 
-// DashboardCriterionStatus derives dashboard status and a short recommendation from the criterion definition
-// (min/max/delta for numeric; same warning-band logic as isRecommendationApplicable).
 func DashboardCriterionStatus(c model.Criterion, value string) (status string, recommendation string) {
 	switch c.InputType {
 	case "check":

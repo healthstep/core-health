@@ -36,12 +36,10 @@ func NewHealthService(repo *repository.HealthRepository, nc *nats.Conn, rdb *red
 	}
 }
 
-// StartCache begins the in-memory cache refresh loop.
 func (s *HealthService) StartCache(ctx context.Context) {
 	go s.cache.RunRefreshLoop(ctx, s.repo)
 }
 
-// ListGroups returns all criterion groups.
 func (s *HealthService) ListGroups(ctx context.Context) ([]model.CriterionGroup, error) {
 	groups := s.cache.GetGroups()
 	if len(groups) == 0 {
@@ -50,7 +48,6 @@ func (s *HealthService) ListGroups(ctx context.Context) ([]model.CriterionGroup,
 	return groups, nil
 }
 
-// ListCriteria returns criteria filtered by user sex.
 func (s *HealthService) ListCriteria(ctx context.Context, userID uuid.UUID, userSex string) ([]model.Criterion, error) {
 	allCriteria := s.cache.GetCriteria()
 	if len(allCriteria) == 0 {
@@ -71,7 +68,6 @@ func (s *HealthService) ListCriteria(ctx context.Context, userID uuid.UUID, user
 	return result, nil
 }
 
-// SetUserCriterion stores or updates a user's criterion value.
 func (s *HealthService) SetUserCriterion(ctx context.Context, userID, criterionID uuid.UUID, value, source, measuredAtStr string) error {
 	uc := &model.UserCriterion{
 		UserID:      userID,
@@ -115,8 +111,6 @@ func userCriterionEntryFromCriterion(cache *CriteriaCache, c model.Criterion, va
 	}
 }
 
-// BuildUserCriterionEntryAfterSet returns one dashboard row for a criterion after a value update (for SetUserCriterion response).
-// Returns (nil, nil) if the criterion is not visible for the given userSex.
 func (s *HealthService) BuildUserCriterionEntryAfterSet(ctx context.Context, criterionID uuid.UUID, userSex, value string) (*UserCriterionEntry, error) {
 	c, ok := s.cache.GetCriterion(criterionID)
 	if !ok {
@@ -133,12 +127,10 @@ func (s *HealthService) BuildUserCriterionEntryAfterSet(ctx context.Context, cri
 	return &out, nil
 }
 
-// ResetAllCriteria soft-deletes all user criteria.
 func (s *HealthService) ResetAllCriteria(ctx context.Context, userID uuid.UUID) error {
 	return s.repo.SoftDeleteAllUserCriteria(ctx, userID)
 }
 
-// GetUserCriteria returns enriched entries: all visible criteria with user values + recommendations.
 func (s *HealthService) GetUserCriteria(ctx context.Context, userID uuid.UUID, userSex string) ([]UserCriterionEntry, error) {
 	allCriteria := s.cache.GetCriteria()
 	if len(allCriteria) == 0 {
@@ -171,7 +163,6 @@ func (s *HealthService) GetUserCriteria(ctx context.Context, userID uuid.UUID, u
 	return entries, nil
 }
 
-// GetProgress computes fill statistics for a user.
 func (s *HealthService) GetProgress(ctx context.Context, userID uuid.UUID) (*ProgressResult, error) {
 	criteria, err := s.repo.ListCriteria(ctx)
 	if err != nil {
@@ -202,7 +193,6 @@ func (s *HealthService) GetProgress(ctx context.Context, userID uuid.UUID) (*Pro
 	}, nil
 }
 
-// GetRecommendations returns ranked items derived from criterion status (for API / bots).
 func (s *HealthService) GetRecommendations(ctx context.Context, userID uuid.UUID, userSex string) ([]RecommendationItem, error) {
 	entries, err := s.GetUserCriteria(ctx, userID, userSex)
 	if err != nil {
@@ -259,31 +249,16 @@ func (s *HealthService) GetRecommendations(ctx context.Context, userID uuid.UUID
 	return result, nil
 }
 
-// --- Weekly recommendation system ---
-
-// currentWeekStart returns the Monday of the current week (UTC, time truncated to midnight).
 func currentWeekStart() time.Time {
 	now := time.Now().UTC()
 	weekday := int(now.Weekday())
 	if weekday == 0 {
-		weekday = 7 // Sunday = 7 in ISO week
+		weekday = 7
 	}
 	monday := now.AddDate(0, 0, -(weekday - 1))
 	return time.Date(monday.Year(), monday.Month(), monday.Day(), 0, 0, 0, 0, time.UTC)
 }
 
-// isRecommendationApplicable checks if a Recommendation applies to the user given their current value.
-//
-// InputType semantics:
-//   - numeric: MinValue/MaxValue define normal range; Delta defines non-critical deviation width
-//   - check:   "1" = done (ok); "" = not done (reminder triggers)
-//   - boolean: "1" = positive/ok; "0" = negative (alarm triggers); "" = no data (reminder)
-//
-// Recommendation types:
-//   - reminder:             value == "" (no data entered)
-//   - recommendation:       numeric only — value in warning (non-critical) zone
-//   - alarm:                numeric with value outside warning zone, OR boolean with value "0"
-//   - expiration_reminder:  handled by expiry scheduler (never selected here)
 func isRecommendationApplicable(rec model.Recommendation, crit model.Criterion, value string) bool {
 	switch rec.Type {
 	case "reminder":
@@ -296,12 +271,11 @@ func isRecommendationApplicable(rec model.Recommendation, crit model.Criterion, 
 		if value == "" {
 			return false
 		}
-		// recommendation only makes sense for numeric criteria with a defined normal range
 		if crit.InputType != "numeric" {
 			return false
 		}
 		if crit.MinValue == nil && crit.MaxValue == nil {
-			return true // no range defined — always applicable
+			return true
 		}
 		numVal, err := strconv.ParseFloat(value, 64)
 		if err != nil {
@@ -316,7 +290,6 @@ func isRecommendationApplicable(rec model.Recommendation, crit model.Criterion, 
 		if inNormal {
 			return false
 		}
-		// In non-critical (warning) zone?
 		warnLow := math.Inf(-1)
 		warnHigh := math.Inf(1)
 		if crit.MinValue != nil {
@@ -331,11 +304,9 @@ func isRecommendationApplicable(rec model.Recommendation, crit model.Criterion, 
 		if value == "" {
 			return false
 		}
-		// boolean: negative result ("0") is always an alarm
 		if crit.InputType == "boolean" {
 			return value == "0"
 		}
-		// numeric: value outside the warning zone
 		if crit.InputType != "numeric" {
 			return false
 		}
@@ -359,11 +330,9 @@ func isRecommendationApplicable(rec model.Recommendation, crit model.Criterion, 
 	}
 }
 
-// GenerateWeeklyRecommendations builds the weekly recommendation weights for a user.
 func (s *HealthService) GenerateWeeklyRecommendations(ctx context.Context, userID uuid.UUID, userSex string) (*WeeklyPlan, error) {
 	weekStart := currentWeekStart()
 
-	// Try to load existing weekly plan first.
 	existing, err := s.repo.GetWeeklyRecommendation(ctx, userID, weekStart)
 	if err == nil && existing != nil {
 		weights := existing.Weights.Data()
@@ -371,7 +340,6 @@ func (s *HealthService) GenerateWeeklyRecommendations(ctx context.Context, userI
 		return &WeeklyPlan{WeekStart: weekStart, Items: items, Weights: weights}, nil
 	}
 
-	// Build fresh plan.
 	allCriteria := s.cache.GetCriteria()
 	if len(allCriteria) == 0 {
 		allCriteria, _ = s.repo.ListCriteria(ctx)
@@ -381,14 +349,12 @@ func (s *HealthService) GenerateWeeklyRecommendations(ctx context.Context, userI
 		allRecs, _ = s.repo.GetAllRecommendations(ctx)
 	}
 
-	// Get user values.
 	userCriteria, _ := s.repo.GetUserCriteria(ctx, userID)
 	valueMap := make(map[uuid.UUID]string)
 	for _, uc := range userCriteria {
 		valueMap[uc.CriterionID] = uc.Value
 	}
 
-	// Build criterion map for sex check.
 	criterionMap := make(map[uuid.UUID]model.Criterion)
 	for _, c := range allCriteria {
 		criterionMap[c.ID] = c
@@ -397,7 +363,7 @@ func (s *HealthService) GenerateWeeklyRecommendations(ctx context.Context, userI
 	weights := make(map[string]int)
 	for _, rec := range allRecs {
 		if rec.Type == "alarm" {
-			continue // alarms go through separate scheduler
+			continue
 		}
 		crit, ok := criterionMap[rec.CriterionID]
 		if !ok {
@@ -467,15 +433,12 @@ func pickRandomNotificationText(rec model.Recommendation, titleFallback string) 
 	return variants[rand.Intn(len(variants))]
 }
 
-// SelectDailyRecommendation picks one recommendation using weighted random selection from the weekly plan.
-// Alarms are NOT included in the daily auction.
 func (s *HealthService) SelectDailyRecommendation(ctx context.Context, userID uuid.UUID, userSex string) (*DailyRec, error) {
 	plan, err := s.GenerateWeeklyRecommendations(ctx, userID, userSex)
 	if err != nil {
 		return nil, err
 	}
 
-	// Filter: only items with weight > 0, exclude alarms.
 	type candidate struct {
 		item   WeeklyItem
 		weight int
@@ -497,7 +460,6 @@ func (s *HealthService) SelectDailyRecommendation(ctx context.Context, userID uu
 		}, nil
 	}
 
-	// Weighted random pick.
 	pick := rand.Intn(totalWeight)
 	var chosen *candidate
 	for i := range pool {
@@ -511,7 +473,6 @@ func (s *HealthService) SelectDailyRecommendation(ctx context.Context, userID uu
 		chosen = &pool[0]
 	}
 
-	// Pick a random notification text for the chosen recommendation.
 	allRecs := s.cache.GetAllRecommendations()
 	text := chosen.item.Title
 	for _, r := range allRecs {
@@ -521,7 +482,6 @@ func (s *HealthService) SelectDailyRecommendation(ctx context.Context, userID uu
 		}
 	}
 
-	// Decrease weight in weekly plan (set to 0 = spent for the week).
 	newWeights := make(map[string]int, len(plan.Weights))
 	for k, v := range plan.Weights {
 		newWeights[k] = v
@@ -539,7 +499,6 @@ func (s *HealthService) SelectDailyRecommendation(ctx context.Context, userID uu
 	}, nil
 }
 
-// GetCachedDailyRecommendation returns today's recommendation from Redis cache, or picks a new one.
 func (s *HealthService) GetCachedDailyRecommendation(ctx context.Context, userID uuid.UUID, userSex string) (*DailyRec, error) {
 	recKey := "daily_rec:" + userID.String()
 	data, err := s.redis.Get(ctx, recKey).Result()
@@ -566,7 +525,6 @@ func (s *HealthService) selectAndCacheDailyRec(ctx context.Context, userID uuid.
 	return rec, nil
 }
 
-// SendNotification publishes a NATS notification message.
 func (s *HealthService) SendNotification(ctx context.Context, userID uuid.UUID, channel, notifType, templateCode, payloadJSON string) error {
 	logEntry := &model.NotificationLog{
 		ID:               uuid.New(),
@@ -598,7 +556,6 @@ func (s *HealthService) SendNotification(ctx context.Context, userID uuid.UUID, 
 	return nil
 }
 
-// RunDailyScheduler fires at 08:00 UTC — sends daily recommendation notifications.
 func (s *HealthService) RunDailyScheduler(ctx context.Context, channels []string) {
 	log := obs.BG("daily")
 	for {
@@ -638,7 +595,6 @@ func (s *HealthService) RunDailyScheduler(ctx context.Context, channels []string
 	}
 }
 
-// RunWeeklyScheduler generates weekly recommendation plans every Monday at 00:05 UTC.
 func (s *HealthService) RunWeeklyScheduler(ctx context.Context) {
 	wlog := obs.BG("weekly")
 	for {
@@ -666,7 +622,6 @@ func (s *HealthService) RunWeeklyScheduler(ctx context.Context) {
 	}
 }
 
-// RunAlarmScheduler fires at 09:00 and checks for alarm-type recommendations.
 func (s *HealthService) RunAlarmScheduler(ctx context.Context, channels []string) {
 	for {
 		next := nextScheduledTime([]int{9})
@@ -727,7 +682,6 @@ func (s *HealthService) RunAlarmScheduler(ctx context.Context, channels []string
 	}
 }
 
-// RunExpiryScheduler fires at 9:00 — sends expiry reminders and cleans up expired data.
 func (s *HealthService) RunExpiryScheduler(ctx context.Context, channels []string) {
 	for {
 		next := nextScheduledTime([]int{9})
@@ -767,8 +721,6 @@ func (s *HealthService) RunExpiryScheduler(ctx context.Context, channels []strin
 		}
 	}
 }
-
-// --- Admin ---
 
 func (s *HealthService) AdminListRecommendations(ctx context.Context, criterionID string) ([]model.Recommendation, error) {
 	if criterionID != "" {
@@ -811,12 +763,10 @@ func (s *HealthService) AdminUpsertCriterion(ctx context.Context, c *model.Crite
 	return nil
 }
 
-// ListAnalyses returns all analyses ordered by id.
 func (s *HealthService) ListAnalyses(ctx context.Context) ([]model.Analysis, error) {
 	return s.repo.ListAnalyses(ctx)
 }
 
-// GetAnalysis returns one analysis by id.
 func (s *HealthService) GetAnalysis(ctx context.Context, id int64) (*model.Analysis, error) {
 	return s.repo.GetAnalysis(ctx, id)
 }
@@ -841,12 +791,9 @@ func (s *HealthService) AdminDeleteAnalysis(ctx context.Context, id int64) error
 	return nil
 }
 
-// AnalysisInstructionForCriterion returns the linked analysis instruction text (or empty).
 func (s *HealthService) AnalysisInstructionForCriterion(c model.Criterion) string {
 	return s.cache.AnalysisInstructionForCriterion(c)
 }
-
-// --- Helpers ---
 
 func ruleWeight(severity string) int {
 	switch severity {
@@ -911,8 +858,6 @@ func computeLevelLabel(pct float64) string {
 		return "Начало пути"
 	}
 }
-
-// --- Value types ---
 
 type NotificationMessage struct {
 	UserID           string `json:"user_id"`

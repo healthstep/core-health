@@ -19,8 +19,6 @@ func NewHealthRepository(db *gorm.DB) *HealthRepository {
 	return &HealthRepository{db: db}
 }
 
-// --- Groups ---
-
 func (r *HealthRepository) ListGroups(ctx context.Context) ([]model.CriterionGroup, error) {
 	var groups []model.CriterionGroup
 	err := r.db.WithContext(ctx).Order("sort_order, name").Find(&groups).Error
@@ -34,8 +32,6 @@ func (r *HealthRepository) UpsertGroup(ctx context.Context, g *model.CriterionGr
 	}).Create(g).Error
 }
 
-// --- Criteria ---
-
 func (r *HealthRepository) ListCriteria(ctx context.Context) ([]model.Criterion, error) {
 	var criteria []model.Criterion
 	err := r.db.WithContext(ctx).Order("level, sort_order, name").Find(&criteria).Error
@@ -44,8 +40,7 @@ func (r *HealthRepository) ListCriteria(ctx context.Context) ([]model.Criterion,
 
 func (r *HealthRepository) GetCriterion(ctx context.Context, id uuid.UUID) (*model.Criterion, error) {
 	var c model.Criterion
-	err := r.db.WithContext(ctx).First(&c, "id = ?", id).Error
-	if err != nil {
+	if err := r.db.WithContext(ctx).First(&c, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &c, nil
@@ -54,11 +49,9 @@ func (r *HealthRepository) GetCriterion(ctx context.Context, id uuid.UUID) (*mod
 func (r *HealthRepository) UpsertCriterion(ctx context.Context, c *model.Criterion) error {
 	return r.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"group_id", "analysis_id", "name", "level", "sex", "input_type", "lifetime", "sort_order", "min_value", "max_value", "delta"}),
+		DoUpdates: clause.AssignmentColumns([]string{"group_id", "analysis_id", "name", "level", "sex", "input_type", "lifetime", "sort_order", "min_value", "max_value", "delta", "lifetime_overrides"}),
 	}).Create(c).Error
 }
-
-// --- Analyses ---
 
 func (r *HealthRepository) ListAnalyses(ctx context.Context) ([]model.Analysis, error) {
 	var list []model.Analysis
@@ -68,8 +61,7 @@ func (r *HealthRepository) ListAnalyses(ctx context.Context) ([]model.Analysis, 
 
 func (r *HealthRepository) GetAnalysis(ctx context.Context, id int64) (*model.Analysis, error) {
 	var a model.Analysis
-	err := r.db.WithContext(ctx).First(&a, "id = ?", id).Error
-	if err != nil {
+	if err := r.db.WithContext(ctx).First(&a, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &a, nil
@@ -89,10 +81,6 @@ func (r *HealthRepository) DeleteAnalysis(ctx context.Context, id int64) error {
 	return r.db.WithContext(ctx).Delete(&model.Analysis{}, "id = ?", id).Error
 }
 
-// --- User Criteria ---
-
-// SetUserCriterion upserts a user_criterion record (insert or update on conflict).
-// Also restores soft-deleted records.
 func (r *HealthRepository) SetUserCriterion(ctx context.Context, uc *model.UserCriterion) error {
 	return r.db.WithContext(ctx).
 		Unscoped().
@@ -114,21 +102,17 @@ func (r *HealthRepository) GetUserCriteria(ctx context.Context, userID uuid.UUID
 	return ucs, err
 }
 
-// SoftDeleteAllUserCriteria soft-deletes all user criteria for a user.
 func (r *HealthRepository) SoftDeleteAllUserCriteria(ctx context.Context, userID uuid.UUID) error {
 	return r.db.WithContext(ctx).
 		Where("user_id = ?", userID).
 		Delete(&model.UserCriterion{}).Error
 }
 
-// SoftDeleteExpiredCriteria finds and soft-deletes user_criteria that have exceeded the
-// criterion's lifetime.
 func (r *HealthRepository) SoftDeleteExpiredCriteria(ctx context.Context) error {
 	var criteria []model.Criterion
 	if err := r.db.WithContext(ctx).Where("lifetime > 0").Find(&criteria).Error; err != nil {
 		return err
 	}
-
 	now := time.Now()
 	for _, c := range criteria {
 		expiryCutoff := now.Add(-time.Duration(c.Lifetime) * 24 * time.Hour)
@@ -139,15 +123,12 @@ func (r *HealthRepository) SoftDeleteExpiredCriteria(ctx context.Context) error 
 	return nil
 }
 
-// NearExpiryEntry holds a user + criterion that is nearing expiry.
 type NearExpiryEntry struct {
 	UserID    uuid.UUID
 	Criterion model.Criterion
 	ExpiresAt time.Time
 }
 
-// GetNearExpiryEntries returns (userID, criterion) pairs where the user's data is
-// within warnWithin of expiring.
 func (r *HealthRepository) GetNearExpiryEntries(ctx context.Context, warnWithin time.Duration) ([]NearExpiryEntry, error) {
 	var criteria []model.Criterion
 	if err := r.db.WithContext(ctx).Where("lifetime > 0").Find(&criteria).Error; err != nil {
@@ -186,8 +167,6 @@ func (r *HealthRepository) GetNearExpiryEntries(ctx context.Context, warnWithin 
 	return result, nil
 }
 
-// --- Recommendations (notification/auction system) ---
-
 func (r *HealthRepository) GetAllRecommendations(ctx context.Context) ([]model.Recommendation, error) {
 	var recs []model.Recommendation
 	err := r.db.WithContext(ctx).Preload("Notifications").Order("criterion_id, id").Find(&recs).Error
@@ -200,7 +179,6 @@ func (r *HealthRepository) GetRecommendationsByCriterion(ctx context.Context, cr
 	return recs, err
 }
 
-// UpsertRecommendation inserts or updates the recommendation row and replaces all notification texts.
 func (r *HealthRepository) UpsertRecommendation(ctx context.Context, rec *model.Recommendation) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		q := tx.Session(&gorm.Session{FullSaveAssociations: false}).Omit("Notifications")
@@ -231,8 +209,6 @@ func (r *HealthRepository) UpsertRecommendation(ctx context.Context, rec *model.
 func (r *HealthRepository) DeleteRecommendation(ctx context.Context, id uuid.UUID) error {
 	return r.db.WithContext(ctx).Delete(&model.Recommendation{}, "id = ?", id).Error
 }
-
-// --- Weekly Recommendations ---
 
 func (r *HealthRepository) GetWeeklyRecommendation(ctx context.Context, userID uuid.UUID, weekStart time.Time) (*model.WeeklyRecommendation, error) {
 	var wr model.WeeklyRecommendation
@@ -265,13 +241,10 @@ func (r *HealthRepository) SaveWeeklyWeights(ctx context.Context, userID uuid.UU
 	return r.UpsertWeeklyRecommendation(ctx, wr)
 }
 
-// --- Notifications ---
-
 func (r *HealthRepository) CreateNotificationLog(ctx context.Context, n *model.NotificationLog) error {
 	return r.db.WithContext(ctx).Create(n).Error
 }
 
-// GetAllDistinctUserIDs returns all user IDs that have at least one criterion entry.
 func (r *HealthRepository) GetAllDistinctUserIDs(ctx context.Context) ([]uuid.UUID, error) {
 	var rows []struct{ UserID uuid.UUID }
 	err := r.db.WithContext(ctx).

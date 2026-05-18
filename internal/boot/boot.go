@@ -74,10 +74,8 @@ func Run(ctx context.Context) error {
 	}
 	labStore := labimport.NewStore(rdb)
 
-	// Start in-memory cache refresh loop.
 	svc.StartCache(ctx)
 
-	// Start schedulers in background.
 	go svc.RunDailyScheduler(ctx, []string{"telegram", "max"})
 	go svc.RunExpiryScheduler(ctx, []string{"telegram", "max"})
 	go svc.RunAlarmScheduler(ctx, []string{"telegram", "max"})
