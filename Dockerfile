@@ -11,6 +11,8 @@ RUN echo "machine github.com login porebric password ${GITHUB_TOKEN}" > /root/.n
 
 ENV GOPRIVATE=github.com
 
+RUN git config --global url."https://github.com/healthstep/".insteadOf "https://github.com/helthtech/"
+
 WORKDIR /app
 
 COPY . .
