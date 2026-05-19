@@ -13,6 +13,7 @@ import (
 	"github.com/helthtech/core-health/internal/server"
 	"github.com/helthtech/core-health/internal/service"
 	pb "github.com/helthtech/core-health/pkg/proto/health"
+	userspb "github.com/helthtech/core-users/pkg/proto/users"
 	"github.com/nats-io/nats.go"
 	"github.com/porebric/configs"
 	criteriapb "github.com/porebric/creteria_parser/pkg/proto/criteria"
@@ -61,6 +62,15 @@ func Run(ctx context.Context) error {
 
 	repo := repository.NewHealthRepository(db)
 	svc := service.NewHealthService(repo, nc, rdb)
+
+	if addr := configs.Value(ctx, "grpc_core_users").String(); addr != "" {
+		usersConn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			obs.BG("boot").Error(err, "grpc core-users connect failed (filtering will use sex-only fallback)")
+		} else {
+			svc.SetUserProvider(service.NewGRPCUserContextProvider(userspb.NewUserServiceClient(usersConn)))
+		}
+	}
 
 	var parserClient criteriapb.CriteriaParserClient
 	var parserConn *grpc.ClientConn

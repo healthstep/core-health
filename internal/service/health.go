@@ -21,10 +21,11 @@ import (
 )
 
 type HealthService struct {
-	repo  *repository.HealthRepository
-	cache *CriteriaCache
-	nc    *nats.Conn
-	redis *redis.Client
+	repo         *repository.HealthRepository
+	cache        *CriteriaCache
+	nc           *nats.Conn
+	redis        *redis.Client
+	userProvider UserContextProvider
 }
 
 func NewHealthService(repo *repository.HealthRepository, nc *nats.Conn, rdb *redis.Client) *HealthService {
@@ -34,6 +35,19 @@ func NewHealthService(repo *repository.HealthRepository, nc *nats.Conn, rdb *red
 		nc:    nc,
 		redis: rdb,
 	}
+}
+
+func (s *HealthService) SetUserProvider(p UserContextProvider) {
+	s.userProvider = p
+}
+
+func (s *HealthService) userContextOrDefault(ctx context.Context, userID uuid.UUID, fallbackSex string) UserContext {
+	if s.userProvider != nil && userID != uuid.Nil {
+		if uc, err := s.userProvider.GetUserContext(ctx, userID); err == nil {
+			return uc
+		}
+	}
+	return UserContext{Sex: fallbackSex}
 }
 
 func (s *HealthService) StartCache(ctx context.Context) {
@@ -58,9 +72,10 @@ func (s *HealthService) ListCriteria(ctx context.Context, userID uuid.UUID, user
 		}
 	}
 
+	uc := s.userContextOrDefault(ctx, userID, userSex)
 	var result []model.Criterion
 	for _, c := range allCriteria {
-		if !CriterionMatchesSex(c, userSex) {
+		if !CriterionVisibleForUser(c, uc) {
 			continue
 		}
 		result = append(result, c)
@@ -123,6 +138,7 @@ func (s *HealthService) BuildUserCriterionEntryAfterSet(ctx context.Context, cri
 	if !CriterionMatchesSex(c, userSex) {
 		return nil, nil
 	}
+	// Note: BuildUserCriterionEntryAfterSet is called post-save so we only do sex check here.
 	out := userCriterionEntryFromCriterion(s.cache, c, value)
 	return &out, nil
 }
@@ -150,9 +166,10 @@ func (s *HealthService) GetUserCriteria(ctx context.Context, userID uuid.UUID, u
 		valueMap[uc.CriterionID] = uc.Value
 	}
 
+	uc := s.userContextOrDefault(ctx, userID, userSex)
 	entries := make([]UserCriterionEntry, 0, len(allCriteria))
 	for _, c := range allCriteria {
-		if !CriterionMatchesSex(c, userSex) {
+		if !CriterionVisibleForUser(c, uc) {
 			continue
 		}
 
@@ -360,6 +377,7 @@ func (s *HealthService) GenerateWeeklyRecommendations(ctx context.Context, userI
 		criterionMap[c.ID] = c
 	}
 
+	userCtx := s.userContextOrDefault(ctx, userID, userSex)
 	weights := make(map[string]int)
 	for _, rec := range allRecs {
 		if rec.Type == "alarm" {
@@ -369,7 +387,7 @@ func (s *HealthService) GenerateWeeklyRecommendations(ctx context.Context, userI
 		if !ok {
 			continue
 		}
-		if !CriterionMatchesSex(crit, userSex) {
+		if !CriterionVisibleForUser(crit, userCtx) {
 			continue
 		}
 		value := valueMap[rec.CriterionID]
@@ -653,11 +671,15 @@ func (s *HealthService) RunAlarmScheduler(ctx context.Context, channels []string
 				valueMap[uc.CriterionID] = uc.Value
 			}
 
+			userCtx := s.userContextOrDefault(ctx, userID, "")
 			for _, rec := range allRecs {
 				if rec.Type != "alarm" {
 					continue
 				}
 				crit := criterionMap[rec.CriterionID]
+				if !CriterionVisibleForUser(crit, userCtx) {
+					continue
+				}
 				value := valueMap[rec.CriterionID]
 				if !isRecommendationApplicable(rec, crit, value) {
 					continue
