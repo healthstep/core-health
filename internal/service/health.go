@@ -45,6 +45,8 @@ func (s *HealthService) userContextOrDefault(ctx context.Context, userID uuid.UU
 	if s.userProvider != nil && userID != uuid.Nil {
 		if uc, err := s.userProvider.GetUserContext(ctx, userID); err == nil {
 			return uc
+		} else {
+			logger.Warn(ctx, "user context fetch failed, sex/advanced filters disabled", "user_id", userID, "err", err)
 		}
 	}
 	return UserContext{Sex: fallbackSex}
@@ -95,7 +97,36 @@ func (s *HealthService) SetUserCriterion(ctx context.Context, userID, criterionI
 			uc.MeasuredAt = &t
 		}
 	}
-	return s.repo.SetUserCriterion(ctx, uc)
+	if err := s.repo.SetUserCriterion(ctx, uc); err != nil {
+		return err
+	}
+	if value != "" {
+		s.zeroReminderWeights(ctx, userID, criterionID)
+	}
+	return nil
+}
+
+func (s *HealthService) zeroReminderWeights(ctx context.Context, userID, criterionID uuid.UUID) {
+	weekStart := currentWeekStart()
+	existing, err := s.repo.GetWeeklyRecommendation(ctx, userID, weekStart)
+	if err != nil || existing == nil {
+		return
+	}
+	allRecs := s.cache.GetAllRecommendations()
+	weights := existing.Weights.Data()
+	changed := false
+	for _, r := range allRecs {
+		if r.CriterionID != criterionID || r.Type != "reminder" {
+			continue
+		}
+		if w, ok := weights[r.ID.String()]; ok && w > 0 {
+			weights[r.ID.String()] = 0
+			changed = true
+		}
+	}
+	if changed {
+		_ = s.repo.SaveWeeklyWeights(ctx, userID, weekStart, weights)
+	}
 }
 
 func userCriterionEntryFromCriterion(cache *CriteriaCache, c model.Criterion, value string) UserCriterionEntry {
