@@ -181,7 +181,7 @@ func (s *HealthService) GetUserCriteria(ctx context.Context, userID uuid.UUID, u
 }
 
 func (s *HealthService) GetProgress(ctx context.Context, userID uuid.UUID) (*ProgressResult, error) {
-	criteria, err := s.repo.ListCriteria(ctx)
+	criteria, err := s.ListCriteria(ctx, userID, "")
 	if err != nil {
 		return nil, err
 	}
@@ -190,9 +190,15 @@ func (s *HealthService) GetProgress(ctx context.Context, userID uuid.UUID) (*Pro
 		return nil, err
 	}
 
-	filled := 0
+	valueMap := make(map[uuid.UUID]bool, len(userCriteria))
 	for _, uc := range userCriteria {
 		if uc.Value != "" {
+			valueMap[uc.CriterionID] = true
+		}
+	}
+	filled := 0
+	for _, c := range criteria {
+		if valueMap[c.ID] {
 			filled++
 		}
 	}
@@ -235,11 +241,6 @@ func (s *HealthService) GetRecommendations(ctx context.Context, userID uuid.UUID
 
 		baseWeight := ruleWeight(sev)
 
-		key := weeklyKey(userID, e.CriterionID)
-		sentThisWeek, _ := s.redis.Exists(ctx, key).Result()
-		if sentThisWeek > 0 {
-			baseWeight -= 4
-		}
 		if baseWeight < 1 {
 			baseWeight = 1
 		}
@@ -349,13 +350,7 @@ func isRecommendationApplicable(rec model.Recommendation, crit model.Criterion, 
 
 func (s *HealthService) GenerateWeeklyRecommendations(ctx context.Context, userID uuid.UUID, userSex string) (*WeeklyPlan, error) {
 	weekStart := currentWeekStart()
-
-	existing, err := s.repo.GetWeeklyRecommendation(ctx, userID, weekStart)
-	if err == nil && existing != nil {
-		weights := existing.Weights.Data()
-		items := s.buildWeeklyItems(weights)
-		return &WeeklyPlan{WeekStart: weekStart, Items: items, Weights: weights}, nil
-	}
+	userCtx := s.userContextOrDefault(ctx, userID, userSex)
 
 	allCriteria := s.cache.GetCriteria()
 	if len(allCriteria) == 0 {
@@ -365,19 +360,49 @@ func (s *HealthService) GenerateWeeklyRecommendations(ctx context.Context, userI
 	if len(allRecs) == 0 {
 		allRecs, _ = s.repo.GetAllRecommendations(ctx)
 	}
+	criterionMap := make(map[uuid.UUID]model.Criterion, len(allCriteria))
+	for _, c := range allCriteria {
+		criterionMap[c.ID] = c
+	}
+	recMap := make(map[string]model.Recommendation, len(allRecs))
+	for _, r := range allRecs {
+		recMap[r.ID.String()] = r
+	}
+
+	existing, err := s.repo.GetWeeklyRecommendation(ctx, userID, weekStart)
+	if err == nil && existing != nil {
+		weights := existing.Weights.Data()
+		changed := false
+		for recID, w := range weights {
+			if w == 0 {
+				continue
+			}
+			rec, ok := recMap[recID]
+			if !ok {
+				continue
+			}
+			crit, ok := criterionMap[rec.CriterionID]
+			if !ok {
+				continue
+			}
+			if !CriterionVisibleForUser(crit, userCtx) {
+				weights[recID] = 0
+				changed = true
+			}
+		}
+		if changed {
+			_ = s.repo.SaveWeeklyWeights(ctx, userID, weekStart, weights)
+		}
+		items := s.buildWeeklyItems(weights)
+		return &WeeklyPlan{WeekStart: weekStart, Items: items, Weights: weights}, nil
+	}
 
 	userCriteria, _ := s.repo.GetUserCriteria(ctx, userID)
-	valueMap := make(map[uuid.UUID]string)
+	valueMap := make(map[uuid.UUID]string, len(userCriteria))
 	for _, uc := range userCriteria {
 		valueMap[uc.CriterionID] = uc.Value
 	}
 
-	criterionMap := make(map[uuid.UUID]model.Criterion)
-	for _, c := range allCriteria {
-		criterionMap[c.ID] = c
-	}
-
-	userCtx := s.userContextOrDefault(ctx, userID, userSex)
 	weights := make(map[string]int)
 	for _, rec := range allRecs {
 		if rec.Type == "alarm" {
@@ -830,9 +855,6 @@ func ruleWeight(severity string) int {
 	}
 }
 
-func weeklyKey(userID uuid.UUID, criterionID string) string {
-	return fmt.Sprintf("weekly_sent:%s:%s", userID.String(), criterionID)
-}
 
 func nextScheduledTime(hours []int) time.Time {
 	now := time.Now()
