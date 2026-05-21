@@ -43,7 +43,9 @@ func (s *HealthService) SetUserProvider(p UserContextProvider) {
 
 func (s *HealthService) userContextOrDefault(ctx context.Context, userID uuid.UUID, fallbackSex string) UserContext {
 	if s.userProvider != nil && userID != uuid.Nil {
-		if uc, err := s.userProvider.GetUserContext(ctx, userID); err == nil {
+		fetchCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		if uc, err := s.userProvider.GetUserContext(fetchCtx, userID); err == nil {
 			return uc
 		} else {
 			logger.Warn(ctx, "user context fetch failed, sex/advanced filters disabled", "user_id", userID, "err", err)

@@ -44,3 +44,7 @@ config:
     # Prod: удалённый парсер (см. infra). Локально переопредели в config/configs.yml → values.
     default: "37.233.81.132:5010"
     source: yaml
+  grpc_core_users:
+    type: string
+    default: ""
+    source: yaml
