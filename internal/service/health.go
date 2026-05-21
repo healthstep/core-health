@@ -18,6 +18,7 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/porebric/logger"
 	"github.com/redis/go-redis/v9"
+	"google.golang.org/grpc/metadata"
 )
 
 type HealthService struct {
@@ -42,6 +43,25 @@ func (s *HealthService) SetUserProvider(p UserContextProvider) {
 }
 
 func (s *HealthService) userContextOrDefault(ctx context.Context, userID uuid.UUID, fallbackSex string) UserContext {
+	// Priority 1: gRPC metadata injected by public-api (most reliable path).
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		sexVals := md.Get("x-user-sex")
+		advVals := md.Get("x-user-advanced")
+		if len(sexVals) > 0 || len(advVals) > 0 {
+			uc := UserContext{}
+			if len(sexVals) > 0 {
+				uc.Sex = sexVals[0]
+			}
+			if len(advVals) > 0 {
+				uc.Advanced = advVals[0] == "true"
+			}
+			if bdVals := md.Get("x-user-birth-date"); len(bdVals) > 0 {
+				uc.BirthDate = bdVals[0]
+			}
+			return uc
+		}
+	}
+	// Priority 2: internal gRPC call to core-users (used by bots and other callers).
 	if s.userProvider != nil && userID != uuid.Nil {
 		fetchCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
