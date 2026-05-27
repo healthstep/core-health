@@ -213,7 +213,7 @@ func (s *HealthServer) ImportCriteriaFromPdf(stream pb.HealthService_ImportCrite
 	}
 	var textParts []string
 	for _, f := range files {
-		t, err := pdfextract.PlainText(f.buf.Bytes())
+		t, err := pdfextract.PlainTextBest(f.buf.Bytes())
 		if err != nil {
 			logger.Error(ctx, err, "import pdf: extract text", "file", f.name)
 			return status.Errorf(codes.InvalidArgument, "pdf parse %q: %v", f.name, err)
