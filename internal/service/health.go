@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math"
 	"math/rand"
 	"sort"
 	"strconv"
@@ -352,49 +351,9 @@ func isRecommendationApplicable(rec model.Recommendation, crit model.Criterion, 
 		if err != nil {
 			return false
 		}
-		delta := 0.0
-		if crit.Delta != nil {
-			delta = *crit.Delta
-		}
 		inNormal := (crit.MinValue == nil || numVal >= *crit.MinValue) &&
 			(crit.MaxValue == nil || numVal <= *crit.MaxValue)
-		if inNormal {
-			return false
-		}
-		warnLow := math.Inf(-1)
-		warnHigh := math.Inf(1)
-		if crit.MinValue != nil {
-			warnLow = *crit.MinValue - delta
-		}
-		if crit.MaxValue != nil {
-			warnHigh = *crit.MaxValue + delta
-		}
-		return numVal >= warnLow && numVal <= warnHigh
-
-	case "alarm":
-		if value == "" {
-			return false
-		}
-		if crit.InputType == "boolean" {
-			return value == "0"
-		}
-		if crit.InputType != "numeric" {
-			return false
-		}
-		if crit.MinValue == nil && crit.MaxValue == nil {
-			return false
-		}
-		numVal, err := strconv.ParseFloat(value, 64)
-		if err != nil {
-			return false
-		}
-		delta := 0.0
-		if crit.Delta != nil {
-			delta = *crit.Delta
-		}
-		belowWarning := crit.MinValue != nil && numVal < *crit.MinValue-delta
-		aboveWarning := crit.MaxValue != nil && numVal > *crit.MaxValue+delta
-		return belowWarning || aboveWarning
+		return !inNormal
 
 	default:
 		return false
@@ -458,9 +417,6 @@ func (s *HealthService) GenerateWeeklyRecommendations(ctx context.Context, userI
 
 	weights := make(map[string]int)
 	for _, rec := range allRecs {
-		if rec.Type == "alarm" {
-			continue
-		}
 		crit, ok := criterionMap[rec.CriterionID]
 		if !ok {
 			continue
@@ -542,7 +498,7 @@ func (s *HealthService) SelectDailyRecommendation(ctx context.Context, userID uu
 	var pool []candidate
 	totalWeight := 0
 	for _, item := range plan.Items {
-		if item.Type == "alarm" || item.Weight <= 0 {
+		if item.Weight <= 0 {
 			continue
 		}
 		pool = append(pool, candidate{item: item, weight: item.Weight})
@@ -718,69 +674,6 @@ func (s *HealthService) RunWeeklyScheduler(ctx context.Context) {
 	}
 }
 
-func (s *HealthService) RunAlarmScheduler(ctx context.Context, channels []string) {
-	for {
-		next := nextScheduledTime([]int{9})
-		select {
-		case <-ctx.Done():
-			return
-		case <-time.After(time.Until(next)):
-		}
-
-		userIDs, err := s.repo.GetAllDistinctUserIDs(ctx)
-		if err != nil {
-			continue
-		}
-
-		allRecs := s.cache.GetAllRecommendations()
-		allCriteria := s.cache.GetCriteria()
-		criterionMap := make(map[uuid.UUID]model.Criterion)
-		for _, c := range allCriteria {
-			criterionMap[c.ID] = c
-		}
-
-		for _, userID := range userIDs {
-			userCriteria, err := s.repo.GetUserCriteria(ctx, userID)
-			if err != nil {
-				continue
-			}
-			valueMap := make(map[uuid.UUID]string)
-			for _, uc := range userCriteria {
-				valueMap[uc.CriterionID] = uc.Value
-			}
-
-			userCtx := s.userContextOrDefault(ctx, userID, "")
-			for _, rec := range allRecs {
-				if rec.Type != "alarm" {
-					continue
-				}
-				crit := criterionMap[rec.CriterionID]
-				if !CriterionVisibleForUser(crit, userCtx) {
-					continue
-				}
-				value := valueMap[rec.CriterionID]
-				if !isRecommendationApplicable(rec, crit, value) {
-					continue
-				}
-				dedupeKey := fmt.Sprintf("alarm_notif:%s:%s", userID.String(), rec.ID.String())
-				if exists, _ := s.redis.Exists(ctx, dedupeKey).Result(); exists > 0 {
-					continue
-				}
-
-				text := pickRandomNotificationText(rec, rec.Title)
-
-				payload, _ := json.Marshal(map[string]string{
-					"title": rec.Title,
-					"body":  text,
-				})
-				for _, ch := range channels {
-					_ = s.SendNotification(ctx, userID, ch, "alarm", "alarm", string(payload))
-				}
-				s.redis.Set(ctx, dedupeKey, "1", 3*24*time.Hour)
-			}
-		}
-	}
-}
 
 func (s *HealthService) RunExpiryScheduler(ctx context.Context, channels []string) {
 	for {

@@ -88,7 +88,6 @@ func Run(ctx context.Context) error {
 
 	go svc.RunDailyScheduler(ctx, []string{"telegram", "max"})
 	go svc.RunExpiryScheduler(ctx, []string{"telegram", "max"})
-	go svc.RunAlarmScheduler(ctx, []string{"telegram", "max"})
 	go svc.RunWeeklyScheduler(ctx)
 
 	grpcServer := grpc.NewServer(

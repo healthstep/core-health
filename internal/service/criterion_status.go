@@ -1,7 +1,6 @@
 package service
 
 import (
-	"math"
 	"strconv"
 
 	"github.com/helthtech/core-health/internal/model"
@@ -41,27 +40,12 @@ func DashboardCriterionStatus(c model.Criterion, value string) (status string, r
 		if err != nil {
 			return "ok", ""
 		}
-		delta := 0.0
-		if c.Delta != nil {
-			delta = *c.Delta
-		}
 		inNormal := (c.MinValue == nil || numVal >= *c.MinValue) &&
 			(c.MaxValue == nil || numVal <= *c.MaxValue)
 		if inNormal {
 			return "ok", "Показатель в норме."
 		}
-		warnLow := math.Inf(-1)
-		warnHigh := math.Inf(1)
-		if c.MinValue != nil {
-			warnLow = *c.MinValue - delta
-		}
-		if c.MaxValue != nil {
-			warnHigh = *c.MaxValue + delta
-		}
-		if numVal >= warnLow && numVal <= warnHigh {
-			return "warning", "Слегка вне нормы — при необходимости проконсультируйтесь с врачом."
-		}
-		return "critical", "Сильное отклонение от нормы — рекомендуется обратиться к врачу."
+		return "critical", "Значение вне нормы — рекомендуется проконсультироваться с врачом."
 
 	default:
 		if value == "" {
