@@ -497,6 +497,7 @@ func (s *HealthService) buildWeeklyItems(weights map[string]int) []WeeklyItem {
 			CriterionName:    crit.Name,
 			Type:             rec.Type,
 			Title:            rec.Title,
+			Text:             pickRandomNotificationText(rec, rec.Title),
 			Weight:           w,
 		})
 	}
@@ -934,6 +935,7 @@ type WeeklyItem struct {
 	CriterionName    string
 	Type             string
 	Title            string
+	Text             string
 	Weight           int
 }
 

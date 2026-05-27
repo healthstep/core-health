@@ -226,6 +226,7 @@ message WeeklyRecommendationItem {
   string type = 4;
   string title = 5;
   int32 weight = 6;
+  string text = 7;
 }
 
 message GetWeeklyRecommendationsRequest {

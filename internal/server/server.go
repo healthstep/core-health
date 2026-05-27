@@ -416,6 +416,7 @@ func (s *HealthServer) GetWeeklyRecommendations(ctx context.Context, req *pb.Get
 			CriterionName:    item.CriterionName,
 			Type:             item.Type,
 			Title:            item.Title,
+			Text:             item.Text,
 			Weight:           int32(item.Weight),
 		})
 	}

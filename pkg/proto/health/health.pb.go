@@ -1721,6 +1721,7 @@ type WeeklyRecommendationItem struct {
 	Type             string                 `protobuf:"bytes,4,opt,name=type,proto3" json:"type,omitempty"`
 	Title            string                 `protobuf:"bytes,5,opt,name=title,proto3" json:"title,omitempty"`
 	Weight           int32                  `protobuf:"varint,6,opt,name=weight,proto3" json:"weight,omitempty"`
+	Text             string                 `protobuf:"bytes,7,opt,name=text,proto3" json:"text,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -1795,6 +1796,13 @@ func (x *WeeklyRecommendationItem) GetWeight() int32 {
 		return x.Weight
 	}
 	return 0
+}
+
+func (x *WeeklyRecommendationItem) GetText() string {
+	if x != nil {
+		return x.Text
+	}
+	return ""
 }
 
 type GetWeeklyRecommendationsRequest struct {
@@ -2835,14 +2843,15 @@ const file_api_health_health_proto_rawDesc = "" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x19\n" +
 	"\buser_sex\x18\x02 \x01(\tR\auserSex\"^\n" +
 	"\x1aGetRecommendationsResponse\x12@\n" +
-	"\x0frecommendations\x18\x01 \x03(\v2\x16.health.RecommendationR\x0frecommendations\"\xd3\x01\n" +
+	"\x0frecommendations\x18\x01 \x03(\v2\x16.health.RecommendationR\x0frecommendations\"\xe7\x01\n" +
 	"\x18WeeklyRecommendationItem\x12+\n" +
 	"\x11recommendation_id\x18\x01 \x01(\tR\x10recommendationId\x12!\n" +
 	"\fcriterion_id\x18\x02 \x01(\tR\vcriterionId\x12%\n" +
 	"\x0ecriterion_name\x18\x03 \x01(\tR\rcriterionName\x12\x12\n" +
 	"\x04type\x18\x04 \x01(\tR\x04type\x12\x14\n" +
 	"\x05title\x18\x05 \x01(\tR\x05title\x12\x16\n" +
-	"\x06weight\x18\x06 \x01(\x05R\x06weight\":\n" +
+	"\x06weight\x18\x06 \x01(\x05R\x06weight\x12\x12\n" +
+	"\x04text\x18\a \x01(\tR\x04text\":\n" +
 	"\x1fGetWeeklyRecommendationsRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\"y\n" +
 	" GetWeeklyRecommendationsResponse\x126\n" +
