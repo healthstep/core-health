@@ -85,6 +85,8 @@ type Recommendation struct {
 	Type          string                       `gorm:"type:text;not null;default:'recommendation'"`
 	Title         string                       `gorm:"type:text;not null"`
 	BaseWeight    int                          `gorm:"type:int;not null;default:1"`
+	MinValue      *float64                     `gorm:"type:decimal"`
+	MaxValue      *float64                     `gorm:"type:decimal"`
 	CreatedAt     time.Time
 	Notifications []RecommendationNotification `gorm:"foreignKey:RecommendationID;constraint:OnDelete:CASCADE"`
 }

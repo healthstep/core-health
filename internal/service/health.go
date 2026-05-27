@@ -376,7 +376,18 @@ func isRecommendationApplicable(rec model.Recommendation, crit model.Criterion, 
 		}
 		inNormal := (crit.MinValue == nil || numVal >= *crit.MinValue) &&
 			(crit.MaxValue == nil || numVal <= *crit.MaxValue)
-		return !inNormal
+		if inNormal {
+			return false
+		}
+		// Directional filter: rec.MaxValue set → "too low" recommendation (skip if value went high).
+		// rec.MinValue set → "too high" recommendation (skip if value went low).
+		if rec.MaxValue != nil && numVal > *rec.MaxValue {
+			return false
+		}
+		if rec.MinValue != nil && numVal < *rec.MinValue {
+			return false
+		}
+		return true
 
 	default:
 		return false
