@@ -106,6 +106,29 @@ func (s *HealthService) ListCriteria(ctx context.Context, userID uuid.UUID, user
 	return result, nil
 }
 
+// ListCriteriaForImport returns all criteria filtered only by sex — used for PDF import
+// so that the LLM sees the full catalog and can extract all values from the document,
+// regardless of the user's "advanced" level setting.
+func (s *HealthService) ListCriteriaForImport(ctx context.Context, userSex string) ([]model.Criterion, error) {
+	allCriteria := s.cache.GetCriteria()
+	if len(allCriteria) == 0 {
+		var err error
+		allCriteria, err = s.repo.ListCriteria(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var result []model.Criterion
+	for _, c := range allCriteria {
+		if !CriterionMatchesSex(c, userSex) {
+			continue
+		}
+		result = append(result, c)
+	}
+	return result, nil
+}
+
 func (s *HealthService) SetUserCriterion(ctx context.Context, userID, criterionID uuid.UUID, value, source, measuredAtStr string) error {
 	uc := &model.UserCriterion{
 		UserID:      userID,

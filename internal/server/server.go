@@ -206,8 +206,7 @@ func (s *HealthServer) ImportCriteriaFromPdf(stream pb.HealthService_ImportCrite
 		logger.Error(ctx, fmt.Errorf("missing user_id"), "import pdf: missing user_id")
 		return status.Error(codes.InvalidArgument, "user_id is required in the first stream message")
 	}
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
+	if _, err := uuid.Parse(userIDStr); err != nil {
 		logger.Error(ctx, err, "import pdf: invalid user_id")
 		return status.Error(codes.InvalidArgument, "invalid user_id")
 	}
@@ -223,7 +222,7 @@ func (s *HealthServer) ImportCriteriaFromPdf(stream pb.HealthService_ImportCrite
 	text := strings.Join(textParts, "\n\n---\n\n")
 	logPDFImportText(ctx, filename, total, text)
 
-	criteria, err := s.svc.ListCriteria(ctx, userID, userSex)
+	criteria, err := s.svc.ListCriteriaForImport(ctx, userSex)
 	if err != nil {
 		logger.Error(ctx, err, "import pdf: list criteria", "user_id", userIDStr)
 		return status.Errorf(codes.Internal, "list criteria: %v", err)
