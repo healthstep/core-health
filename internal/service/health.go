@@ -418,24 +418,47 @@ func (s *HealthService) GenerateWeeklyRecommendations(ctx context.Context, userI
 	existing, err := s.repo.GetWeeklyRecommendation(ctx, userID, weekStart)
 	if err == nil && existing != nil {
 		weights := existing.Weights.Data()
+
+		// Re-fetch current user values so we can detect new/resolved indicators.
+		userCriteria, _ := s.repo.GetUserCriteria(ctx, userID)
+		valueMap := make(map[uuid.UUID]string, len(userCriteria))
+		for _, uc := range userCriteria {
+			valueMap[uc.CriterionID] = uc.Value
+		}
+
 		changed := false
-		for recID, w := range weights {
-			if w == 0 {
-				continue
-			}
-			rec, ok := recMap[recID]
-			if !ok {
-				continue
-			}
+		for _, rec := range allRecs {
 			crit, ok := criterionMap[rec.CriterionID]
 			if !ok {
 				continue
 			}
+			recIDStr := rec.ID.String()
+			currentWeight, inPlan := weights[recIDStr]
+
 			if !CriterionVisibleForUser(crit, userCtx) {
-				weights[recID] = 0
+				if inPlan && currentWeight > 0 {
+					weights[recIDStr] = 0
+					changed = true
+				}
+				continue
+			}
+
+			value := valueMap[rec.CriterionID]
+			applicable := isRecommendationApplicable(rec, crit, value)
+
+			switch {
+			case applicable && !inPlan:
+				// Became applicable after plan was created — add it now.
+				weights[recIDStr] = rec.BaseWeight
+				changed = true
+			case !applicable && inPlan && currentWeight > 0:
+				// Was pending but indicator is now in normal range — remove.
+				weights[recIDStr] = 0
 				changed = true
 			}
+			// weight==0 and applicable: rec was already sent/spent this week, leave it.
 		}
+
 		if changed {
 			_ = s.repo.SaveWeeklyWeights(ctx, userID, weekStart, weights)
 		}
