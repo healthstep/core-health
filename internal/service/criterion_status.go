@@ -6,6 +6,10 @@ import (
 	"github.com/helthtech/core-health/internal/model"
 )
 
+// DashboardCriterionStatus returns the status (empty / ok / critical) and a
+// baseline recommendation. The recommendation is intentionally empty for
+// healthy ("ok") values; concrete advice for empty/out-of-range values is
+// layered on top from the recommendations table.
 func DashboardCriterionStatus(c model.Criterion, value string) (status string, recommendation string) {
 	switch c.InputType {
 	case "check":
@@ -13,21 +17,23 @@ func DashboardCriterionStatus(c model.Criterion, value string) (status string, r
 			return "empty", "Нет отметки — выполните и отметьте показатель."
 		}
 		if value == "1" {
-			return "ok", "Выполнено."
+			return "ok", ""
 		}
-		return "empty", ""
+		return "empty", "Нет отметки — выполните и отметьте показатель."
 
 	case "boolean":
 		if value == "" {
 			return "empty", "Нет данных — укажите результат."
 		}
-		if value == "1" {
-			return "ok", "Результат в норме."
+		// "good" answer is "Да" (1) by default, or "Нет" (0) when negative is normal.
+		goodValue := "1"
+		if c.NegativeIsNormal {
+			goodValue = "0"
 		}
-		if value == "0" {
-			return "critical", "Отрицательный результат — обратитесь к врачу."
+		if value == goodValue {
+			return "ok", ""
 		}
-		return "empty", ""
+		return "critical", "Результат вне нормы — стоит разобраться в причине."
 
 	case "numeric":
 		if value == "" {
@@ -43,9 +49,9 @@ func DashboardCriterionStatus(c model.Criterion, value string) (status string, r
 		inNormal := (c.MinValue == nil || numVal >= *c.MinValue) &&
 			(c.MaxValue == nil || numVal <= *c.MaxValue)
 		if inNormal {
-			return "ok", "Показатель в норме."
+			return "ok", ""
 		}
-		return "critical", "Значение вне нормы — рекомендуется проконсультироваться с врачом."
+		return "critical", "Значение вне нормы."
 
 	default:
 		if value == "" {

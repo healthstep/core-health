@@ -89,7 +89,8 @@ message Criterion {
   optional double max_value = 11;
   optional double delta = 12;
   optional int64 analysis_id = 13;
-  string lifetime_overrides = 14;
+  string lifetime_overrides = 14; // deprecated, unused
+  string description = 15;
 }
 
 message ListCriteriaRequest {
@@ -139,6 +140,8 @@ message UserCriterionEntry {
   string instruction = 10;
   optional int64 analysis_id = 11;
   string analysis_name = 12;
+  // What the criterion is for + border values (shown in the cabinet).
+  string description = 13;
 }
 
 message GetUserCriteriaRequest {

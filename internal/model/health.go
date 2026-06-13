@@ -26,46 +26,31 @@ type Analysis struct {
 func (Analysis) TableName() string { return "analyses" }
 
 type Criterion struct {
-	ID                uuid.UUID                          `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	GroupID           *uuid.UUID                         `gorm:"type:uuid;index"`
-	AnalysisID        *int64                             `gorm:"index"`
-	Name              string                             `gorm:"type:text;not null"`
-	Level             int                                `gorm:"type:int;not null;default:1"`
-	Sex               string                             `gorm:"type:text;not null;default:''"`
-	InputType         string                             `gorm:"type:text;not null;default:'numeric'"`
-	Lifetime          int                                `gorm:"type:int;not null;default:0"`
-	SortOrder         int                                `gorm:"type:int;not null;default:0"`
-	MinValue          *float64                           `gorm:"type:decimal"`
-	MaxValue          *float64                           `gorm:"type:decimal"`
-	Delta             *float64                           `gorm:"type:decimal"`
-	LifetimeOverrides datatypes.JSONType[map[int]int]    `gorm:"type:jsonb"`
-	CreatedAt         time.Time
+	ID               uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	GroupID          *uuid.UUID `gorm:"type:uuid;index"`
+	AnalysisID       *int64     `gorm:"index"`
+	Name             string     `gorm:"type:text;not null"`
+	Level            int        `gorm:"type:int;not null;default:1"`
+	Sex              string     `gorm:"type:text;not null;default:''"`
+	InputType        string     `gorm:"type:text;not null;default:'numeric'"`
+	Lifetime         int        `gorm:"type:int;not null;default:0"`
+	SortOrder        int        `gorm:"type:int;not null;default:0"`
+	MinValue         *float64   `gorm:"type:decimal"`
+	MaxValue         *float64   `gorm:"type:decimal"`
+	Delta            *float64   `gorm:"type:decimal"`
+	Description      string     `gorm:"type:text;not null;default:''"`
+	NegativeIsNormal bool       `gorm:"type:boolean;not null;default:false"`
+	CreatedAt        time.Time
 }
 
 func (Criterion) TableName() string { return "criteria" }
 
-func (c Criterion) EffectiveLifetime(userAge int) int {
-	overrides := c.LifetimeOverrides.Data()
-	if len(overrides) == 0 {
-		return c.Lifetime
-	}
-	bestAge := -1
-	result := c.Lifetime
-	for age, lt := range overrides {
-		if userAge >= age && age > bestAge {
-			bestAge = age
-			result = lt
-		}
-	}
-	return result
-}
-
 type UserCriterion struct {
-	ID          uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	UserID      uuid.UUID      `gorm:"type:uuid;not null;uniqueIndex:idx_user_criterion"`
-	CriterionID uuid.UUID      `gorm:"type:uuid;not null;uniqueIndex:idx_user_criterion"`
-	Value       string         `gorm:"type:text"`
-	MeasuredAt  *time.Time     `gorm:"type:date"`
+	ID          uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	UserID      uuid.UUID  `gorm:"type:uuid;not null;uniqueIndex:idx_user_criterion"`
+	CriterionID uuid.UUID  `gorm:"type:uuid;not null;uniqueIndex:idx_user_criterion"`
+	Value       string     `gorm:"type:text"`
+	MeasuredAt  *time.Time `gorm:"type:date"`
 	UpdatedAt   time.Time
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
 }
@@ -80,13 +65,13 @@ func (uc *UserCriterion) BeforeCreate(tx *gorm.DB) error {
 }
 
 type Recommendation struct {
-	ID            uuid.UUID                    `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	CriterionID   uuid.UUID                    `gorm:"type:uuid;not null;index"`
-	Type          string                       `gorm:"type:text;not null;default:'recommendation'"`
-	Title         string                       `gorm:"type:text;not null"`
-	BaseWeight    int                          `gorm:"type:int;not null;default:1"`
-	MinValue      *float64                     `gorm:"type:decimal"`
-	MaxValue      *float64                     `gorm:"type:decimal"`
+	ID            uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	CriterionID   uuid.UUID `gorm:"type:uuid;not null;index"`
+	Type          string    `gorm:"type:text;not null;default:'recommendation'"`
+	Title         string    `gorm:"type:text;not null"`
+	BaseWeight    int       `gorm:"type:int;not null;default:1"`
+	MinValue      *float64  `gorm:"type:decimal"`
+	MaxValue      *float64  `gorm:"type:decimal"`
 	CreatedAt     time.Time
 	Notifications []RecommendationNotification `gorm:"foreignKey:RecommendationID;constraint:OnDelete:CASCADE"`
 }

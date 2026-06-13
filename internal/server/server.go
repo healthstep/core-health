@@ -3,7 +3,6 @@ package server
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -20,7 +19,6 @@ import (
 	"github.com/porebric/logger"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -478,25 +476,20 @@ func (s *HealthServer) AdminUpsertCriterion(ctx context.Context, req *pb.AdminUp
 		return nil, status.Errorf(codes.InvalidArgument, "criterion is required")
 	}
 	c := &model.Criterion{
-		Name:      pc.GetName(),
-		Level:     int(pc.GetLevel()),
-		Sex:       pc.GetSex(),
-		InputType: pc.GetInputType(),
-		Lifetime:  int(pc.GetLifetime()),
-		SortOrder: int(pc.GetSortOrder()),
-		MinValue:  pc.MinValue,
-		MaxValue:  pc.MaxValue,
-		Delta:     pc.Delta,
+		Name:        pc.GetName(),
+		Level:       int(pc.GetLevel()),
+		Sex:         pc.GetSex(),
+		InputType:   pc.GetInputType(),
+		Lifetime:    int(pc.GetLifetime()),
+		SortOrder:   int(pc.GetSortOrder()),
+		MinValue:    pc.MinValue,
+		MaxValue:    pc.MaxValue,
+		Delta:       pc.Delta,
+		Description: pc.GetDescription(),
 	}
 	if pc.AnalysisId != nil {
 		aid := pc.GetAnalysisId()
 		c.AnalysisID = &aid
-	}
-	if lo := pc.GetLifetimeOverrides(); lo != "" {
-		var m map[int]int
-		if err := json.Unmarshal([]byte(lo), &m); err == nil {
-			c.LifetimeOverrides = datatypes.NewJSONType(m)
-		}
 	}
 	if pc.GetId() != "" {
 		id, err := uuid.Parse(pc.GetId())
@@ -591,6 +584,7 @@ func userCriterionEntryToProto(e service.UserCriterionEntry) *pb.UserCriterionEn
 		GroupId:        e.GroupID,
 		Instruction:    e.Instruction,
 		AnalysisName:   e.AnalysisName,
+		Description:    e.Description,
 	}
 	if e.AnalysisID != 0 {
 		aid := e.AnalysisID
@@ -601,16 +595,17 @@ func userCriterionEntryToProto(e service.UserCriterionEntry) *pb.UserCriterionEn
 
 func criterionToProto(c model.Criterion) *pb.Criterion {
 	pc := &pb.Criterion{
-		Id:        c.ID.String(),
-		Name:      c.Name,
-		Level:     int32(c.Level),
-		Sex:       c.Sex,
-		InputType: c.InputType,
-		Lifetime:  int32(c.Lifetime),
-		SortOrder: int32(c.SortOrder),
-		MinValue:  c.MinValue,
-		MaxValue:  c.MaxValue,
-		Delta:     c.Delta,
+		Id:          c.ID.String(),
+		Name:        c.Name,
+		Level:       int32(c.Level),
+		Sex:         c.Sex,
+		InputType:   c.InputType,
+		Lifetime:    int32(c.Lifetime),
+		SortOrder:   int32(c.SortOrder),
+		MinValue:    c.MinValue,
+		MaxValue:    c.MaxValue,
+		Delta:       c.Delta,
+		Description: c.Description,
 	}
 	if c.GroupID != nil {
 		pc.GroupId = c.GroupID.String()
@@ -619,18 +614,14 @@ func criterionToProto(c model.Criterion) *pb.Criterion {
 		aid := *c.AnalysisID
 		pc.AnalysisId = &aid
 	}
-	if overrides := c.LifetimeOverrides.Data(); len(overrides) > 0 {
-		raw, _ := json.Marshal(overrides)
-		pc.LifetimeOverrides = string(raw)
-	}
 	return pc
 }
 
 func analysisToProto(a model.Analysis) *pb.Analysis {
 	return &pb.Analysis{
-		Id:           a.ID,
-		Name:         a.Name,
-		Instruction:  a.Instruction,
+		Id:          a.ID,
+		Name:        a.Name,
+		Instruction: a.Instruction,
 	}
 }
 

@@ -408,7 +408,8 @@ type Criterion struct {
 	MaxValue          *float64               `protobuf:"fixed64,11,opt,name=max_value,json=maxValue,proto3,oneof" json:"max_value,omitempty"`
 	Delta             *float64               `protobuf:"fixed64,12,opt,name=delta,proto3,oneof" json:"delta,omitempty"`
 	AnalysisId        *int64                 `protobuf:"varint,13,opt,name=analysis_id,json=analysisId,proto3,oneof" json:"analysis_id,omitempty"`
-	LifetimeOverrides string                 `protobuf:"bytes,14,opt,name=lifetime_overrides,json=lifetimeOverrides,proto3" json:"lifetime_overrides,omitempty"`
+	LifetimeOverrides string                 `protobuf:"bytes,14,opt,name=lifetime_overrides,json=lifetimeOverrides,proto3" json:"lifetime_overrides,omitempty"` // deprecated, unused
+	Description       string                 `protobuf:"bytes,15,opt,name=description,proto3" json:"description,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -530,6 +531,13 @@ func (x *Criterion) GetAnalysisId() int64 {
 func (x *Criterion) GetLifetimeOverrides() string {
 	if x != nil {
 		return x.LifetimeOverrides
+	}
+	return ""
+}
+
+func (x *Criterion) GetDescription() string {
+	if x != nil {
+		return x.Description
 	}
 	return ""
 }
@@ -868,9 +876,11 @@ type UserCriterionEntry struct {
 	InputType      string                 `protobuf:"bytes,8,opt,name=input_type,json=inputType,proto3" json:"input_type,omitempty"`
 	GroupId        string                 `protobuf:"bytes,9,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
 	// Full instruction text from linked analysis (empty if no analysis).
-	Instruction   string `protobuf:"bytes,10,opt,name=instruction,proto3" json:"instruction,omitempty"`
-	AnalysisId    *int64 `protobuf:"varint,11,opt,name=analysis_id,json=analysisId,proto3,oneof" json:"analysis_id,omitempty"`
-	AnalysisName  string `protobuf:"bytes,12,opt,name=analysis_name,json=analysisName,proto3" json:"analysis_name,omitempty"`
+	Instruction  string `protobuf:"bytes,10,opt,name=instruction,proto3" json:"instruction,omitempty"`
+	AnalysisId   *int64 `protobuf:"varint,11,opt,name=analysis_id,json=analysisId,proto3,oneof" json:"analysis_id,omitempty"`
+	AnalysisName string `protobuf:"bytes,12,opt,name=analysis_name,json=analysisName,proto3" json:"analysis_name,omitempty"`
+	// What the criterion is for + border values (shown in the cabinet).
+	Description   string `protobuf:"bytes,13,opt,name=description,proto3" json:"description,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -985,6 +995,13 @@ func (x *UserCriterionEntry) GetAnalysisId() int64 {
 func (x *UserCriterionEntry) GetAnalysisName() string {
 	if x != nil {
 		return x.AnalysisName
+	}
+	return ""
+}
+
+func (x *UserCriterionEntry) GetDescription() string {
+	if x != nil {
+		return x.Description
 	}
 	return ""
 }
@@ -2728,7 +2745,7 @@ const file_api_health_health_proto_rawDesc = "" +
 	"\x12GetAnalysisRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\"C\n" +
 	"\x13GetAnalysisResponse\x12,\n" +
-	"\banalysis\x18\x01 \x01(\v2\x10.health.AnalysisR\banalysis\"\xb6\x03\n" +
+	"\banalysis\x18\x01 \x01(\v2\x10.health.AnalysisR\banalysis\"\xd8\x03\n" +
 	"\tCriterion\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
@@ -2746,7 +2763,8 @@ const file_api_health_health_proto_rawDesc = "" +
 	"\x05delta\x18\f \x01(\x01H\x02R\x05delta\x88\x01\x01\x12$\n" +
 	"\vanalysis_id\x18\r \x01(\x03H\x03R\n" +
 	"analysisId\x88\x01\x01\x12-\n" +
-	"\x12lifetime_overrides\x18\x0e \x01(\tR\x11lifetimeOverridesB\f\n" +
+	"\x12lifetime_overrides\x18\x0e \x01(\tR\x11lifetimeOverrides\x12 \n" +
+	"\vdescription\x18\x0f \x01(\tR\vdescriptionB\f\n" +
 	"\n" +
 	"_min_valueB\f\n" +
 	"\n" +
@@ -2772,7 +2790,7 @@ const file_api_health_health_proto_rawDesc = "" +
 	"\x14ResetCriteriaRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\"1\n" +
 	"\x15ResetCriteriaResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x9d\x03\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xbf\x03\n" +
 	"\x12UserCriterionEntry\x12!\n" +
 	"\fcriterion_id\x18\x01 \x01(\tR\vcriterionId\x12%\n" +
 	"\x0ecriterion_name\x18\x02 \x01(\tR\rcriterionName\x12\x14\n" +
@@ -2788,7 +2806,8 @@ const file_api_health_health_proto_rawDesc = "" +
 	" \x01(\tR\vinstruction\x12$\n" +
 	"\vanalysis_id\x18\v \x01(\x03H\x00R\n" +
 	"analysisId\x88\x01\x01\x12#\n" +
-	"\ranalysis_name\x18\f \x01(\tR\fanalysisNameB\x0e\n" +
+	"\ranalysis_name\x18\f \x01(\tR\fanalysisName\x12 \n" +
+	"\vdescription\x18\r \x01(\tR\vdescriptionB\x0e\n" +
 	"\f_analysis_id\"L\n" +
 	"\x16GetUserCriteriaRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x19\n" +

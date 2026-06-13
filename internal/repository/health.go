@@ -49,7 +49,9 @@ func (r *HealthRepository) GetCriterion(ctx context.Context, id uuid.UUID) (*mod
 func (r *HealthRepository) UpsertCriterion(ctx context.Context, c *model.Criterion) error {
 	return r.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"group_id", "analysis_id", "name", "level", "sex", "input_type", "lifetime", "sort_order", "min_value", "max_value", "delta", "lifetime_overrides"}),
+		// description / negative_is_normal are curated via SQL migrations and
+		// intentionally excluded here so an admin upsert can't wipe them.
+		DoUpdates: clause.AssignmentColumns([]string{"group_id", "analysis_id", "name", "level", "sex", "input_type", "lifetime", "sort_order", "min_value", "max_value", "delta"}),
 	}).Create(c).Error
 }
 
@@ -85,7 +87,7 @@ func (r *HealthRepository) SetUserCriterion(ctx context.Context, uc *model.UserC
 	return r.db.WithContext(ctx).
 		Unscoped().
 		Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "user_id"}, {Name: "criterion_id"}},
+			Columns: []clause.Column{{Name: "user_id"}, {Name: "criterion_id"}},
 			DoUpdates: clause.Assignments(map[string]interface{}{
 				"value":       uc.Value,
 				"measured_at": uc.MeasuredAt,
@@ -223,7 +225,7 @@ func (r *HealthRepository) GetWeeklyRecommendation(ctx context.Context, userID u
 
 func (r *HealthRepository) UpsertWeeklyRecommendation(ctx context.Context, wr *model.WeeklyRecommendation) error {
 	return r.db.WithContext(ctx).Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "user_id"}, {Name: "week_start"}},
+		Columns: []clause.Column{{Name: "user_id"}, {Name: "week_start"}},
 		DoUpdates: clause.Assignments(map[string]interface{}{
 			"weights":    wr.Weights,
 			"updated_at": wr.UpdatedAt,

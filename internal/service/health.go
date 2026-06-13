@@ -173,8 +173,30 @@ func (s *HealthService) zeroReminderWeights(ctx context.Context, userID, criteri
 	}
 }
 
-func userCriterionEntryFromCriterion(cache *CriteriaCache, c model.Criterion, value string) UserCriterionEntry {
+func userCriterionEntryFromCriterion(cache *CriteriaCache, c model.Criterion, value string, measuredAt *time.Time) UserCriterionEntry {
 	st, rec := DashboardCriterionStatus(c, value)
+
+	// Layer concrete advice from the recommendations table on top of the
+	// generic status text: a reminder when not measured, directional advice
+	// when out of range.
+	if concrete := recommendationTextForCriterion(cache, c, value); concrete != "" {
+		rec = concrete
+	}
+
+	// Expiry: if the value is in range but the measurement is getting old,
+	// nudge the user to retake it. Out-of-range advice takes priority.
+	if st == "ok" && c.Lifetime > 0 && value != "" && measuredAt != nil {
+		expiresAt := measuredAt.AddDate(0, 0, c.Lifetime)
+		daysLeft := int(time.Until(expiresAt).Hours() / 24)
+		switch {
+		case daysLeft < 0:
+			st = "critical"
+			rec = "Срок действия результата истёк — пора пересдать."
+		case daysLeft <= 30:
+			rec = fmt.Sprintf("Результат скоро устареет (осталось ~%d дн.) — стоит обновить.", daysLeft)
+		}
+	}
+
 	groupID := ""
 	if c.GroupID != nil {
 		groupID = c.GroupID.String()
@@ -186,19 +208,44 @@ func userCriterionEntryFromCriterion(cache *CriteriaCache, c model.Criterion, va
 		aid = *c.AnalysisID
 	}
 	return UserCriterionEntry{
-		CriterionID:      c.ID.String(),
-		CriterionName:    c.Name,
-		Value:            value,
-		Level:            c.Level,
-		InputType:        c.InputType,
-		GroupID:          groupID,
-		Status:           st,
-		Severity:         st,
+		CriterionID:    c.ID.String(),
+		CriterionName:  c.Name,
+		Value:          value,
+		Level:          c.Level,
+		InputType:      c.InputType,
+		GroupID:        groupID,
+		Status:         st,
+		Severity:       st,
 		Recommendation: rec,
-		Instruction:      instr,
-		AnalysisName:     aname,
-		AnalysisID:       aid,
+		Description:    c.Description,
+		Instruction:    instr,
+		AnalysisName:   aname,
+		AnalysisID:     aid,
 	}
+}
+
+// recommendationTextForCriterion returns concrete advice for the given value by
+// finding the applicable recommendation (reminder when empty, directional
+// recommendation when out of range) and returning its first notification text.
+func recommendationTextForCriterion(cache *CriteriaCache, c model.Criterion, value string) string {
+	for _, r := range cache.GetRecsForCriterion(c.ID) {
+		if !isRecommendationApplicable(r, c, value) {
+			continue
+		}
+		if t := firstNotificationText(r); t != "" {
+			return t
+		}
+	}
+	return ""
+}
+
+func firstNotificationText(rec model.Recommendation) string {
+	for _, n := range rec.Notifications {
+		if strings.TrimSpace(n.Text) != "" {
+			return n.Text
+		}
+	}
+	return ""
 }
 
 func (s *HealthService) BuildUserCriterionEntryAfterSet(ctx context.Context, criterionID uuid.UUID, userSex, value string) (*UserCriterionEntry, error) {
@@ -214,7 +261,8 @@ func (s *HealthService) BuildUserCriterionEntryAfterSet(ctx context.Context, cri
 		return nil, nil
 	}
 	// Note: BuildUserCriterionEntryAfterSet is called post-save so we only do sex check here.
-	out := userCriterionEntryFromCriterion(s.cache, c, value)
+	// Measurement is fresh, so no expiry hint is needed → pass nil.
+	out := userCriterionEntryFromCriterion(s.cache, c, value, nil)
 	return &out, nil
 }
 
@@ -237,8 +285,10 @@ func (s *HealthService) GetUserCriteria(ctx context.Context, userID uuid.UUID, u
 		return nil, err
 	}
 	valueMap := make(map[uuid.UUID]string, len(userCriteria))
+	measuredMap := make(map[uuid.UUID]*time.Time, len(userCriteria))
 	for _, uc := range userCriteria {
 		valueMap[uc.CriterionID] = uc.Value
+		measuredMap[uc.CriterionID] = uc.MeasuredAt
 	}
 
 	uc := s.userContextOrDefault(ctx, userID, userSex)
@@ -249,7 +299,7 @@ func (s *HealthService) GetUserCriteria(ctx context.Context, userID uuid.UUID, u
 		}
 
 		value := valueMap[c.ID]
-		entries = append(entries, userCriterionEntryFromCriterion(s.cache, c, value))
+		entries = append(entries, userCriterionEntryFromCriterion(s.cache, c, value, measuredMap[c.ID]))
 	}
 
 	return entries, nil
@@ -732,7 +782,6 @@ func (s *HealthService) RunWeeklyScheduler(ctx context.Context) {
 	}
 }
 
-
 func (s *HealthService) RunExpiryScheduler(ctx context.Context, channels []string) {
 	for {
 		next := nextScheduledTime([]int{9})
@@ -859,7 +908,6 @@ func ruleWeight(severity string) int {
 	}
 }
 
-
 func nextScheduledTime(hours []int) time.Time {
 	now := time.Now()
 	today := now.Truncate(24 * time.Hour)
@@ -920,6 +968,7 @@ type UserCriterionEntry struct {
 	Value          string
 	Status         string
 	Recommendation string
+	Description    string
 	Severity       string
 	Level          int
 	InputType      string
@@ -967,4 +1016,3 @@ type WeeklyPlan struct {
 	Items     []WeeklyItem
 	Weights   map[string]int
 }
-
