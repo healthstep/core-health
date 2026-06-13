@@ -190,9 +190,10 @@ func userCriterionEntryFromCriterion(cache *CriteriaCache, c model.Criterion, va
 		daysLeft := int(time.Until(expiresAt).Hours() / 24)
 		switch {
 		case daysLeft < 0:
-			st = "critical"
+			st = "expiring"
 			rec = "Срок действия результата истёк — пора пересдать."
 		case daysLeft <= 30:
+			st = "expiring"
 			rec = fmt.Sprintf("Результат скоро устареет (осталось ~%d дн.) — стоит обновить.", daysLeft)
 		}
 	}
