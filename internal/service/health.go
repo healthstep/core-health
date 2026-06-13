@@ -560,6 +560,11 @@ func (s *HealthService) buildWeeklyItems(weights map[string]int) []WeeklyItem {
 
 	var items []WeeklyItem
 	for recID, w := range weights {
+		// Only surface active items: a weight of 0 means "already done/spent"
+		// this week, and keeping them bloats the list past the indicator count.
+		if w <= 0 {
+			continue
+		}
 		rec, ok := recMap[recID]
 		if !ok {
 			continue
