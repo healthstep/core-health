@@ -348,9 +348,10 @@ func (s *HealthServer) ConfirmPendingImport(ctx context.Context, req *pb.Confirm
 		if overrideDate != "" {
 			measuredAt = overrideDate
 		}
+		// Skip items that fail validation (e.g. non-numeric text for a numeric
+		// criterion) instead of aborting the whole import.
 		if err := s.svc.SetUserCriterion(ctx, userID, cid, it.Value, "import_ai", measuredAt); err != nil {
-			_ = s.lab.Delete(ctx, req.GetPendingId())
-			return &pb.ConfirmPendingImportResponse{Success: false, ErrorMessage: err.Error(), Applied: n}, nil
+			continue
 		}
 		n++
 	}
@@ -585,6 +586,7 @@ func userCriterionEntryToProto(e service.UserCriterionEntry) *pb.UserCriterionEn
 		Instruction:    e.Instruction,
 		AnalysisName:   e.AnalysisName,
 		Description:    e.Description,
+		MeasuredAt:     e.MeasuredAt,
 	}
 	if e.AnalysisID != 0 {
 		aid := e.AnalysisID

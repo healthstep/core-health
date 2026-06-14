@@ -142,6 +142,8 @@ message UserCriterionEntry {
   string analysis_name = 12;
   // What the criterion is for + border values (shown in the cabinet).
   string description = 13;
+  // ISO date "YYYY-MM-DD" of the measurement (empty if none).
+  string measured_at = 14;
 }
 
 message GetUserCriteriaRequest {

@@ -130,6 +130,16 @@ func (s *HealthService) ListCriteriaForImport(ctx context.Context, userSex strin
 }
 
 func (s *HealthService) SetUserCriterion(ctx context.Context, userID, criterionID uuid.UUID, value, source, measuredAtStr string) error {
+	value = strings.TrimSpace(value)
+	// Numeric criteria must hold a number — reject text like "не обнаружено"
+	// (the AI import can emit it) and normalize a decimal comma to a dot.
+	if crit, ok := s.cache.GetCriterion(criterionID); ok && crit.InputType == "numeric" && value != "" {
+		normalized := strings.Replace(value, ",", ".", 1)
+		if _, err := strconv.ParseFloat(normalized, 64); err != nil {
+			return fmt.Errorf("значение «%s» не является числом", value)
+		}
+		value = normalized
+	}
 	uc := &model.UserCriterion{
 		UserID:      userID,
 		CriterionID: criterionID,
@@ -208,6 +218,10 @@ func userCriterionEntryFromCriterion(cache *CriteriaCache, c model.Criterion, va
 	if c.AnalysisID != nil {
 		aid = *c.AnalysisID
 	}
+	measuredAtStr := ""
+	if measuredAt != nil {
+		measuredAtStr = measuredAt.Format("2006-01-02")
+	}
 	return UserCriterionEntry{
 		CriterionID:    c.ID.String(),
 		CriterionName:  c.Name,
@@ -222,6 +236,7 @@ func userCriterionEntryFromCriterion(cache *CriteriaCache, c model.Criterion, va
 		Instruction:    instr,
 		AnalysisName:   aname,
 		AnalysisID:     aid,
+		MeasuredAt:     measuredAtStr,
 	}
 }
 
@@ -982,6 +997,7 @@ type UserCriterionEntry struct {
 	Instruction    string
 	AnalysisID     int64
 	AnalysisName   string
+	MeasuredAt     string
 }
 
 type ProgressResult struct {

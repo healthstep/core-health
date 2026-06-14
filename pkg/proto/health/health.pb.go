@@ -880,7 +880,9 @@ type UserCriterionEntry struct {
 	AnalysisId   *int64 `protobuf:"varint,11,opt,name=analysis_id,json=analysisId,proto3,oneof" json:"analysis_id,omitempty"`
 	AnalysisName string `protobuf:"bytes,12,opt,name=analysis_name,json=analysisName,proto3" json:"analysis_name,omitempty"`
 	// What the criterion is for + border values (shown in the cabinet).
-	Description   string `protobuf:"bytes,13,opt,name=description,proto3" json:"description,omitempty"`
+	Description string `protobuf:"bytes,13,opt,name=description,proto3" json:"description,omitempty"`
+	// ISO date "YYYY-MM-DD" of the measurement (empty if none).
+	MeasuredAt    string `protobuf:"bytes,14,opt,name=measured_at,json=measuredAt,proto3" json:"measured_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1002,6 +1004,13 @@ func (x *UserCriterionEntry) GetAnalysisName() string {
 func (x *UserCriterionEntry) GetDescription() string {
 	if x != nil {
 		return x.Description
+	}
+	return ""
+}
+
+func (x *UserCriterionEntry) GetMeasuredAt() string {
+	if x != nil {
+		return x.MeasuredAt
 	}
 	return ""
 }
@@ -2790,7 +2799,7 @@ const file_api_health_health_proto_rawDesc = "" +
 	"\x14ResetCriteriaRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\"1\n" +
 	"\x15ResetCriteriaResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xbf\x03\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xe0\x03\n" +
 	"\x12UserCriterionEntry\x12!\n" +
 	"\fcriterion_id\x18\x01 \x01(\tR\vcriterionId\x12%\n" +
 	"\x0ecriterion_name\x18\x02 \x01(\tR\rcriterionName\x12\x14\n" +
@@ -2807,7 +2816,9 @@ const file_api_health_health_proto_rawDesc = "" +
 	"\vanalysis_id\x18\v \x01(\x03H\x00R\n" +
 	"analysisId\x88\x01\x01\x12#\n" +
 	"\ranalysis_name\x18\f \x01(\tR\fanalysisName\x12 \n" +
-	"\vdescription\x18\r \x01(\tR\vdescriptionB\x0e\n" +
+	"\vdescription\x18\r \x01(\tR\vdescription\x12\x1f\n" +
+	"\vmeasured_at\x18\x0e \x01(\tR\n" +
+	"measuredAtB\x0e\n" +
 	"\f_analysis_id\"L\n" +
 	"\x16GetUserCriteriaRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x19\n" +
