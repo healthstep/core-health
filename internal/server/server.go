@@ -15,7 +15,6 @@ import (
 	"github.com/helthtech/core-health/internal/pdfextract"
 	"github.com/helthtech/core-health/internal/service"
 	pb "github.com/helthtech/core-health/pkg/proto/health"
-	criteriapb "github.com/porebric/creteria_parser/pkg/proto/criteria"
 	"github.com/porebric/logger"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -25,11 +24,11 @@ import (
 type HealthServer struct {
 	pb.UnimplementedHealthServiceServer
 	svc    *service.HealthService
-	parser criteriapb.CriteriaParserClient
+	parser *labimport.Parser
 	lab    *labimport.Store
 }
 
-func NewHealthServer(svc *service.HealthService, parser criteriapb.CriteriaParserClient, lab *labimport.Store) *HealthServer {
+func NewHealthServer(svc *service.HealthService, parser *labimport.Parser, lab *labimport.Store) *HealthServer {
 	return &HealthServer{svc: svc, parser: parser, lab: lab}
 }
 
@@ -225,49 +224,21 @@ func (s *HealthServer) ImportCriteriaFromPdf(stream pb.HealthService_ImportCrite
 		logger.Error(ctx, err, "import pdf: list criteria", "user_id", userIDStr)
 		return status.Errorf(codes.Internal, "list criteria: %v", err)
 	}
-	var hints []*criteriapb.CriterionHint
-	cat := make(map[uuid.UUID]model.Criterion)
+	cat := make(map[uuid.UUID]model.Criterion, len(criteria))
 	for _, c := range criteria {
-		it := strings.ToLower(c.InputType)
-		if it != "numeric" && it != "boolean" && it != "check" {
-			continue
-		}
 		cat[c.ID] = c
-		h := &criteriapb.CriterionHint{
-			Id:       c.ID.String(),
-			Name:     c.Name,
-			UnitHint: s.svc.AnalysisInstructionForCriterion(c),
-		}
-		if c.InputType != "" {
-			h.InputType = c.InputType
-		}
-		if c.MinValue != nil {
-			h.MinValue = c.MinValue
-		}
-		if c.MaxValue != nil {
-			h.MaxValue = c.MaxValue
-		}
-		hints = append(hints, h)
-	}
-	if len(hints) == 0 {
-		return stream.SendAndClose(&pb.ImportCriteriaFromPdfResponse{})
 	}
 
-	pr, err := s.parser.ParseFromText(ctx, &criteriapb.ParseFromTextRequest{
-		Text:            text,
-		AllowedCriteria: hints,
-		UserSex:         userSex,
-		Locale:          "ru",
-	})
+	results, modelNote, err := s.parser.Parse(ctx, text, userSex, criteria)
 	if err != nil {
-		logger.Error(ctx, err, "import pdf: parser", "user_id", userIDStr)
+		logger.Error(ctx, err, "import pdf: parse", "user_id", userIDStr)
 		return status.Errorf(codes.Internal, "ai parse: %v", err)
 	}
 
 	var out []*pb.ImportedUserCriterion
 	var items []labimport.PendingItem
-	for _, r := range pr.GetResults() {
-		cid, err := uuid.Parse(r.GetCriterionId())
+	for _, r := range results {
+		cid, err := uuid.Parse(r.CriterionID)
 		if err != nil {
 			continue
 		}
@@ -279,24 +250,24 @@ func (s *HealthServer) ImportCriteriaFromPdf(stream pb.HealthService_ImportCrite
 		out = append(out, &pb.ImportedUserCriterion{
 			CriterionId:   c.ID.String(),
 			CriterionName: c.Name,
-			Value:         r.GetValue(),
+			Value:         r.Value,
 			InputType:     c.InputType,
-			MeasuredAt:    r.GetMeasuredAt(),
+			MeasuredAt:    r.MeasuredAt,
 			Instruction:   inst,
 		})
 		items = append(items, labimport.PendingItem{
 			CriterionID:   c.ID.String(),
 			CriterionName: c.Name,
-			Value:         r.GetValue(),
+			Value:         r.Value,
 			InputType:     c.InputType,
-			MeasuredAt:    r.GetMeasuredAt(),
+			MeasuredAt:    r.MeasuredAt,
 			Instruction:   inst,
 		})
 	}
 
 	if len(out) == 0 {
 		return stream.SendAndClose(&pb.ImportCriteriaFromPdfResponse{
-			ModelNote: pr.GetModelNote(),
+			ModelNote: modelNote,
 		})
 	}
 
@@ -310,7 +281,7 @@ func (s *HealthServer) ImportCriteriaFromPdf(stream pb.HealthService_ImportCrite
 	return stream.SendAndClose(&pb.ImportCriteriaFromPdfResponse{
 		UserCriteria:    out,
 		PendingImportId: pendingID,
-		ModelNote:       pr.GetModelNote(),
+		ModelNote:       modelNote,
 	})
 }
 

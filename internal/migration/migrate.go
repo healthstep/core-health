@@ -17,6 +17,7 @@ func Run(db *gorm.DB) error {
 		&model.RecommendationNotification{},
 		&model.WeeklyRecommendation{},
 		&model.NotificationLog{},
+		&model.GigachatParseLog{},
 	); err != nil {
 		return err
 	}

@@ -16,7 +16,6 @@ import (
 	userspb "github.com/helthtech/core-users/pkg/proto/users"
 	"github.com/nats-io/nats.go"
 	"github.com/porebric/configs"
-	criteriapb "github.com/porebric/creteria_parser/pkg/proto/criteria"
 	"github.com/porebric/logger"
 	"github.com/porebric/resty"
 	"github.com/redis/go-redis/v9"
@@ -72,16 +71,7 @@ func Run(ctx context.Context) error {
 		}
 	}
 
-	var parserClient criteriapb.CriteriaParserClient
-	var parserConn *grpc.ClientConn
-	if addr := configs.Value(ctx, "grpc_creteria_parser").String(); addr != "" {
-		var err error
-		parserConn, err = grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-		if err != nil {
-			return fmt.Errorf("grpc creteria_parser: %w", err)
-		}
-		parserClient = criteriapb.NewCriteriaParserClient(parserConn)
-	}
+	labParser := labimport.NewParser(db)
 	labStore := labimport.NewStore(rdb)
 
 	svc.StartCache(ctx)
@@ -95,7 +85,7 @@ func Run(ctx context.Context) error {
 		grpc.ChainUnaryInterceptor(middleware.GRPCUnaryAccessLog()),
 		grpc.ChainStreamInterceptor(middleware.GRPCStreamAccessLog()),
 	)
-	pb.RegisterHealthServiceServer(grpcServer, server.NewHealthServer(svc, parserClient, labStore))
+	pb.RegisterHealthServiceServer(grpcServer, server.NewHealthServer(svc, labParser, labStore))
 
 	grpcPort := configs.Value(ctx, "grpc_port").String()
 	lis, err := net.Listen("tcp", "0.0.0.0:"+grpcPort)
@@ -113,9 +103,6 @@ func Run(ctx context.Context) error {
 	router := resty.NewRouter(func() *logger.Logger { return obs.L }, nil)
 	resty.RunServer(ctx, router, func(ctx context.Context) error {
 		grpcServer.GracefulStop()
-		if parserConn != nil {
-			_ = parserConn.Close()
-		}
 		nc.Close()
 		return nil
 	})

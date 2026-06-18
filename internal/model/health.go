@@ -117,3 +117,17 @@ type NotificationLog struct {
 }
 
 func (NotificationLog) TableName() string { return "notification_log" }
+
+type GigachatParseLog struct {
+	ID           int64          `gorm:"primaryKey;autoIncrement"`
+	CreatedAt    time.Time      `gorm:"type:timestamptz;not null;default:now()"`
+	Model        string         `gorm:"type:text"`
+	UserSex      string         `gorm:"type:text"`
+	DocumentText string         `gorm:"type:text"`
+	CriteriaSent datatypes.JSON `gorm:"type:jsonb"`
+	RawResponse  string         `gorm:"type:text"`
+	ParsedResult datatypes.JSON `gorm:"type:jsonb"`
+	Error        string         `gorm:"type:text"`
+}
+
+func (GigachatParseLog) TableName() string { return "gigachat_parse_log" }
