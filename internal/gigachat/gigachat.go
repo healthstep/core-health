@@ -27,7 +27,7 @@ const (
 	defaultOAuthURL = "https://ngw.devices.sberbank.ru:9443/api/v2/oauth"
 	defaultChatURL  = "https://gigachat.devices.sberbank.ru/api/v1/chat/completions"
 	defaultModel    = "GigaChat-Max"
-	defaultScope    = "GIGACHAT_API_B2B"
+	defaultScope    = "GIGACHAT_API_PERS"
 
 	headerAuthorization = "Authorization"
 	headerContentType   = "Content-Type"
